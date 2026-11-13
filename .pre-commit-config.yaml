@@ -1,0 +1,32 @@
+# Install once: `cd backend && uv run pre-commit install` (run from the repo root afterwards).
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ["--maxkb=1024"]
+      - id: detect-private-key
+  - repo: local
+    hooks:
+      - id: ruff
+        name: ruff (lint + format)
+        entry: bash -c 'cd backend && uv run ruff format . && uv run ruff check --fix .'
+        language: system
+        files: ^backend/.*\.py$
+        pass_filenames: false
+      - id: mypy
+        name: mypy
+        entry: bash -c 'cd backend && uv run mypy app seed'
+        language: system
+        files: ^backend/.*\.py$
+        pass_filenames: false
+      - id: frontend
+        name: prettier + eslint + tsc
+        entry: bash -c 'cd frontend && npx prettier --write . >/dev/null && npx eslint . && npx tsc -b --noEmit'
+        language: system
+        files: ^frontend/.*\.(ts|tsx|css|json)$
+        pass_filenames: false

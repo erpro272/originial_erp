@@ -1,0 +1,87 @@
+# CLAUDE.md — working notes for this repo
+
+Manufacturing ERP for small/mid Indian manufacturers (fasteners, bolts, nuts, steel
+assemblies). Modules: **Orders, Planning, Purchasing, Production, Billing, Finance** (+ a
+Dashboard tab at the end of the nav, added later). Built **one feature at a time**; see
+`docs/PROGRESS.md` for status and `docs/DECISIONS.md` for the why behind choices.
+
+## Workflow (agreed with the owner)
+1. Plan first (data model, endpoints, screens, tests) → wait for OK.
+2. Build completely (backend, frontend, migrations, seed).
+3. Test it yourself: pytest, Vitest, Playwright, and look at the screens vs the mockups.
+4. Hand over (what was built, how to run, manual test checklist, assumptions) and **stop**.
+5. Apply feedback, re-run everything, only then start the next feature.
+- Commit after each working step. Update this file and `docs/PROGRESS.md` after each feature.
+- Never show hard-coded numbers on a screen: everything comes from the API/DB.
+- If attachments/requirements conflict, **ask** instead of guessing.
+
+## Stack
+- **Backend** `backend/`: Python 3.12, FastAPI, Pydantic v2, SQLAlchemy 2 (async, asyncpg),
+  Alembic, ARQ worker on Redis, boto3 → S3/MinIO, Anthropic SDK (`app/ai/`). uv for deps.
+- **DB**: PostgreSQL 16. Money = integer **paise** (`BIGINT`), never float. JSONB for
+  owner-customisable settings.
+- **Frontend** `frontend/`: React 18 + TS (Vite 8), React Router 6, TanStack Query/Table/
+  Virtual, Tailwind v4 (tokens in `src/styles.css`), Radix (shadcn-style components in
+  `src/components/ui`), dnd-kit, react-hook-form + zod, openapi-fetch.
+- **E2E** `e2e/`: Playwright 1.63 against the running stack.
+- TypeScript is pinned to 5.9: openapi-typescript needs TS 5 and typescript-eslint
+  doesn't support TS 7 yet.
+
+## Commands (see `make help`)
+```
+make up            # whole stack in docker: web :5173, api :8000/api/docs, minio :9001
+make infra         # only postgres/redis/minio; then `make api`, `make worker`, `make web`
+make test          # pytest (real Postgres, needs infra) + vitest
+make e2e           # playwright against a running stack
+make lint typecheck format
+make gen-api       # after ANY API change: regenerates backend/openapi.json + TS types
+make seed          # wipe + reseed dev DB      make reset-db  # drop the DB volume
+```
+Seed logins (password `Demo@12345`): `owner@demo.example` (owner of BOTH demo companies →
+company picker), `planner@`, `purchaser@`, `accountant@demo.example`, `owner@second.example`.
+
+## Backend conventions
+- Modular monolith: `app/<module>/{models,schemas,service,router}.py`. Business logic in
+  services, never in routers. Modules talk via service functions + domain events
+  (`core/events.emit`, transactional outbox), never by querying another module's tables.
+- All routes under `/api`. Errors: raise `core.errors.DomainError` subclasses →
+  `{"error": {"code", "message", "details"}}`. Validation errors use the same shape.
+- **Tenancy (Layer 1, RLS)**: every business table uses the `TenantScoped` mixin and its
+  migration MUST call `enable_tenant_rls("<table>")` (`app/core/rls.py`). The API connects
+  as `erp_app` (not owner, no BYPASSRLS); each request runs in one transaction with
+  `app.tenant_id` set (`get_db` / `TenantDB`). `tenant_id` fills itself from that setting.
+  A test asserts every table with `tenant_id` has forced RLS + a policy.
+- **Encryption (Layer 2)**: sensitive fields (bank account no., UPI, etc.) are encrypted with
+  the tenant's AES-256-GCM key: `cipher = await keys.get_cipher(db, tenant_id)`,
+  `cipher.encrypt(value, field="bank_account")`. Store bytes (`LargeBinary`). Show masked
+  (`crypto.mask_tail`) unless `Permission.SENSITIVE_VIEW`.
+- **Audit**: every create/update/delete calls `core.audit.record(...)` in the same
+  transaction (before/after, auto-redacted). `audit_log` is append-only for the app role.
+- **Permissions**: check `Depends(require(Permission.X))`, never raw roles. Matrix in
+  `core/permissions.py`.
+- Use `TenantDB` (dependency with `scope="function"`) so commits finish before the response.
+- AI: only through `app/ai/service.get_ai_client()`. Mock mode (fixtures in
+  `app/ai/fixtures/<task>/`) when `ANTHROPIC_API_KEY` is unset; tests always use mock.
+  Extraction model: `claude-sonnet-5-5` (owner's choice). AI never does maths; code does.
+- Never log secrets/PII: logging has a redacting filter; don't put bank numbers in messages.
+- Tests: `backend/tests`, real Postgres DB `erp_test` (recreated per run), seed via
+  `seed.run.seed()`. Use helpers in `tests/conftest.py` (`login`, `owner`, `planner`).
+
+## Frontend conventions
+- Design system = the two mockups. Use tokens only (`bg-primary`, `text-ink`, `border-line`,
+  `rounded-card`, tag tones `hi|md|lo|ok|bl`). ESLint blocks raw hex colours.
+  If you add a colour token, also add it to `COLORS` in `src/lib/cn.ts` (tailwind-merge).
+- Shared components in `src/components/ui` and `src/components/data-table` — reuse them.
+  Tables: `DataTable` (column picker saved per user via `table.<id>.columns` preference).
+- API: `api.GET/POST(...)` from `src/api/client.ts` + `unwrap()`. Types are generated —
+  never hand-write API types. Server state via TanStack Query.
+- Module pages replace the "Coming soon" route in `src/app/App.tsx`; nav in `src/app/nav.ts`.
+- Page-level top-bar actions (e.g. "+ New order") via `<PageActions>`.
+- Brand: neutral placeholder `Brand` (`VITE_BRAND_NAME`).
+- Tests: Vitest + RTL next to components (`*.test.tsx`); `src/test/utils.tsx` mocks fetch.
+- `/_design` (dev only) shows every shared component.
+
+## Gotchas
+- Official MinIO images are gone from Docker Hub; compose uses the community build
+  `pgsty/minio` pinned by digest. The API creates the bucket on startup.
+- In this cloud sandbox, Docker builds need the proxy CA (not needed on a normal machine).

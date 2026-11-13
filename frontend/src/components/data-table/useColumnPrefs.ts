@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { api, unwrap } from "@/api/client";
 
 export interface ColumnPrefs {
@@ -42,10 +42,22 @@ export function useColumnPrefs(tableId: string, columns: ColumnInfo[]) {
           body: { value: value as unknown as Record<string, unknown> },
         }),
       ),
-    onMutate: (value) => qc.setQueryData(["prefs", key], value),
   });
-  const prefs = useMemo(() => resolvePrefs(columns, query.data), [columns, query.data]);
-  const update = useCallback((next: ColumnPrefs) => save.mutate(next), [save]);
-  const reset = useCallback(() => save.mutate(resolvePrefs(columns, undefined)), [columns, save]);
+  // Local state makes each change visible in the same render (the query cache notifies
+  // observers on a later tick, which would make controlled checkboxes flicker).
+  const [local, setLocal] = useState<ColumnPrefs | undefined>();
+  const effective = local ?? query.data;
+  const prefs = useMemo(() => resolvePrefs(columns, effective), [columns, effective]);
+  // Update the cache synchronously (no flicker on controlled checkboxes), then save.
+  const { mutate } = save;
+  const update = useCallback(
+    (next: ColumnPrefs) => {
+      setLocal(next);
+      qc.setQueryData(["prefs", key], next);
+      mutate(next);
+    },
+    [qc, key, mutate],
+  );
+  const reset = useCallback(() => update(resolvePrefs(columns, undefined)), [columns, update]);
   return { prefs, update, reset, loaded: query.isSuccess || query.isError };
 }
