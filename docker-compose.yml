@@ -1,0 +1,97 @@
+# Local development stack: `docker compose up`
+#   web    http://localhost:5173   (Vite dev server, proxies /api to the API)
+#   api    http://localhost:8000/api/docs
+#   minio  http://localhost:9001   (console; user/pass minioadmin)
+name: erp
+
+x-backend-env: &backend-env
+  ERP_ENV: dev
+  ERP_DATABASE_URL: postgresql+asyncpg://erp_app:erp_app@postgres:5432/erp
+  ERP_DATABASE_OWNER_URL: postgresql+asyncpg://erp_owner:erp_owner@postgres:5432/erp
+  ERP_REDIS_URL: redis://redis:6379/0
+  ERP_S3_ENDPOINT_URL: http://minio:9000
+  ERP_S3_PUBLIC_ENDPOINT_URL: http://localhost:9000
+  ERP_CORS_ORIGINS: '["http://localhost:5173"]'
+  # Optional: set in a .env file next to this compose file to use the real AI.
+  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+
+services:
+  postgres:
+    image: postgres:16-alpine@sha256:f377d590e5474681d4d7838635031a2b50647923b7abfa803ce9b5ff35d5c663
+    environment:
+      POSTGRES_USER: erp_owner
+      POSTGRES_PASSWORD: erp_owner
+      POSTGRES_DB: erp
+      ERP_APP_DB_PASSWORD: erp_app
+    ports: ["5432:5432"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./infra/postgres:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U erp_owner -d erp"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine@sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe
+    ports: ["6379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  minio:
+    # Community-maintained MinIO build (the official images are no longer published on Docker Hub).
+    image: pgsty/minio@sha256:b6bfe7239bfc83fb90d31612d9704d86039dd714f7904b3f1ad68f211e602372
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports: ["9000:9000", "9001:9001"]
+    volumes: [miniodata:/data]
+    healthcheck:
+      test: ["CMD", "minio", "--version"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: ./backend
+    environment: *backend-env
+    command: >
+      sh -c "alembic upgrade head && python -m seed.run --if-empty &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir app"
+    ports: ["8000:8000"]
+    volumes: ["./backend/app:/srv/app", "./backend/seed:/srv/seed", "./backend/alembic:/srv/alembic"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      minio: { condition: service_started }
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  worker:
+    build: ./backend
+    environment: *backend-env
+    command: ["arq", "app.worker.WorkerSettings"]
+    volumes: ["./backend/app:/srv/app"]
+    depends_on:
+      api: { condition: service_healthy }
+
+  web:
+    build: ./frontend
+    environment:
+      VITE_API_PROXY: http://api:8000
+    ports: ["5173:5173"]
+    volumes: ["./frontend/src:/app/src", "./frontend/public:/app/public"]
+    depends_on:
+      api: { condition: service_healthy }
+
+volumes:
+  pgdata:
+  miniodata:

@@ -1,0 +1,71 @@
+[project]
+name = "erp-backend"
+version = "0.1.0"
+description = "Manufacturing ERP API (modular monolith)"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.32",
+  "pydantic>=2.9",
+  "pydantic-settings>=2.6",
+  "email-validator>=2.2",
+  "sqlalchemy[asyncio]>=2.0.36,<2.2",
+  "asyncpg>=0.30",
+  "alembic>=1.14",
+  "argon2-cffi>=23.1",
+  "pyjwt>=2.10",
+  "cryptography>=44",
+  "arq>=0.26",
+  "redis>=5.2",
+  "boto3>=1.35",
+  "anthropic>=2.8,<3",
+  "python-multipart>=0.0.18",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3",
+  "pytest-asyncio>=0.24",
+  "httpx>=0.28",
+  "hypothesis>=6.120",
+  "ruff>=0.8",
+  "mypy>=1.13",
+  "boto3-stubs[s3]>=1.35",
+  "pre-commit>=4.0",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["alembic/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "N", "S", "ASYNC", "RUF", "SIM", "PTH"]
+ignore = ["S101", "B008", "RUF012", "N818"]  # N818: domain errors read better as NotFound, Forbidden
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S105", "S106", "S108", "S311"]
+"seed/**" = ["S105", "S106", "S311"]
+
+[tool.mypy]
+python_version = "3.12"
+plugins = ["pydantic.mypy"]
+strict = true
+warn_unused_ignores = true
+ignore_missing_imports = true
+exclude = ["alembic/versions/"]
+
+[[tool.mypy.overrides]]
+module = ["tests.*", "seed.*", "alembic.*"]
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+testpaths = ["tests"]
+addopts = "-ra"
