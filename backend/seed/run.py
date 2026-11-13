@@ -25,6 +25,7 @@ from app.core.keys import create_tenant_key
 from app.core.models import Membership, Tenant, User
 from app.core.permissions import Role
 from app.core.security import hash_password
+from seed.demo_data import seed_demo, seed_second
 
 PASSWORD = os.environ.get("ERP_SEED_PASSWORD", "Demo@12345")
 
@@ -42,6 +43,23 @@ USERS = [
 ]
 
 TABLES_IN_DELETE_ORDER = [
+    "invoice_transport",
+    "invoice_payments",
+    "invoice_lines",
+    "invoice_parties",
+    "extraction_runs",
+    "invoice_uploads",
+    "invoices",
+    "orders",
+    "customer_followups",
+    "customer_contacts",
+    "customer_addresses",
+    "customers",
+    "product_materials",
+    "material_stock",
+    "products",
+    "materials",
+    "tenant_counters",
     "user_preferences",
     "tenant_settings",
     "outbox_events",
@@ -86,6 +104,12 @@ async def seed(session: AsyncSession) -> dict[str, uuid.UUID]:
     return {slug: t.id for slug, t in tenants.items()}
 
 
+async def seed_business(session: AsyncSession, ids: dict[str, uuid.UUID]) -> None:
+    owner = (await session.execute(select(User.id).where(User.email == "owner@demo.example"))).scalar_one()
+    await seed_demo(session, ids["demo"], owner)
+    await seed_second(session, ids["second"])
+
+
 async def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--if-empty", action="store_true")
@@ -102,6 +126,7 @@ async def main() -> None:
                 return
             raise SystemExit("Already seeded. Use --reset to start over.")
         ids = await seed(session)
+        await seed_business(session, ids)
     await engine.dispose()
     print(f"seed: done. Companies: {ids}. Password for all users: {PASSWORD}")
 
