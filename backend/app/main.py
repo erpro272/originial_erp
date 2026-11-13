@@ -10,12 +10,16 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from app import models_registry  # noqa: F401  (all tables known to SQLAlchemy)
+from app.catalog.router import router as catalog_router
 from app.core.config import get_settings
 from app.core.context import request_id_var
 from app.core.errors import DomainError
 from app.core.logging import configure_logging
 from app.core.routers import admin, auth, health
 from app.core.storage import get_storage
+from app.customers.router import router as customers_router
+from app.orders.router import router as orders_router
 
 log = logging.getLogger(__name__)
 
@@ -48,9 +52,7 @@ def create_app() -> FastAPI:
     )
 
     @app.middleware("http")
-    async def request_id(
-        request: Request, call_next: Callable[[Request], Awaitable[Response]]
-    ) -> Response:
+    async def request_id(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
         rid = request.headers.get("x-request-id") or uuid.uuid4().hex
         token = request_id_var.set(rid[:64])
         try:
@@ -69,9 +71,7 @@ def create_app() -> FastAPI:
 
     @app.exception_handler(RequestValidationError)
     async def validation_error(_: Request, exc: RequestValidationError) -> JSONResponse:
-        fields = [
-            {"loc": list(e["loc"]), "message": e["msg"], "type": e["type"]} for e in exc.errors()
-        ]
+        fields = [{"loc": list(e["loc"]), "message": e["msg"], "type": e["type"]} for e in exc.errors()]
         return JSONResponse(
             status_code=422,
             content={
@@ -83,7 +83,7 @@ def create_app() -> FastAPI:
             },
         )
 
-    for r in (health.router, auth.router, admin.router):
+    for r in (health.router, auth.router, admin.router, catalog_router, customers_router, orders_router):
         app.include_router(r, prefix="/api")
     return app
 

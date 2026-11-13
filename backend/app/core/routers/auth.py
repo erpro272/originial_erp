@@ -38,9 +38,7 @@ async def login(body: LoginRequest, request: Request, response: Response) -> Tok
 
 
 @router.post("/refresh")
-async def refresh(
-    response: Response, erp_refresh: Annotated[str | None, Cookie()] = None
-) -> TokenResponse:
+async def refresh(response: Response, erp_refresh: Annotated[str | None, Cookie()] = None) -> TokenResponse:
     if not erp_refresh:
         raise Unauthorized("Not signed in.")
     return _respond(response, await svc.refresh(erp_refresh))

@@ -38,9 +38,7 @@ class TokenClaims:
     ver: int
 
 
-def create_token(
-    *, user_id: uuid.UUID, tenant_id: uuid.UUID, role: str, typ: TokenType, ver: int = 0
-) -> str:
+def create_token(*, user_id: uuid.UUID, tenant_id: uuid.UUID, role: str, typ: TokenType, ver: int = 0) -> str:
     s = get_settings()
     ttl = s.access_token_ttl_seconds if typ == "access" else s.refresh_token_ttl_seconds
     now = datetime.now(UTC)

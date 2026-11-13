@@ -35,7 +35,5 @@ async def list_entries(
     if until:
         q = q.where(AuditLog.at < until)
     total = (await session.execute(select(func.count()).select_from(q.subquery()))).scalar_one()
-    rows = (
-        await session.execute(q.order_by(AuditLog.id.desc()).limit(limit).offset(offset))
-    ).scalars()
+    rows = (await session.execute(q.order_by(AuditLog.id.desc()).limit(limit).offset(offset))).scalars()
     return list(rows), total

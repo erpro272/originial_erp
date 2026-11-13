@@ -6,9 +6,7 @@ The API under test connects as ``erp_app`` (RLS applies), exactly like productio
 import os
 
 os.environ.setdefault("ERP_ENV", "test")
-os.environ.setdefault(
-    "ERP_DATABASE_URL", "postgresql+asyncpg://erp_app:erp_app@localhost:5432/erp_test"
-)
+os.environ.setdefault("ERP_DATABASE_URL", "postgresql+asyncpg://erp_app:erp_app@localhost:5432/erp_test")
 os.environ.setdefault(
     "ERP_DATABASE_OWNER_URL", "postgresql+asyncpg://erp_owner:erp_owner@localhost:5432/erp_test"
 )
@@ -87,9 +85,7 @@ async def client(app, tenants) -> AsyncIterator[AsyncClient]:  # type: ignore[no
         yield c
 
 
-async def login(
-    client: AsyncClient, email: str, tenant_id: uuid.UUID | None = None
-) -> dict[str, str]:
+async def login(client: AsyncClient, email: str, tenant_id: uuid.UUID | None = None) -> dict[str, str]:
     body: dict[str, str] = {"email": email, "password": PASSWORD}
     if tenant_id:
         body["tenant_id"] = str(tenant_id)
@@ -106,3 +102,55 @@ async def owner(client, tenants) -> dict[str, str]:  # type: ignore[no-untyped-d
 @pytest.fixture
 async def planner(client) -> dict[str, str]:  # type: ignore[no-untyped-def]
     return await login(client, "planner@demo.example")
+
+
+# ---- per-module fresh company (isolated data for feature tests) ------------------------
+
+from datetime import date  # noqa: E402
+
+from app.core import clock  # noqa: E402
+from app.core.db import set_tenant  # noqa: E402
+from app.core.keys import create_tenant_key  # noqa: E402
+from app.core.models import Membership, Tenant, User  # noqa: E402
+from app.core.security import hash_password  # noqa: E402
+
+TODAY = date(2026, 11, 13)  # a Friday
+
+
+@pytest.fixture(autouse=True)
+def _pin_today():  # type: ignore[no-untyped-def]
+    clock.set_today(TODAY)
+    yield
+    clock.set_today(None)
+
+
+class Company:
+    def __init__(self, tenant_id: uuid.UUID, emails: dict[str, str]) -> None:
+        self.id = tenant_id
+        self.emails = emails  # role -> email
+
+
+async def make_company(slug: str) -> Company:
+    """New tenant with one user per role (password PASSWORD) and its encryption key."""
+    eng = create_async_engine(get_settings().database_owner_url)
+    tid = uuid.uuid4()
+    emails = {
+        r: f"{r}.{slug}.{tid.hex[:6]}@test.example" for r in ("owner", "planner", "purchaser", "accountant")
+    }
+    async with async_sessionmaker(eng)() as s, s.begin():
+        s.add(Tenant(id=tid, slug=f"{slug}-{tid.hex[:8]}", name=f"{slug.title()} Co"))
+        pw = hash_password(PASSWORD)
+        for role, email in emails.items():
+            u = User(id=uuid.uuid4(), email=email, full_name=f"{role.title()} {slug}", password_hash=pw)
+            s.add(u)
+            await s.flush()
+            s.add(Membership(tenant_id=tid, user_id=u.id, role=role))
+        await s.flush()
+        await set_tenant(s, tid)
+        await create_tenant_key(s, tid)
+    await eng.dispose()
+    return Company(tid, emails)
+
+
+async def headers_for(client: AsyncClient, company: Company, role: str = "owner") -> dict[str, str]:
+    return await login(client, company.emails[role])

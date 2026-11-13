@@ -11,17 +11,13 @@ from tests.conftest import PASSWORD, login
 
 
 async def test_login_single_company_and_me(client: AsyncClient, tenants) -> None:
-    r = await client.post(
-        "/auth/login", json={"email": "Planner@Demo.example ", "password": PASSWORD}
-    )
+    r = await client.post("/auth/login", json={"email": "Planner@Demo.example ", "password": PASSWORD})
     assert r.status_code == 200
     assert r.headers["cache-control"] == "no-store"
     set_cookie = r.headers["set-cookie"].lower()
     assert "erp_refresh=" in set_cookie and "httponly" in set_cookie
     assert "samesite=strict" in set_cookie and "path=/api/auth" in set_cookie
-    me = await client.get(
-        "/auth/me", headers={"Authorization": f"Bearer {r.json()['access_token']}"}
-    )
+    me = await client.get("/auth/me", headers={"Authorization": f"Bearer {r.json()['access_token']}"})
     body = me.json()
     assert body["role"] == "planner"
     assert body["company"]["id"] == str(tenants["demo"])
@@ -62,20 +58,14 @@ async def test_cannot_sign_in_to_foreign_company(client: AsyncClient, tenants) -
 
 
 async def test_switch_company(client: AsyncClient, owner, tenants) -> None:
-    r = await client.post(
-        "/auth/switch-company", headers=owner, json={"tenant_id": str(tenants["second"])}
-    )
+    r = await client.post("/auth/switch-company", headers=owner, json={"tenant_id": str(tenants["second"])})
     assert r.status_code == 200
     h = {"Authorization": f"Bearer {r.json()['access_token']}"}
-    assert (await client.get("/auth/me", headers=h)).json()["company"]["id"] == str(
-        tenants["second"]
-    )
+    assert (await client.get("/auth/me", headers=h)).json()["company"]["id"] == str(tenants["second"])
 
 
 async def test_switch_to_foreign_company_refused(client: AsyncClient, planner, tenants) -> None:
-    r = await client.post(
-        "/auth/switch-company", headers=planner, json={"tenant_id": str(tenants["second"])}
-    )
+    r = await client.post("/auth/switch-company", headers=planner, json={"tenant_id": str(tenants["second"])})
     assert r.status_code == 403
 
 
@@ -98,9 +88,7 @@ async def test_logout_all_revokes_refresh_tokens(client: AsyncClient) -> None:
 
 async def test_missing_bad_expired_and_wrong_type_tokens(client: AsyncClient, tenants) -> None:
     assert (await client.get("/auth/me")).status_code == 401
-    assert (
-        await client.get("/auth/me", headers={"Authorization": "Bearer junk"})
-    ).status_code == 401
+    assert (await client.get("/auth/me", headers={"Authorization": "Bearer junk"})).status_code == 401
     s = get_settings()
     expired = jwt.encode(
         {
@@ -115,15 +103,9 @@ async def test_missing_bad_expired_and_wrong_type_tokens(client: AsyncClient, te
         s.jwt_secret.get_secret_value(),
         algorithm="HS256",
     )
-    assert (
-        await client.get("/auth/me", headers={"Authorization": f"Bearer {expired}"})
-    ).status_code == 401
-    forged = jwt.encode(
-        {"sub": "x"}, "not-the-secret-but-long-enough-for-hs256!!", algorithm="HS256"
-    )
-    assert (
-        await client.get("/auth/me", headers={"Authorization": f"Bearer {forged}"})
-    ).status_code == 401
+    assert (await client.get("/auth/me", headers={"Authorization": f"Bearer {expired}"})).status_code == 401
+    forged = jwt.encode({"sub": "x"}, "not-the-secret-but-long-enough-for-hs256!!", algorithm="HS256")
+    assert (await client.get("/auth/me", headers={"Authorization": f"Bearer {forged}"})).status_code == 401
     refresh_as_access = create_token(
         user_id=uuid.uuid4(), tenant_id=tenants["demo"], role="owner", typ="refresh"
     )
@@ -134,9 +116,7 @@ async def test_missing_bad_expired_and_wrong_type_tokens(client: AsyncClient, te
 async def test_login_rate_limited(client: AsyncClient) -> None:
     for _ in range(10):
         await client.post("/auth/login", json={"email": "planner@demo.example", "password": "x"})
-    r = await client.post(
-        "/auth/login", json={"email": "planner@demo.example", "password": PASSWORD}
-    )
+    r = await client.post("/auth/login", json={"email": "planner@demo.example", "password": PASSWORD})
     assert r.status_code == 429
 
 

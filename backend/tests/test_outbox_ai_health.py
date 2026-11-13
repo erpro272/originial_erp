@@ -29,9 +29,7 @@ async def test_outbox_dispatch_per_tenant(tenants) -> None:
     assert sorted(seen) == sorted([(str(tenants["demo"]), "a"), (str(tenants["second"]), "b")])
 
     async with tenant_session(tenants["demo"]) as s:
-        failed = (
-            await s.execute(select(OutboxEvent).where(OutboxEvent.type == "test.fail"))
-        ).scalar_one()
+        failed = (await s.execute(select(OutboxEvent).where(OutboxEvent.type == "test.fail"))).scalar_one()
         assert failed.processed_at is None and failed.attempts == 1
         assert "handler broke" in (failed.last_error or "")
     await events.dispatch_outbox()  # processed events are not delivered twice
@@ -47,9 +45,7 @@ async def test_ai_mock_mode_without_key() -> None:
 
 async def test_ai_mock_missing_fixture() -> None:
     with pytest.raises(AIError):
-        await MockAIClient().extract_json(
-            task="nope", system="", instructions="", schema={}, files=[]
-        )
+        await MockAIClient().extract_json(task="nope", system="", instructions="", schema={}, files=[])
 
 
 async def test_health(client: AsyncClient) -> None:

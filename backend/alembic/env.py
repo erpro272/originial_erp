@@ -5,7 +5,7 @@ import asyncio
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
 
-import app.core.models  # noqa: F401  (register core tables)
+import app.models_registry  # noqa: F401  (register all tables)
 from alembic import context
 from app.core.config import get_settings
 from app.core.db import Base

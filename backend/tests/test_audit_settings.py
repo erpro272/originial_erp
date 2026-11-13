@@ -16,9 +16,7 @@ async def test_login_is_audited(client: AsyncClient, owner) -> None:
     assert entry["request_id"]
 
 
-@pytest.mark.parametrize(
-    "who", ["planner@demo.example", "purchaser@demo.example", "accountant@demo.example"]
-)
+@pytest.mark.parametrize("who", ["planner@demo.example", "purchaser@demo.example", "accountant@demo.example"])
 async def test_only_owner_reads_audit_log(client: AsyncClient, who: str) -> None:
     h = await login(client, who)
     assert (await client.get("/audit-log", headers=h)).status_code == 403
@@ -27,18 +25,12 @@ async def test_only_owner_reads_audit_log(client: AsyncClient, who: str) -> None
 async def test_setting_write_audited_with_before_after(client: AsyncClient, owner) -> None:
     key = "order-ranking"
     assert (await client.get(f"/settings/{key}", headers=owner)).status_code == 404
-    r1 = await client.put(
-        f"/settings/{key}", headers=owner, json={"value": {"weights": {"profit": 1}}}
-    )
+    r1 = await client.put(f"/settings/{key}", headers=owner, json={"value": {"weights": {"profit": 1}}})
     assert r1.status_code == 200
     await client.put(f"/settings/{key}", headers=owner, json={"value": {"weights": {"profit": 2}}})
-    assert (await client.get(f"/settings/{key}", headers=owner)).json()["value"] == {
-        "weights": {"profit": 2}
-    }
+    assert (await client.get(f"/settings/{key}", headers=owner)).json()["value"] == {"weights": {"profit": 2}}
     log = (
-        await client.get(
-            "/audit-log", headers=owner, params={"entity_type": "setting", "entity_id": key}
-        )
+        await client.get("/audit-log", headers=owner, params={"entity_type": "setting", "entity_id": key})
     ).json()
     assert [e["action"] for e in log["items"]] == ["update", "create"]
     assert log["items"][0]["before"] == {"weights": {"profit": 1}}
@@ -62,14 +54,10 @@ async def test_audit_rolls_back_with_the_change(tenants) -> None:
 
     with pytest.raises(Boom):
         async with tenant_session(tenants["demo"]) as s:
-            await audit.record(
-                s, actor_id=None, action="create", entity_type="probe", entity_id="rb"
-            )
+            await audit.record(s, actor_id=None, action="create", entity_type="probe", entity_id="rb")
             raise Boom
     async with tenant_session(tenants["demo"]) as s:
-        assert (
-            await s.execute(select(AuditLog).where(AuditLog.entity_type == "probe"))
-        ).first() is None
+        assert (await s.execute(select(AuditLog).where(AuditLog.entity_type == "probe"))).first() is None
 
 
 async def test_audit_redacts_sensitive_fields(tenants) -> None:
@@ -97,7 +85,5 @@ def test_audit_diff() -> None:
 async def test_preferences_are_per_user(client: AsyncClient, owner, planner) -> None:
     key = "table.orders.columns"
     await client.put(f"/me/preferences/{key}", headers=owner, json={"value": {"visible": ["id"]}})
-    assert (await client.get(f"/me/preferences/{key}", headers=owner)).json()["value"] == {
-        "visible": ["id"]
-    }
+    assert (await client.get(f"/me/preferences/{key}", headers=owner)).json()["value"] == {"visible": ["id"]}
     assert (await client.get(f"/me/preferences/{key}", headers=planner)).json()["value"] == {}

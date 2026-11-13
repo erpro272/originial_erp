@@ -57,15 +57,11 @@ async def put_setting(
     return value
 
 
-async def get_preference(
-    session: AsyncSession, user_id: uuid.UUID, key: str
-) -> dict[str, Any] | None:
+async def get_preference(session: AsyncSession, user_id: uuid.UUID, key: str) -> dict[str, Any] | None:
     _check(key)
     return (
         await session.execute(
-            select(UserPreference.value).where(
-                UserPreference.user_id == user_id, UserPreference.key == key
-            )
+            select(UserPreference.value).where(UserPreference.user_id == user_id, UserPreference.key == key)
         )
     ).scalar_one_or_none()
 
@@ -75,8 +71,6 @@ async def put_preference(
 ) -> dict[str, Any]:
     _check(key, value)
     stmt = insert(UserPreference).values(user_id=user_id, key=key, value=value)
-    stmt = stmt.on_conflict_do_update(
-        index_elements=["tenant_id", "user_id", "key"], set_={"value": value}
-    )
+    stmt = stmt.on_conflict_do_update(index_elements=["tenant_id", "user_id", "key"], set_={"value": value})
     await session.execute(stmt)
     return value

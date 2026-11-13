@@ -70,7 +70,5 @@ async def get_preference(key: str, db: TenantDB, principal: CurrentPrincipal) ->
 
 
 @router.put("/me/preferences/{key}")
-async def put_preference(
-    key: str, body: JsonValueIn, db: TenantDB, principal: CurrentPrincipal
-) -> JsonValue:
+async def put_preference(key: str, body: JsonValueIn, db: TenantDB, principal: CurrentPrincipal) -> JsonValue:
     return JsonValue(key=key, value=await kv.put_preference(db, principal.user_id, key, body.value))

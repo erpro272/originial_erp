@@ -27,9 +27,7 @@ async def get_cipher(session: AsyncSession, tenant_id: uuid.UUID) -> TenantCiphe
     if (cached := _cache.get(tenant_id)) is not None:
         return cached
     row = (
-        await session.execute(
-            select(TenantKey).where(TenantKey.tenant_id == tenant_id, TenantKey.is_active)
-        )
+        await session.execute(select(TenantKey).where(TenantKey.tenant_id == tenant_id, TenantKey.is_active))
     ).scalar_one()
     cipher = TenantCipher(tenant_id, get_key_provider().unwrap(row.wrapped_key, tenant_id))
     _cache[tenant_id] = cipher

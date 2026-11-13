@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Orders — clean wall</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#fff}
+a{color:#1D4ED8}a:hover{color:#1E40AF}
+.nav a{color:#475569;text-decoration:none;font-size:15px;padding:21px 0 19px;border-bottom:2px solid transparent}
+.nav a:hover{color:#0F172A}
+.tag{font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;white-space:nowrap}
+.hi{background:#FDECEC;color:#B42318}.md{background:#FEF3E2;color:#9A5205}.lo{background:#EEF2F6;color:#475569}
+.mono{font-family:'JetBrains Mono',monospace}
+th{font-size:12px;font-weight:600;color:#64748B;text-align:left;padding:12px 16px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+td{font-size:14px;color:#0F172A;padding:14px 16px;border-top:1px solid #EEF1F5;white-space:nowrap}
+</style>
+</helmet>
+<div style="font-family: Inter, system-ui, sans-serif; color: #0F172A; background: #FFFFFF; min-height: 100vh">
+  <header style="border-bottom: 1px solid #E5E9F0">
+    <div style="max-width: 1360px; margin: 0 auto; padding: 0 32px; display: flex; align-items: center; gap: 40px; flex-wrap: wrap; min-height: 64px">
+      <div style="display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px"><span style="width: 16px; height: 16px; border-radius: 50%; background: #1D63ED"></span>[Brand]</div>
+      <nav class="nav" aria-label="Main" style="display: flex; gap: 32px; flex: 1; flex-wrap: wrap">
+        <a href="#" style="color: #0F172A; font-weight: 600; border-bottom-color: #1D63ED">Orders</a>
+        <a href="#">Planning</a><a href="#">Purchasing</a><a href="#">Production</a><a href="#">Billing</a><a href="#">Finance</a>
+      </nav>
+      <button style="font: 600 14px Inter, sans-serif; color: #fff; background: #1D63ED; border: 0; border-radius: 999px; padding: 10px 20px; min-height: 40px; cursor: pointer">+ New order</button>
+    </div>
+  </header>
+
+  <main style="max-width: 1360px; margin: 0 auto; padding: 40px 32px 64px; display: flex; flex-direction: column; gap: 32px">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap">
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <h1 style="margin: 0; font-size: 34px; font-weight: 700; letter-spacing: -0.02em">Orders</h1>
+        <p style="margin: 0; font-size: 16px; color: #64748B">Every open order, ranked by priority, customer and delivery date.</p>
+      </div>
+      <div style="display: flex; border: 1px solid #E5E9F0; border-radius: 16px; background: #F8FAFC">
+        <div style="padding: 14px 24px; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 26px; font-weight: 700">12</span><span style="font-size: 13px; color: #64748B">Open orders</span></div>
+        <div style="padding: 14px 24px; display: flex; flex-direction: column; gap: 2px; border-left: 1px solid #E5E9F0"><span style="font-size: 26px; font-weight: 700; color: #B42318">5</span><span style="font-size: 13px; color: #64748B">High priority</span></div>
+        <div style="padding: 14px 24px; display: flex; flex-direction: column; gap: 2px; border-left: 1px solid #E5E9F0"><span style="font-size: 26px; font-weight: 700; color: #1D4ED8">4</span><span style="font-size: 13px; color: #64748B">In production</span></div>
+        <div style="padding: 14px 24px; display: flex; flex-direction: column; gap: 2px; border-left: 1px solid #E5E9F0"><span style="font-size: 26px; font-weight: 700; color: #9A5205">4</span><span style="font-size: 13px; color: #64748B">Ship in 7 days</span></div>
+      </div>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; border-bottom: 1px solid #E5E9F0">
+      <div style="display: flex; gap: 28px">
+        <a href="#" style="text-decoration: none; color: #0F172A; font-weight: 600; font-size: 15px; padding: 10px 0; border-bottom: 2px solid #0F172A">Orders received <span style="color: #64748B; font-weight: 500">12</span></a>
+        <a href="#" style="text-decoration: none; color: #475569; font-size: 15px; padding: 10px 0">Customers <span style="color: #64748B">8</span></a>
+      </div>
+      <div style="display: flex; gap: 8px; padding-bottom: 8px; flex-wrap: wrap">
+        <button style="font: 500 13px Inter, sans-serif; color: #334155; background: #fff; border: 1px solid #E2E8F0; border-radius: 999px; padding: 8px 14px; cursor: pointer">All customers ▾</button>
+        <button style="font: 500 13px Inter, sans-serif; color: #334155; background: #fff; border: 1px solid #E2E8F0; border-radius: 999px; padding: 8px 14px; cursor: pointer">Priority ▾</button>
+        <button style="font: 500 13px Inter, sans-serif; color: #334155; background: #fff; border: 1px solid #E2E8F0; border-radius: 999px; padding: 8px 14px; cursor: pointer">Status ▾</button>
+        <label style="display: flex; align-items: center; gap: 8px; border: 1px solid #E2E8F0; border-radius: 999px; padding: 0 14px; font-size: 13px; color: #64748B"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><input aria-label="Search orders" placeholder="Search orders" style="border: 0; outline: none; font: 13px Inter, sans-serif; width: 140px; padding: 8px 0"></label>
+      </div>
+    </div>
+
+    <section style="display: flex; flex-direction: column; gap: 14px">
+      <h2 style="margin: 0; font-size: 13px; font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: .06em">Needs attention</h2>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px">
+        <article style="border: 1px solid #F3B4AE; border-radius: 16px; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+          <div style="display: flex; justify-content: space-between; align-items: center"><span class="mono" style="font-size: 14px; font-weight: 600">ORD-1042</span><span class="tag hi">High priority</span></div>
+          <div style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 18px; font-weight: 600">M10 hex bolts</span><span style="font-size: 14px; color: #64748B">Maruti Suzuki · 50,000 pcs · ships Mon 16 Nov</span></div>
+          <div style="display: flex; gap: 24px; font-size: 14px; color: #334155"><span>Sales <b>₹50.0 L</b></span><span>Profit <b>₹5.0 L</b></span><span>4 days</span></div>
+          <div style="border-top: 1px solid #EEF1F5; padding-top: 14px; font-size: 14px; color: #B42318">Press line 2 down · 1 day behind</div>
+        </article>
+        <article style="border: 1px solid #F1CF9B; border-radius: 16px; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+          <div style="display: flex; justify-content: space-between; align-items: center"><span class="mono" style="font-size: 14px; font-weight: 600">ORD-1041</span><span class="tag hi">High priority</span></div>
+          <div style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 18px; font-weight: 600">M8 nylock nuts</span><span style="font-size: 14px; color: #64748B">Tata Motors · 1,20,000 pcs · ships Wed 18 Nov</span></div>
+          <div style="display: flex; gap: 24px; font-size: 14px; color: #334155"><span>Sales <b>₹18.4 L</b></span><span>Profit <b>₹2.1 L</b></span><span>5 days</span></div>
+          <div style="border-top: 1px solid #EEF1F5; padding-top: 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px"><span style="font-size: 14px; color: #9A5205">Steel wire rod short · 2.4 t</span><button style="font: 600 13px Inter, sans-serif; color: #fff; background: #0F172A; border: 0; border-radius: 999px; padding: 9px 16px; min-height: 36px; cursor: pointer">Raise PO</button></div>
+        </article>
+        <article style="border: 1px solid #E5E9F0; border-radius: 16px; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+          <div style="display: flex; justify-content: space-between; align-items: center"><span class="mono" style="font-size: 14px; font-weight: 600">ORD-1039</span><span class="tag hi">High priority</span></div>
+          <div style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 18px; font-weight: 600">M12 flange bolts</span><span style="font-size: 14px; color: #64748B">Mahindra · 30,000 pcs · ships Thu 19 Nov</span></div>
+          <div style="display: flex; gap: 24px; font-size: 14px; color: #334155"><span>Sales <b>₹27.6 L</b></span><span>Profit <b>₹3.3 L</b></span><span>3 days</span></div>
+          <div style="border-top: 1px solid #EEF1F5; padding-top: 14px; font-size: 14px; color: #15803D">Material in · line booked</div>
+        </article>
+      </div>
+    </section>
+
+    <section style="border: 1px solid #E5E9F0; border-radius: 16px">
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 18px 20px">
+        <h2 style="margin: 0; font-size: 17px; font-weight: 600">All orders received</h2>
+        <button style="font: 500 13px Inter, sans-serif; color: #334155; background: #fff; border: 1px solid #E2E8F0; border-radius: 999px; padding: 8px 14px; cursor: pointer">Columns (8) ▾</button>
+      </div>
+      <div style="overflow-x: auto">
+        <table style="width: 100%; border-collapse: collapse; font-family: Inter, sans-serif">
+          <thead style="background: #F8FAFC"><tr><th>Order</th><th>Customer</th><th>Product</th><th>Priority</th><th style="text-align: right">Sales (₹)</th><th style="text-align: right">Profit (₹)</th><th>Ships</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">ORD-1042</td><td>Maruti Suzuki</td><td>M10 hex bolts</td><td><span class="tag hi">High</span></td><td style="text-align: right">50,00,000</td><td style="text-align: right">5,00,000</td><td>Mon 16 Nov</td><td style="color: #B42318">Behind</td></tr>
+            <tr><td class="mono">ORD-1041</td><td>Tata Motors</td><td>M8 nylock nuts</td><td><span class="tag hi">High</span></td><td style="text-align: right">18,40,000</td><td style="text-align: right">2,10,000</td><td>Wed 18 Nov</td><td style="color: #9A5205">Material short</td></tr>
+            <tr><td class="mono">ORD-1039</td><td>Mahindra</td><td>M12 flange bolts</td><td><span class="tag hi">High</span></td><td style="text-align: right">27,60,000</td><td style="text-align: right">3,30,000</td><td>Thu 19 Nov</td><td>Planned</td></tr>
+            <tr><td class="mono">ORD-1038</td><td>Bajaj Auto</td><td>Wheel studs</td><td><span class="tag md">Medium</span></td><td style="text-align: right">22,00,000</td><td style="text-align: right">2,40,000</td><td>Sat 21 Nov</td><td>Production · 62%</td></tr>
+            <tr><td class="mono">ORD-1036</td><td>Hero MotoCorp</td><td>M6 socket screws</td><td><span class="tag md">Medium</span></td><td style="text-align: right">9,80,000</td><td style="text-align: right">1,20,000</td><td>Tue 24 Nov</td><td>Waiting on steel</td></tr>
+            <tr><td class="mono">ORD-1035</td><td>Ashok Leyland</td><td>U-bolts</td><td><span class="tag lo">Low</span></td><td style="text-align: right">14,20,000</td><td style="text-align: right">1,90,000</td><td>Fri 27 Nov</td><td>New</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1080}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

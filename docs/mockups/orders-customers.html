@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Orders — clean wall</title>
+<!--
+=====================================================================
+PRODUCT REQUIREMENTS — CUSTOMERS TAB (Orders module)
+Design system: "clean kri" (Kyros-inspired Clean Wall). Inter + JetBrains Mono,
+slate neutrals, blue accent #1D63ED, red #B42318, amber #9A5205.
+Not rendered on the page; this note is for anyone (or any AI) reading the code.
+=====================================================================
+
+GOAL
+The Customers tab is a customer intelligence and relationship management
+system, not just a directory of registered customers. It helps the owner
+understand customer behaviour, track growth, spot revenue opportunities,
+improve retention and make decisions from historical sales data.
+
+---------------------------------------------------------------------
+PART A — CUSTOMER FEATURES (what the system does)
+---------------------------------------------------------------------
+
+A1. Historical invoice import (onboarding / digitisation)
+  - Upload historical invoices as photos, scanned copies or PDFs, single or bulk.
+  - AI/OCR extracts: customer name, company details, GSTIN, address/contact,
+    invoice number, invoice date, products sold, quantity, unit, selling price,
+    discount, taxes (CGST/SGST/IGST), invoice total and payment details/status.
+  - Show a review step: extracted fields with confidence; the user can correct
+    them before saving. Low-confidence fields are flagged.
+  - Detect duplicate invoices (same invoice number + GSTIN) and skip or merge them.
+
+A2. Customer matching and consolidation
+  - Match each invoice to an existing customer, first by GSTIN, then by other
+    identifiers (company name, phone, email, address).
+  - Create a new customer profile when there is no match.
+  - Suggest probable matches for the user to confirm when the match is uncertain;
+    allow merging duplicate customers.
+  - Consolidate all historical invoices into one profile per customer, so the
+    result is a searchable digital record of every customer relationship.
+
+A3. Customer profile
+  - Company and contact details, GSTIN, addresses.
+  - Full invoice history (searchable, openable) and the products bought.
+  - Totals: sales, invoices, AOV, units, outstanding receivables, last purchase,
+    purchase frequency, health status and its trend.
+  - Follow-up actions: call, WhatsApp, email, add note, set reminder.
+
+A4. Key metrics (for the selected period)
+  - Total customers (registered)
+  - Active customers (count and % of total)
+  - New customers (this period)
+  - Total units sold (this period)
+
+A5. Customer table data (per customer)
+  - Total sales, number of invoices, AOV (sales / invoices), units sold,
+    outstanding receivables, last purchase date, purchase frequency
+    (e.g. average days between orders), health status.
+  - Sortable by any column; columns can be shown/hidden from a larger set
+    of available fields (customisable table).
+  - Search by name, GSTIN or phone.
+
+A6. Reporting period, date ranges and filters
+  - Reporting period presets (this month, quarter, financial year to date,
+    custom range); every metric and table value follows the period.
+  - Filters for customer groups (health status, location/state, product,
+    outstanding > 0, sales range, etc.) without cluttering the main view.
+
+A7. Customer health insights
+  - Statuses: New, Repeat, Inactive, Dormant, High-value, Declining.
+  - Suggested rules (configurable):
+      New        = first purchase within the period
+      Repeat     = 2+ purchases and bought recently
+      Inactive   = previously regular, no purchase in 60–90 days
+      Dormant    = no purchase in 90+ days
+      High-value = top customers by sales (e.g. top 10%)
+      Declining  = purchase value/frequency dropping vs the previous period
+  - From any at-risk customer the owner can open their invoice history and
+    contact details and start a follow-up in one or two clicks.
+
+---------------------------------------------------------------------
+PART B — PAGE LAYOUT (how it looks, clean kri)
+---------------------------------------------------------------------
+
+B1. Page frame
+  - Top nav bar with modules; Orders page title and subtitle.
+  - Two tabs directly under the title: "Orders received" | "Customers".
+    Content below the tabs switches with the selected tab.
+
+B2. Customers tab, top to bottom
+  1. Overview row: "Customer overview" label + reporting-period button on
+     the left; "Upload invoice" (outline pill) and "+ Add customer" (dark pill)
+     on the right.
+  2. Metrics box: 4 equal cells in one bordered #F8FAFC box with dividers
+     (value, label, small caption).
+  3. Customer health: row of filter chips with counts (All, New, Repeat,
+     High-value, Declining, Inactive, Dormant) + one-line definition note.
+     Selected chip is dark filled; clicking filters the table.
+  4. Customer table card: title + "Showing x–y of n"; search, Filters and
+     Columns buttons on the right. Columns: Customer (name + GSTIN in mono),
+     Total sales, Invoices, AOV, Units sold, Outstanding (red when > 0),
+     Last purchase, Health tag. Sort arrows on headers.
+     Footer: "n columns visible · m available fields" + pagination.
+
+B3. Progressive disclosure
+  - Essential info visible upfront: metrics, health chips, core columns.
+  - Advanced filters, extra fields and deeper insights live behind
+    Filters / Columns / the customer profile, not on the main wall.
+
+B4. Upload invoice flow (dialog or side panel)
+  - Drop zone for images/PDFs -> processing status -> review extracted data
+    -> confirm customer match -> save. Shows how many invoices were imported,
+    matched to existing customers, created new customers or need review.
+
+B5. Visual rules
+  - White page, soft #E5E9F0 borders, 16px card radius, pill buttons/tags,
+    no heavy shadows, Indian number format (₹, lakhs/crores), one primary
+    action per area.
+=====================================================================
+-->
+
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#fff}
+a{color:#1D4ED8}a:hover{color:#1E40AF}
+.nav a{color:#475569;text-decoration:none;font-size:15px;padding:21px 0 19px;border-bottom:2px solid transparent}
+.nav a:hover{color:#0F172A}
+.tag{font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;white-space:nowrap}
+.hi{background:#FDECEC;color:#B42318}.md{background:#FEF3E2;color:#9A5205}.lo{background:#EEF2F6;color:#475569}
+.hv{background:#EAF1FE;color:#1D4ED8}.nw{background:#E7F6EC;color:#15803D}
+.mono{font-family:'JetBrains Mono',monospace}
+th{font-size:12px;font-weight:600;color:#64748B;text-align:left;padding:12px 16px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+td{font-size:14px;color:#0F172A;padding:14px 16px;border-top:1px solid #EEF1F5;white-space:nowrap}
+.btn{font:500 13px Inter,sans-serif;color:#334155;background:#fff;border:1px solid #E2E8F0;border-radius:999px;padding:8px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:#CBD5E1}
+.search{display:flex;align-items:center;gap:8px;border:1px solid #E2E8F0;border-radius:999px;padding:0 14px;font-size:13px;color:#64748B}
+.search input{border:0;outline:none;font:13px Inter,sans-serif;padding:8px 0;background:transparent}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid #E5E9F0;border-radius:16px;background:#F8FAFC}
+.stat{padding:16px 24px;display:flex;flex-direction:column;gap:2px}
+.stat+.stat{border-left:1px solid #E5E9F0}
+.stat b{font-size:26px;font-weight:700}
+.stat span{font-size:13px;color:#64748B}
+.stat small{font-size:12px;color:#94A3B8;margin-top:2px}
+.label{margin:0;font-size:13px;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.06em}
+.chip{font:500 13px Inter,sans-serif;color:#334155;background:#fff;border:1px solid #E2E8F0;border-radius:999px;padding:7px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.chip em{font-style:normal;color:#64748B}
+.chip.on{background:#0F172A;border-color:#0F172A;color:#fff}.chip.on em{color:#CBD5E1}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.sort{color:#94A3B8;font-size:11px;margin-left:4px}
+.sort.on{color:#0F172A}
+.sub{display:block;font-size:12px;color:#64748B;margin-top:2px}
+.pg{font:500 13px Inter,sans-serif;color:#334155;background:none;border:0;border-radius:999px;min-width:32px;height:32px;padding:0 10px;cursor:pointer}
+.pg.on{background:#EAF1FE;color:#1D4ED8;font-weight:600}
+/* tabs: CSS-only switching */
+.tabr{position:absolute;opacity:0;pointer-events:none}
+.tabs{display:flex;gap:28px;border-bottom:1px solid #E5E9F0}
+.tabs label{color:#475569;font-size:15px;padding:10px 0;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer}
+.tabs label span{color:#64748B;font-weight:500}
+.tabs label:hover{color:#0F172A}
+#tab-orders:checked ~ .tabs label[for=tab-orders],
+#tab-customers:checked ~ .tabs label[for=tab-customers]{color:#0F172A;font-weight:600;border-bottom-color:#0F172A}
+#tab-orders:focus-visible ~ .tabs label[for=tab-orders],
+#tab-customers:focus-visible ~ .tabs label[for=tab-customers]{outline:2px solid #1D63ED;outline-offset:4px;border-radius:4px}
+.panel{display:flex;flex-direction:column;gap:32px}
+.p-customers{display:none}
+#tab-customers:checked ~ .p-orders{display:none}
+#tab-customers:checked ~ .p-customers{display:flex}
+</style>
+</helmet>
+<div style="font-family: Inter, system-ui, sans-serif; color: #0F172A; background: #FFFFFF; min-height: 100vh">
+  <header style="border-bottom: 1px solid #E5E9F0">
+    <div style="max-width: 1360px; margin: 0 auto; padding: 0 32px; display: flex; align-items: center; gap: 40px; flex-wrap: wrap; min-height: 64px">
+      <div style="display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px"><span style="width: 16px; height: 16px; border-radius: 50%; background: #1D63ED"></span>[Brand]</div>
+      <nav class="nav" aria-label="Main" style="display: flex; gap: 32px; flex: 1; flex-wrap: wrap">
+        <a href="#" style="color: #0F172A; font-weight: 600; border-bottom-color: #1D63ED">Orders</a>
+        <a href="#">Planning</a><a href="#">Purchasing</a><a href="#">Production</a><a href="#">Billing</a><a href="#">Finance</a>
+      </nav>
+      <button style="font: 600 14px Inter, sans-serif; color: #fff; background: #1D63ED; border: 0; border-radius: 999px; padding: 10px 20px; min-height: 40px; cursor: pointer">+ New order</button>
+    </div>
+  </header>
+
+  <main style="max-width: 1360px; margin: 0 auto; padding: 40px 32px 64px; display: flex; flex-direction: column; gap: 32px; position: relative">
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <h1 style="margin: 0; font-size: 34px; font-weight: 700; letter-spacing: -0.02em">Orders</h1>
+      <p style="margin: 0; font-size: 16px; color: #64748B">Every open order and the customers behind them.</p>
+    </div>
+
+    <input type="radio" name="orders-tab" id="tab-orders" class="tabr" checked>
+    <input type="radio" name="orders-tab" id="tab-customers" class="tabr">
+    <div class="tabs" role="tablist" style="margin-top: -8px">
+      <label for="tab-orders" role="tab">Orders received <span>12</span></label>
+      <label for="tab-customers" role="tab">Customers <span>248</span></label>
+    </div>
+
+    <!-- ============ ORDERS RECEIVED ============ -->
+    <div class="panel p-orders" role="tabpanel" aria-label="Orders received">
+      <div class="stats">
+        <div class="stat"><b>12</b><span>Open orders</span></div>
+        <div class="stat"><b style="color: #B42318">5</b><span>High priority</span></div>
+        <div class="stat"><b style="color: #1D4ED8">4</b><span>In production</span></div>
+        <div class="stat"><b style="color: #9A5205">4</b><span>Ship in 7 days</span></div>
+      </div>
+
+      <section style="display: flex; flex-direction: column; gap: 14px">
+        <h2 class="label">Needs attention</h2>
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px">
+          <article style="border: 1px solid #F3B4AE; border-radius: 16px; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+            <div style="display: flex; justify-content: space-between; align-items: center"><span class="mono" style="font-size: 14px; font-weight: 600">ORD-1042</span><span class="tag hi">High priority</span></div>
+            <div style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 18px; font-weight: 600">M10 hex bolts</span><span style="font-size: 14px; color: #64748B">Maruti Suzuki · 50,000 pcs · ships Mon 16 Nov</span></div>
+            <div style="display: flex; gap: 24px; font-size: 14px; color: #334155"><span>Sales <b>₹50.0 L</b></span><span>Profit <b>₹5.0 L</b></span><span>4 days</span></div>
+            <div style="border-top: 1px solid #EEF1F5; padding-top: 14px; font-size: 14px; color: #B42318">Press line 2 down · 1 day behind</div>
+          </article>
+          <article style="border: 1px solid #F1CF9B; border-radius: 16px; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+            <div style="display: flex; justify-content: space-between; align-items: center"><span class="mono" style="font-size: 14px; font-weight: 600">ORD-1041</span><span class="tag hi">High priority</span></div>
+            <div style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 18px; font-weight: 600">M8 nylock nuts</span><span style="font-size: 14px; color: #64748B">Tata Motors · 1,20,000 pcs · ships Wed 18 Nov</span></div>
+            <div style="display: flex; gap: 24px; font-size: 14px; color: #334155"><span>Sales <b>₹18.4 L</b></span><span>Profit <b>₹2.1 L</b></span><span>5 days</span></div>
+            <div style="border-top: 1px solid #EEF1F5; padding-top: 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px"><span style="font-size: 14px; color: #9A5205">Steel wire rod short · 2.4 t</span><button style="font: 600 13px Inter, sans-serif; color: #fff; background: #0F172A; border: 0; border-radius: 999px; padding: 9px 16px; min-height: 36px; cursor: pointer">Raise PO</button></div>
+          </article>
+          <article style="border: 1px solid #E5E9F0; border-radius: 16px; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+            <div style="display: flex; justify-content: space-between; align-items: center"><span class="mono" style="font-size: 14px; font-weight: 600">ORD-1039</span><span class="tag hi">High priority</span></div>
+            <div style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 18px; font-weight: 600">M12 flange bolts</span><span style="font-size: 14px; color: #64748B">Mahindra · 30,000 pcs · ships Thu 19 Nov</span></div>
+            <div style="display: flex; gap: 24px; font-size: 14px; color: #334155"><span>Sales <b>₹27.6 L</b></span><span>Profit <b>₹3.3 L</b></span><span>3 days</span></div>
+            <div style="border-top: 1px solid #EEF1F5; padding-top: 14px; font-size: 14px; color: #15803D">Material in · line booked</div>
+          </article>
+        </div>
+      </section>
+
+      <section style="border: 1px solid #E5E9F0; border-radius: 16px">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding: 18px 20px">
+          <h2 style="margin: 0; font-size: 17px; font-weight: 600">All orders received</h2>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap">
+            <button class="btn">All customers ▾</button>
+            <button class="btn">Priority ▾</button>
+            <button class="btn">Status ▾</button>
+            <label class="search"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><input aria-label="Search orders" placeholder="Search orders" style="width: 140px"></label>
+            <button class="btn">Columns (8) ▾</button>
+          </div>
+        </div>
+        <div style="overflow-x: auto">
+          <table style="width: 100%; border-collapse: collapse; font-family: Inter, sans-serif">
+            <thead style="background: #F8FAFC"><tr><th>Order</th><th>Customer</th><th>Product</th><th>Priority</th><th style="text-align: right">Sales (₹)</th><th style="text-align: right">Profit (₹)</th><th>Ships</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">ORD-1042</td><td>Maruti Suzuki</td><td>M10 hex bolts</td><td><span class="tag hi">High</span></td><td style="text-align: right">50,00,000</td><td style="text-align: right">5,00,000</td><td>Mon 16 Nov</td><td style="color: #B42318">Behind</td></tr>
+              <tr><td class="mono">ORD-1041</td><td>Tata Motors</td><td>M8 nylock nuts</td><td><span class="tag hi">High</span></td><td style="text-align: right">18,40,000</td><td style="text-align: right">2,10,000</td><td>Wed 18 Nov</td><td style="color: #9A5205">Material short</td></tr>
+              <tr><td class="mono">ORD-1039</td><td>Mahindra</td><td>M12 flange bolts</td><td><span class="tag hi">High</span></td><td style="text-align: right">27,60,000</td><td style="text-align: right">3,30,000</td><td>Thu 19 Nov</td><td>Planned</td></tr>
+              <tr><td class="mono">ORD-1038</td><td>Bajaj Auto</td><td>Wheel studs</td><td><span class="tag md">Medium</span></td><td style="text-align: right">22,00,000</td><td style="text-align: right">2,40,000</td><td>Sat 21 Nov</td><td>Production · 62%</td></tr>
+              <tr><td class="mono">ORD-1036</td><td>Hero MotoCorp</td><td>M6 socket screws</td><td><span class="tag md">Medium</span></td><td style="text-align: right">9,80,000</td><td style="text-align: right">1,20,000</td><td>Tue 24 Nov</td><td>Waiting on steel</td></tr>
+              <tr><td class="mono">ORD-1035</td><td>Ashok Leyland</td><td>U-bolts</td><td><span class="tag lo">Low</span></td><td style="text-align: right">14,20,000</td><td style="text-align: right">1,90,000</td><td>Fri 27 Nov</td><td>New</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- ============ CUSTOMERS ============ -->
+    <div class="panel p-customers" role="tabpanel" aria-label="Customers">
+      <section style="display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap">
+          <div style="display: flex; align-items: center; gap: 12px">
+            <h2 class="label">Customer overview</h2>
+            <button class="btn"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M16 3v4M8 3v4M3 10h18"></path></svg>01 Apr – 14 Nov 2026 ▾</button>
+          </div>
+          <div style="display: flex; gap: 8px">
+            <button class="btn" style="font-weight: 600; padding: 9px 16px; min-height: 38px"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3M7 8l5-5 5 5M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"></path></svg>Upload invoice</button>
+            <button style="font: 600 13px Inter, sans-serif; color: #fff; background: #0F172A; border: 0; border-radius: 999px; padding: 9px 16px; min-height: 38px; cursor: pointer">+ Add customer</button>
+          </div>
+        </div>
+        <div class="stats">
+          <div class="stat"><b>248</b><span>Total customers</span><small>Registered</small></div>
+          <div class="stat"><b style="color: #1D4ED8">164</b><span>Active customers</span><small>66.1% of total</small></div>
+          <div class="stat"><b style="color: #15803D">12</b><span>New customers</span><small>This period</small></div>
+          <div class="stat"><b>61,40,000</b><span>Units sold</span><small>pcs · this period</small></div>
+        </div>
+      </section>
+
+      <section style="display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap">
+          <h2 class="label">Customer health</h2>
+          <span style="font-size: 13px; color: #64748B">Inactive = no order in 60–90 days · Dormant = 90+ days</span>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap">
+          <button class="chip on">All <em>248</em></button>
+          <button class="chip"><i class="dot" style="background: #15803D"></i>New <em>12</em></button>
+          <button class="chip"><i class="dot" style="background: #64748B"></i>Repeat <em>152</em></button>
+          <button class="chip"><i class="dot" style="background: #1D63ED"></i>High-value <em>24</em></button>
+          <button class="chip"><i class="dot" style="background: #9A5205"></i>Declining <em>18</em></button>
+          <button class="chip"><i class="dot" style="background: #B42318"></i>Inactive <em>54</em></button>
+          <button class="chip"><i class="dot" style="background: #94A3B8"></i>Dormant <em>30</em></button>
+        </div>
+      </section>
+
+      <section style="border: 1px solid #E5E9F0; border-radius: 16px">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding: 18px 20px">
+          <div style="display: flex; align-items: baseline; gap: 12px">
+            <h2 style="margin: 0; font-size: 17px; font-weight: 600">All customers</h2>
+            <span style="font-size: 13px; color: #64748B">Showing 1–8 of 248</span>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap">
+            <label class="search"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><input aria-label="Search customers" placeholder="Search name, GSTIN, phone" style="width: 190px"></label>
+            <button class="btn">Filters ▾</button>
+            <button class="btn">Columns (8) ▾</button>
+          </div>
+        </div>
+        <div style="overflow-x: auto">
+          <table style="width: 100%; border-collapse: collapse; font-family: Inter, sans-serif">
+            <thead style="background: #F8FAFC"><tr>
+              <th>Customer<span class="sort">↕</span></th>
+              <th style="text-align: right">Total sales (₹)<span class="sort on">↓</span></th>
+              <th style="text-align: right">Invoices<span class="sort">↕</span></th>
+              <th style="text-align: right">AOV (₹)<span class="sort">↕</span></th>
+              <th style="text-align: right">Units sold<span class="sort">↕</span></th>
+              <th style="text-align: right">Outstanding (₹)<span class="sort">↕</span></th>
+              <th>Last purchase<span class="sort">↕</span></th>
+              <th>Health</th>
+            </tr></thead>
+            <tbody>
+              <tr><td><b style="font-weight: 600">Maruti Suzuki</b><span class="sub mono">06AAACM1234A1Z5</span></td><td style="text-align: right">1,84,00,000</td><td style="text-align: right">22</td><td style="text-align: right">8,36,364</td><td style="text-align: right">4,60,000</td><td style="text-align: right; color: #B42318">50,00,000</td><td>12 Nov 2026</td><td><span class="tag hv">High-value</span></td></tr>
+              <tr><td><b style="font-weight: 600">Tata Motors</b><span class="sub mono">27AAACT1234B1Z2</span></td><td style="text-align: right">1,26,50,000</td><td style="text-align: right">23</td><td style="text-align: right">5,50,000</td><td style="text-align: right">7,80,000</td><td style="text-align: right; color: #B42318">18,40,000</td><td>11 Nov 2026</td><td><span class="tag hv">High-value</span></td></tr>
+              <tr><td><b style="font-weight: 600">Mahindra</b><span class="sub mono">27AAACM5678C1Z9</span></td><td style="text-align: right">96,60,000</td><td style="text-align: right">14</td><td style="text-align: right">6,90,000</td><td style="text-align: right">2,90,000</td><td style="text-align: right; color: #B42318">27,60,000</td><td>10 Nov 2026</td><td><span class="tag lo">Repeat</span></td></tr>
+              <tr><td><b style="font-weight: 600">Bajaj Auto</b><span class="sub mono">27AAACB2345D1Z1</span></td><td style="text-align: right">72,00,000</td><td style="text-align: right">12</td><td style="text-align: right">6,00,000</td><td style="text-align: right">3,10,000</td><td style="text-align: right; color: #64748B">0</td><td>08 Nov 2026</td><td><span class="tag lo">Repeat</span></td></tr>
+              <tr><td><b style="font-weight: 600">Ashok Leyland</b><span class="sub mono">33AAACA4567F1Z6</span></td><td style="text-align: right">48,30,000</td><td style="text-align: right">7</td><td style="text-align: right">6,90,000</td><td style="text-align: right">1,20,000</td><td style="text-align: right; color: #B42318">14,20,000</td><td>02 Nov 2026</td><td><span class="tag md">Declining</span></td></tr>
+              <tr><td><b style="font-weight: 600">Hero MotoCorp</b><span class="sub mono">07AAACH3456E1Z4</span></td><td style="text-align: right">39,20,000</td><td style="text-align: right">8</td><td style="text-align: right">4,90,000</td><td style="text-align: right">2,40,000</td><td style="text-align: right; color: #B42318">9,80,000</td><td>30 Oct 2026</td><td><span class="tag lo">Repeat</span></td></tr>
+              <tr><td><b style="font-weight: 600">Escorts Kubota</b><span class="sub mono">06AAACE6789H1Z3</span></td><td style="text-align: right">21,60,000</td><td style="text-align: right">2</td><td style="text-align: right">10,80,000</td><td style="text-align: right">60,000</td><td style="text-align: right; color: #B42318">10,80,000</td><td>06 Nov 2026</td><td><span class="tag nw">New</span></td></tr>
+              <tr><td><b style="font-weight: 600">TVS Motor</b><span class="sub mono">33AAACT5678G1Z8</span></td><td style="text-align: right">18,90,000</td><td style="text-align: right">6</td><td style="text-align: right">3,15,000</td><td style="text-align: right">95,000</td><td style="text-align: right; color: #64748B">0</td><td>28 Aug 2026 <span style="font-size: 12px; color: #B42318">· 78 days</span></td><td><span class="tag hi">Inactive</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding: 12px 20px; border-top: 1px solid #EEF1F5">
+          <span style="font-size: 13px; color: #64748B">8 columns visible · 66 available fields</span>
+          <div style="display: flex; align-items: center; gap: 4px">
+            <button class="pg">‹ Previous</button>
+            <button class="pg on" aria-current="page">1</button><button class="pg">2</button><button class="pg">3</button>
+            <span style="font-size: 13px; color: #94A3B8; padding: 0 4px">…</span><button class="pg">31</button>
+            <button class="pg">Next ›</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1080}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

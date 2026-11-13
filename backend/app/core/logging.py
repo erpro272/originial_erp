@@ -17,9 +17,7 @@ def configure_logging(level: int = logging.INFO) -> None:
     handler = logging.StreamHandler(sys.stdout)
     handler.addFilter(_RequestIdFilter())
     handler.addFilter(RedactingFilter())
-    handler.setFormatter(
-        logging.Formatter("%(asctime)s %(levelname)s %(name)s [%(request_id)s] %(message)s")
-    )
+    handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s [%(request_id)s] %(message)s"))
     root = logging.getLogger()
     root.handlers = [handler]
     root.setLevel(level)

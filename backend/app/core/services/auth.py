@@ -32,9 +32,7 @@ class IssuedTokens:
 
 async def _bind_user(session: AsyncSession, user_id: uuid.UUID) -> None:
     """Lets the memberships/tenants RLS policies show this user's own rows."""
-    await session.execute(
-        text("SELECT set_config('app.user_id', :uid, true)"), {"uid": str(user_id)}
-    )
+    await session.execute(text("SELECT set_config('app.user_id', :uid, true)"), {"uid": str(user_id)})
 
 
 async def _companies(session: AsyncSession, user_id: uuid.UUID) -> list[CompanyOut]:
@@ -66,9 +64,7 @@ def _issue(user: User, company: CompanyOut) -> IssuedTokens:
     )
 
 
-async def login(
-    email: str, password: str, tenant_id: uuid.UUID | None, client_ip: str
-) -> IssuedTokens:
+async def login(email: str, password: str, tenant_id: uuid.UUID | None, client_ip: str) -> IssuedTokens:
     email = email.strip().lower()
     await _rate_limit(f"login:{client_ip}:{email}")
     async with get_sessionmaker()() as session, session.begin():
@@ -94,9 +90,7 @@ async def login(
                 raise Forbidden("You are not a member of that company.")
             company = match[0]
         await set_tenant(session, company.id)
-        await audit.record(
-            session, actor_id=user.id, action="login", entity_type="user", entity_id=user.id
-        )
+        await audit.record(session, actor_id=user.id, action="login", entity_type="user", entity_id=user.id)
         tokens = _issue(user, company)
     await get_redis().delete(f"login:{client_ip}:{email}")
     return tokens
@@ -114,9 +108,7 @@ async def switch_company(user_id: uuid.UUID, tenant_id: uuid.UUID) -> IssuedToke
     return await _reissue(user_id, tenant_id, token_version=None)
 
 
-async def _reissue(
-    user_id: uuid.UUID, tenant_id: uuid.UUID, token_version: int | None
-) -> IssuedTokens:
+async def _reissue(user_id: uuid.UUID, tenant_id: uuid.UUID, token_version: int | None) -> IssuedTokens:
     """Re-check the user and the membership on every refresh (role changes apply)."""
     async with get_sessionmaker()() as session, session.begin():
         user = await session.get(User, user_id)

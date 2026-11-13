@@ -11,9 +11,7 @@ from app.core.models import AuditLog, Membership, Tenant, TenantKey, TenantSetti
 async def test_app_role_is_not_privileged(tenants) -> None:
     async with global_session() as s:
         row = (
-            await s.execute(
-                text("SELECT rolsuper, rolbypassrls FROM pg_roles WHERE rolname = current_user")
-            )
+            await s.execute(text("SELECT rolsuper, rolbypassrls FROM pg_roles WHERE rolname = current_user"))
         ).one()
     assert row == (False, False)
 
@@ -31,17 +29,12 @@ async def test_every_tenant_table_has_forced_rls(tenants) -> None:
         for name in tables:
             rls, forced = (
                 await s.execute(
-                    text(
-                        "SELECT relrowsecurity, relforcerowsecurity "
-                        "FROM pg_class WHERE relname = :n"
-                    ),
+                    text("SELECT relrowsecurity, relforcerowsecurity FROM pg_class WHERE relname = :n"),
                     {"n": name},
                 )
             ).one()
             policies = (
-                await s.execute(
-                    text("SELECT count(*) FROM pg_policies WHERE tablename = :n"), {"n": name}
-                )
+                await s.execute(text("SELECT count(*) FROM pg_policies WHERE tablename = :n"), {"n": name})
             ).scalar_one()
             assert rls and forced and policies >= 1, name
 
@@ -60,9 +53,7 @@ async def test_tenant_sees_only_its_rows(tenants) -> None:
         s.add(TenantSetting(key="rls-probe", value={"owner": "b"}))
     async with tenant_session(a) as s:
         rows = (
-            (await s.execute(select(TenantSetting).where(TenantSetting.key == "rls-probe")))
-            .scalars()
-            .all()
+            (await s.execute(select(TenantSetting).where(TenantSetting.key == "rls-probe"))).scalars().all()
         )
         assert [r.value for r in rows] == [{"owner": "a"}]
         assert {r.tenant_id for r in (await s.execute(select(AuditLog))).scalars()} == {a}

@@ -69,9 +69,7 @@ def get_sessionmaker() -> async_sessionmaker[AsyncSession]:
 
 async def set_tenant(session: AsyncSession, tenant_id: uuid.UUID) -> None:
     """Bind the current transaction to one tenant (transaction-local setting)."""
-    await session.execute(
-        text("SELECT set_config('app.tenant_id', :tid, true)"), {"tid": str(tenant_id)}
-    )
+    await session.execute(text("SELECT set_config('app.tenant_id', :tid, true)"), {"tid": str(tenant_id)})
 
 
 @asynccontextmanager

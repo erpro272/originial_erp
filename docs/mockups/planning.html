@@ -1,0 +1,1167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Planning — Order Manufacturing Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#fff;font-family:Inter,system-ui,sans-serif;color:#0F172A}
+a{color:#1D4ED8}a:hover{color:#1E40AF}
+button{font-family:Inter,sans-serif;cursor:pointer}
+.wrap{max-width:1360px;margin:0 auto;padding:0 32px}
+.nav a{color:#475569;text-decoration:none;font-size:15px;padding:21px 0 19px;border-bottom:2px solid transparent}
+.nav a:hover{color:#0F172A}
+.nav a.on{color:#0F172A;font-weight:600;border-bottom-color:#1D63ED}
+.tag{font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;white-space:nowrap}
+.hi{background:#FDECEC;color:#B42318}.md{background:#FEF3E2;color:#9A5205}.lo{background:#EEF2F6;color:#475569}.ok{background:#E7F6EC;color:#15803D}.bl{background:#EAF1FE;color:#1D4ED8}
+.mono{font-family:'JetBrains Mono',monospace}
+th{font-size:12px;font-weight:600;color:#64748B;text-align:left;padding:12px 16px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+td{font-size:14px;color:#0F172A;padding:14px 16px;border-top:1px solid #EEF1F5;white-space:nowrap}
+.r{text-align:right}
+.pill{font:500 13px Inter,sans-serif;color:#334155;background:#fff;border:1px solid #E2E8F0;border-radius:999px;padding:8px 14px}
+.pill:hover{border-color:#CBD5E1}
+.primary{font:600 14px Inter,sans-serif;color:#fff;background:#1D63ED;border:0;border-radius:999px;padding:10px 20px;min-height:40px}
+.primary:hover{background:#1A56D0}
+.dark{font:600 14px Inter,sans-serif;color:#fff;background:#0F172A;border:0;border-radius:999px;padding:10px 20px;min-height:40px}
+
+/* plan mode toggle */
+.seg{display:inline-flex;border:1px solid #E5E9F0;border-radius:999px;background:#F8FAFC;padding:4px}
+.seg button{border:0;background:transparent;font:500 14px Inter,sans-serif;color:#475569;padding:8px 18px;border-radius:999px}
+.seg button.on{background:#fff;color:#0F172A;font-weight:600;box-shadow:0 1px 2px rgba(15,23,42,.08),0 0 0 1px #E5E9F0}
+
+/* step tabs */
+.steps{display:flex;gap:28px;border-bottom:1px solid #E5E9F0;overflow-x:auto}
+.steps a{display:flex;align-items:center;gap:8px;text-decoration:none;color:#475569;font-size:15px;padding:10px 0 12px;border-bottom:2px solid transparent;white-space:nowrap}
+.steps a .n{width:22px;height:22px;border-radius:50%;border:1px solid #CBD5E1;font-size:12px;font-weight:600;display:grid;place-items:center;color:#64748B}
+.steps a.on{color:#0F172A;font-weight:600;border-bottom-color:#0F172A}
+.steps a.on .n{background:#0F172A;border-color:#0F172A;color:#fff}
+.steps a.lock{color:#94A3B8}
+.steps a.lock .n{border-style:dashed;color:#94A3B8}
+
+.chk{width:16px;height:16px;accent-color:#1D63ED}
+.x{border:0;background:transparent;color:#94A3B8;font-size:18px;line-height:1;padding:4px 8px;border-radius:8px}
+.x:hover{background:#FDECEC;color:#B42318}
+tr.off td{color:#94A3B8}
+tr.off td .tag{opacity:.55}
+.panel{display:none}.panel.on{display:flex}
+
+/* sequence list */
+.sq{display:grid;grid-template-columns:28px 28px minmax(220px,2.2fr) minmax(170px,1.4fr) 100px 100px 100px 70px 120px 36px;align-items:center;gap:12px;padding:14px 20px;border-top:1px solid #EEF1F5;font-size:14px;background:#fff}
+.sq-head{background:#F8FAFC;font-size:12px;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.04em;padding-top:12px;padding-bottom:12px}
+.sq .grip{color:#CBD5E1;cursor:grab;letter-spacing:-2px;font-size:14px}
+.sq:hover .grip{color:#64748B}
+.sq .rk{width:24px;height:24px;border-radius:50%;background:#F1F5F9;display:grid;place-items:center;font-size:12px;font-weight:600;color:#334155}
+.sq .who{display:flex;flex-direction:column;gap:3px;min-width:0}
+.sq .who b{font-size:14px;font-weight:600}
+.sq .who small{font-size:13px;color:#64748B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sq i{font-style:normal;color:#94A3B8;margin:0 6px}
+.chip{display:inline-block;font:500 12px 'JetBrains Mono',monospace;color:#334155;background:#F1F5F9;border:1px solid #E2E8F0;border-radius:6px;padding:3px 7px}
+.chip.warn{background:#FDECEC;border-color:#F3B4AE;color:#B42318}
+.lk{font-size:14px;opacity:.35;cursor:pointer;text-align:center}.lk.on{opacity:1}
+.sq.late{background:#FFFBFA}
+.grp{position:relative;border-left:3px solid #1D63ED;margin-top:-1px}
+.grp + .grp{border-left-color:#7C9CF0}
+.grp-lbl{display:flex;align-items:center;gap:8px;padding:10px 20px 0 88px;font-size:12px;font-weight:600;color:#1D4ED8;border-top:1px solid #EEF1F5;background:#fff}
+.grp-lbl em{font-style:normal;font-weight:500;color:#64748B}
+.grp .sq{border-top:0}
+.grp .sq + .sq{border-top:1px dashed #E2E8F0}
+
+/* ---------- gantt ---------- */
+.gantt{position:relative;overflow-x:auto}
+.g-row,.g-bg{display:grid;grid-template-columns:290px repeat(18,minmax(46px,1fr));min-width:1120px}
+.g-bg{position:absolute;inset:0;pointer-events:none}
+.g-col{grid-row:1;border-left:1px solid #F1F4F8}
+.g-col.sun{background:#F8FAFC}
+.g-col.today{box-shadow:inset 2px 0 0 #1D63ED}
+.g-col.hot{background:rgba(180,35,24,.045)}
+.g-row{position:relative;align-items:center;row-gap:0;min-height:56px;border-top:1px solid #EEF1F5}
+.g-row > *{grid-row:1}
+.g-lbl{grid-column:1;display:flex;align-items:center;gap:10px;padding:0 14px 0 20px;background:#fff;height:100%;position:sticky;left:0;z-index:3;border-right:1px solid #E5E9F0}
+.g-head{min-height:52px;background:#F8FAFC;border-top:0}
+.g-head .g-lbl{background:#F8FAFC}
+.g-day{display:flex;flex-direction:column;align-items:center;gap:1px;font-size:13px;color:#334155}
+.g-day small{font-size:11px;color:#94A3B8}
+.g-day.sun b,.g-day.sun small{color:#94A3B8}
+.g-day.today b{background:#1D63ED;color:#fff;border-radius:999px;padding:1px 7px}
+.g-sec{font-size:12px;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.06em;padding:14px 20px 8px;border-top:1px solid #E5E9F0;background:#fff;position:relative;z-index:2;min-width:1100px}
+.g-id{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.g-id b{font-size:13px;font-weight:600}
+.g-id small{font-size:12px;color:#64748B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.g-grip{color:#CBD5E1;cursor:grab;letter-spacing:-2px;font-size:14px;user-select:none}
+.pl-row:hover .g-grip{color:#475569}
+.g-lock{font-size:12px;opacity:.6;width:14px}
+.g-lbl .rk{width:22px;height:22px;border-radius:50%;background:#F1F5F9;display:grid;place-items:center;font-size:12px;font-weight:600;color:#334155;flex:none}
+.g-lbl .tag{font-size:11px;padding:3px 8px}
+.bar{height:30px;margin:0 1px;display:flex;align-items:center;padding:0 8px;font:500 11px 'JetBrains Mono',monospace;border:1px solid;border-radius:4px;position:relative;z-index:1;cursor:grab;overflow:hidden;white-space:nowrap}
+.bar span{overflow:hidden;text-overflow:ellipsis}
+.bar.first{border-top-left-radius:9px;border-bottom-left-radius:9px}
+.bar.last{border-top-right-radius:9px;border-bottom-right-radius:9px}
+.bar:not(.last)::after{content:'';position:absolute;right:-4px;top:50%;width:6px;height:2px;background:currentColor;opacity:.5}
+.bar.last::before{content:'';position:absolute;right:2px;top:7px;bottom:7px;width:3px;border-radius:2px;background:currentColor;opacity:0;cursor:ew-resize}
+.bar.last:hover::before{opacity:.45}
+.bar:hover{filter:brightness(.97);box-shadow:0 2px 6px rgba(15,23,42,.12)}
+.m-press{background:#EEF0FF;border-color:#C7CBFB;color:#4338CA}
+.m-cnc{background:#EAF1FE;border-color:#B9CEFA;color:#1D4ED8}
+.m-asm{background:#E6F6F3;border-color:#A7DDD3;color:#0F766E}
+.m-qc{background:#F1F5F9;border-color:#CBD5E1;color:#475569}
+.m-setup{background:repeating-linear-gradient(135deg,#FEF3E2 0 6px,#FDE7C3 6px 12px);border-color:#F1CF9B;color:#9A5205}
+.bar.og{background:#F1F5F9;border-color:#E2E8F0;color:#94A3B8;cursor:not-allowed}
+.bar.late{background:#FDECEC;border-color:#F3B4AE;color:#B42318}
+.ovl{height:38px;border:2px solid #B42318;border-radius:8px;background:repeating-linear-gradient(135deg,rgba(180,35,24,.16) 0 4px,transparent 4px 9px);z-index:2;pointer-events:auto;margin:0 -1px}
+.flag{z-index:3;justify-self:start;margin-left:-8px;width:18px;height:18px;border-radius:50%;background:#E59E2E;color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;align-self:start;margin-top:5px;box-shadow:0 0 0 2px #fff}
+.dl{justify-self:end;width:0;height:44px;border-right:2px dashed #B42318;z-index:2;position:relative}
+.dl::after{content:'';position:absolute;top:-2px;right:-6px;border:5px solid transparent;border-top-color:#B42318}
+.og-row .g-id b{color:#64748B}
+.ld-row{min-height:40px}
+.ld{margin:0 2px;height:26px;border-radius:5px;display:grid;place-items:center;font-size:11px;font-weight:600;position:relative;z-index:1}
+.ld.z{color:#CBD5E1;font-weight:400}
+.ld.lo2{background:#EAF1FE;color:#1D4ED8}
+.ld.hi2{background:#C9DAFC;color:#1E3A8A}
+.ld.ov{background:#B42318;color:#fff}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;border:1px solid;flex:none}
+.legend .sw:not(.og):not(.ovl-sw),.ld-row .sw{background:currentColor;opacity:.75}
+.sw.og{background:#F1F5F9;border-color:#E2E8F0}
+.ovl-sw{border:2px solid #B42318;background:repeating-linear-gradient(135deg,rgba(180,35,24,.25) 0 2px,transparent 2px 4px)}
+.dl-sw{display:inline-block;width:0;height:12px;border-right:2px dashed #B42318}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:#475569}
+.legend span{display:flex;align-items:center;gap:6px}
+.bn{display:flex;align-items:center;gap:10px;border:1px solid #F3B4AE;background:#FFFBFA;border-radius:999px;padding:8px 16px;font-size:14px}
+.bn span{color:#64748B}
+.bn a{text-decoration:none;font-size:13px;margin-left:4px}
+.bn-dot{width:8px;height:8px;border-radius:50%;background:#B42318}
+.pl-row.dragging{opacity:.5}
+.pl-row.drop-above{box-shadow:inset 0 3px 0 #1D63ED}
+/* tooltip */
+#tip{position:fixed;z-index:50;display:none;width:260px;background:#fff;border:1px solid #E5E9F0;border-radius:12px;box-shadow:0 12px 32px rgba(15,23,42,.14);padding:14px 16px;font-size:13px;pointer-events:none}
+#tip .tr{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-top:1px solid #F1F4F8}
+#tip .tr span:first-child{color:#64748B}
+#tip .tr span:last-child{font-weight:500;text-align:right}
+/* modal */
+#warn-modal{position:fixed;inset:0;background:rgba(15,23,42,.35);display:none;align-items:center;justify-content:center;z-index:60;padding:24px}
+#warn-modal .box{background:#fff;border-radius:20px;max-width:520px;width:100%;padding:26px;display:flex;flex-direction:column;gap:18px;box-shadow:0 24px 64px rgba(15,23,42,.25)}
+.wi{display:flex;gap:12px;padding:12px 0;border-top:1px solid #EEF1F5;font-size:14px}
+.wi b{display:block;margin-bottom:2px}
+.wi small{color:#64748B;font-size:13px}
+
+/* ---------- resource feasibility ---------- */
+.rf-grid{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(320px,1fr);gap:20px;align-items:start}
+.card{border:1px solid #E5E9F0;border-radius:16px;overflow:hidden}
+.card-h{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px 20px}
+.card-h h3{margin:0;font-size:17px;font-weight:600}
+.card-h h3 small{font-size:13px;font-weight:400;color:#64748B;margin-left:6px}
+.rt{width:100%;border-collapse:collapse}
+.rt thead{background:#F8FAFC}
+.rt td{vertical-align:middle}
+.rt td small{display:block;font-size:11px;color:#94A3B8;margin-top:2px}
+.rt tr.bad td{background:#FFFBFA}
+.ok-t{color:#15803D}
+.lb{display:inline-block;width:90px;height:6px;border-radius:999px;background:#EEF1F5;overflow:hidden;vertical-align:middle;margin-right:8px}
+.lb i{display:block;height:100%;background:#1D63ED;border-radius:999px}
+.mg-wrap{border-top:1px solid #EEF1F5;padding:16px 20px 18px;display:flex;flex-direction:column;gap:12px}
+.mg-cap{display:flex;gap:10px;font-size:13px;color:#64748B;flex-wrap:wrap}
+.mg-cap b{color:#0F172A;font-weight:600}
+.mg{border:1px solid #EEF1F5;border-radius:10px;overflow:hidden}
+.mg-row{display:grid;grid-template-columns:130px repeat(11,minmax(0,1fr));align-items:center;min-height:34px;position:relative}
+.mg-row+.mg-row{border-top:1px solid #F1F4F8}
+.mg-row>*{grid-row:1}
+.mg-head{min-height:26px;background:#F8FAFC;font-size:11px;color:#64748B;text-align:center}
+.mg-head .sun{color:#CBD5E1}
+.mg-l{grid-column:1;font-size:12px;color:#334155;padding:0 10px;font-weight:500}
+.mg-c{height:100%;border-left:1px solid #F4F6F9}
+.mg-c.sun{background:#F8FAFC}
+.mg-b{height:20px;margin:0 2px;border-radius:5px;font-size:10.5px;font-weight:500;display:flex;align-items:center;padding:0 6px;white-space:nowrap;overflow:hidden;z-index:1}
+.mg-b.n{background:#EAF1FE;color:#1D4ED8;border:1px solid #C7D7FB}
+.mg-b.g{background:#F1F5F9;color:#64748B;border:1px solid #E2E8F0}
+.mg-b.r{background:#FDECEC;color:#B42318;border:1px solid #F3B4AE;font-weight:600}
+.mg-b.ok{background:#E7F6EC;color:#15803D;border:1px solid #B7E2C4;font-weight:600}
+.mg-b.m{background:repeating-linear-gradient(135deg,#F1F5F9 0 5px,#E2E8F0 5px 10px);color:#475569;border:1px solid #CBD5E1}
+.wo-panel{position:sticky;top:20px;border:1px solid #E5E9F0;border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:18px;background:#fff}
+.ai{font-size:12px;font-weight:600;color:#6D28D9;background:#F3EEFF;border-radius:999px;padding:4px 10px}
+.wo-grp{display:flex;flex-direction:column;gap:8px}
+.wo-h{display:flex;align-items:center;gap:8px;font-size:14px}
+.wo-h small{color:#64748B;font-size:13px}
+.wo{display:flex;gap:10px;align-items:flex-start;border:1px solid #E5E9F0;border-radius:12px;padding:12px 14px;cursor:pointer}
+.wo:hover{border-color:#CBD5E1}
+.wo.sel{border-color:#1D63ED;background:#F5F8FF;box-shadow:0 0 0 1px #1D63ED}
+.wo input{margin-top:3px;accent-color:#1D63ED}
+.wo-b{display:flex;flex-direction:column;gap:4px;min-width:0}
+.wo-t{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;font-size:14px}
+.wo-t b{font-weight:600}
+.wo-t .tag{font-size:11px;padding:3px 8px}
+.wo-m{font-size:12.5px;color:#64748B}
+.wo-m .mono{font-size:12px;color:#0F172A}
+.wo-sum{background:#F8FAFC;border:1px solid #EEF1F5;border-radius:12px;padding:6px 14px}
+.tr2{display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:7px 0}
+.tr2+.tr2{border-top:1px solid #EEF1F5}
+.tr2>span{color:#64748B}
+@media (max-width:1100px){.rf-grid{grid-template-columns:1fr}.wo-panel{position:static}}
+
+/* ---------- financials ---------- */
+.fk{padding:18px 22px;display:flex;flex-direction:column;gap:4px}
+.fk+.fk{border-left:1px solid #E5E9F0}
+.fk>span{font-size:13px;color:#64748B;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.fk b{font-size:28px;font-weight:700;letter-spacing:-.01em}
+.fk small{font-size:12px;color:#94A3B8}
+.cmp{font-style:normal;font-size:11px;font-weight:600;color:#1D4ED8;background:#EAF1FE;border-radius:999px;padding:2px 8px}
+.cb-bar{display:flex;height:10px;border-radius:999px;overflow:hidden;gap:2px;background:#EEF1F5}
+.cb-bar i{display:block;height:100%}
+.cb-r{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid #EEF1F5;font-size:14px}
+.cb-r span:first-child{display:flex;align-items:center;gap:10px}
+.cb-r span:first-child i{width:10px;height:10px;border-radius:3px;box-shadow:inset 0 0 0 1px rgba(15,23,42,.06)}
+.cb-r span:last-child{display:flex;gap:12px;align-items:baseline}
+.cb-r small{color:#94A3B8;font-size:12px;width:44px;text-align:right}
+
+/* ---------- approval ---------- */
+.ck{display:flex;gap:12px;align-items:center;padding:14px 0;border-top:1px solid #EEF1F5}
+.ck:first-child{border-top:0}
+.ck-i{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;flex:none}
+.ck b{display:block;font-size:14px;font-weight:600}
+.ck small{font-size:13px;color:#64748B}
+.hi-r{display:flex;gap:12px;padding:8px 0;position:relative}
+.hi-r i{width:8px;height:8px;border-radius:50%;background:#1D63ED;margin-top:6px;flex:none}
+.hi-r b{display:block;font-size:13px;font-weight:600}
+.hi-r small{font-size:12px;color:#64748B}
+
+/* ---------- plan comparison ---------- */
+.tl{border:1px solid #EEF1F5;border-radius:10px;overflow:hidden}
+.tl-row{display:grid;grid-template-columns:190px repeat(20,minmax(0,1fr));align-items:center;min-height:44px;position:relative}
+.tl-row+.tl-row{border-top:1px solid #F1F4F8}
+.tl-row>*{grid-row:1}
+.tl-h{min-height:28px;background:#F8FAFC;font-size:11px;color:#64748B;text-align:center}
+.tl-h .sun{color:#CBD5E1}
+.tl-l{grid-column:1;padding:0 12px;display:flex;flex-direction:column;gap:1px}
+.tl-l b{font-size:13px}.tl-l small{font-size:11px;color:#64748B}
+.tl-c{height:100%;border-left:1px solid #F4F6F9}
+.tl-c.sun{background:#F8FAFC}
+.tl-c.ov{background:repeating-linear-gradient(135deg,rgba(180,35,24,.07) 0 4px,transparent 4px 8px)}
+.tl-b{height:24px;margin:0 2px;border-radius:7px;font-size:11.5px;font-weight:600;display:flex;align-items:center;padding:0 10px;z-index:1}
+.tl-b.a{background:#1D63ED;color:#fff}
+.tl-b.f{background:#EAF1FE;color:#1D4ED8;border:1px dashed #93B4F7}
+.cmp-t{width:100%;border-collapse:collapse;min-width:980px}
+.cmp-t th[scope=row]{font-size:13px;font-weight:500;color:#64748B;text-transform:none;letter-spacing:0;padding:12px 20px;width:200px;border-top:1px solid #EEF1F5;white-space:nowrap}
+.cmp-t .cv{border-top:1px solid #EEF1F5;padding:12px 16px;font-size:14px;width:22%;vertical-align:middle}
+.cmp-t .cv.best span{background:#E7F6EC;color:#15803D;font-weight:600;border-radius:6px;padding:2px 8px;margin-left:-8px}
+.cmp-t .cv.empty{background:#FCFDFE}
+.cmp-t tr.key th,.cmp-t tr.key .cv{font-size:15px}
+.cmp-t tr.key th[scope=row]{color:#0F172A;font-weight:600}
+.cmp-t tr.sep th{background:#F8FAFC;font-size:12px;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.06em;padding:10px 20px}
+.cmp-t tr.act .cv,.cmp-t tr.act th{border-top:1px solid #E5E9F0;padding-top:16px;padding-bottom:16px}
+.ph{text-align:left;padding:16px;vertical-align:top;text-transform:none;letter-spacing:0;color:#0F172A}
+.ph>*{display:flex}
+.ph-t{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.ph-t b{font-size:17px;font-weight:600}
+.ph small{font-size:13px;font-weight:400;color:#64748B;margin-bottom:10px}
+.ph .tag{display:inline-block}
+.ph.main{background:#F5F8FF;box-shadow:inset 0 3px 0 #1D63ED}
+.ph.slot{vertical-align:middle}
+.slot-b{width:100%;min-height:96px;border:1px dashed #CBD5E1;border-radius:12px;background:#fff;color:#1D4ED8;font-size:22px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.slot-b small{font-size:13px;color:#64748B}
+.slot-b:hover{border-color:#1D63ED;background:#F5F8FF}
+.ocs{display:flex;flex-wrap:wrap;gap:4px}
+.oc{font:500 11.5px 'JetBrains Mono',monospace;background:#F1F5F9;border:1px solid #E2E8F0;border-radius:6px;padding:2px 6px;color:#334155}
+.oc.add{background:#E7F6EC;border-color:#B7E2C4;color:#15803D}
+.oc.drop{text-decoration:line-through;color:#94A3B8;background:#fff}
+.best-sw{display:inline-block;width:10px;height:10px;border-radius:3px;background:#E7F6EC;border:1px solid #B7E2C4;vertical-align:-1px;margin-right:4px}
+</style>
+</head>
+<body>
+
+<!--
+================================================================
+BUILD NOTE: EVERYTHING IS CONNECTED (not displayed; for the real build)
+================================================================
+The 6 tabs, the Plan comparison view and other modules all read ONE plan
+object. Any change at any step must re-run the plan and update every
+affected tab. No tab may show stale numbers.
+
+Change made in                     → Must update
+-------------------------------------------------------------------------
+Orders module (new/edited/cancelled order)
+                                   → Tab 1 list; if the order is selected, all of 2–6
+Tab 1 Selected orders (add/remove/tick)
+                                   → 2 overview + sequence, 3 Gantt + machine load,
+                                     4 capacity/material/labour + ways out,
+                                     5 all financials, 6 summary + checklist,
+                                     Plan comparison
+Tab 2 Sequence (drag, rule, lock, apply hint, start date)
+                                   → 3 Gantt order + dates, 4 bottleneck sizes/dates,
+                                     5 penalties + contribution, 6 summary
+Tab 3 Gantt (row reorder, bar resize)
+                                   → 2 sequence + overview + feasibility, 4, 5, 6
+Tab 4 Ways out (fix selected/applied)
+                                   → 2 overview + feasibility, 3 chart (overload removed,
+                                     new shift/arrival shown), 5 Plan adjustments + cost
+                                     breakdown + profit by order, 6 checklist + fixes chips
+Tab 4 "Save as Plan B"             → Plan comparison gets a new plan (max 3–4)
+Tab 5 financials                   → 6 summary; key figure (margin) → Plan comparison
+Purchasing (PO raised, arrival date changes, supplier price)
+                                   → 4 materials + ways-out costs, 5 cost, 6 checklist
+Production (machine down, maintenance, shift change, progress on ongoing orders)
+                                   → 3 locked rows + load, 4 capacity/labour, then 2, 5, 6
+Tab 6 Approve                      → plan locked; POs to Purchasing, schedule to
+                                     Production, promised dates to each order in Orders
+
+Behaviour on change:
+- Recalculate, then show "Plan updated · 3 tabs changed" with a dot on each changed tab.
+- Changed values briefly highlight. The history log in Tab 6 records the change.
+- If a plan was approved and something changes, it goes back to "Needs re-approval".
+- Bottleneck checks (see the Tab 3 note) run on every change, wherever it was made.
+================================================================
+-->
+
+<header style="border-bottom:1px solid #E5E9F0">
+  <div class="wrap" style="display:flex;align-items:center;gap:40px;flex-wrap:wrap;min-height:64px">
+    <div style="display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px"><span style="width:16px;height:16px;border-radius:50%;background:#1D63ED"></span>[Brand]</div>
+    <nav class="nav" aria-label="Main" style="display:flex;gap:32px;flex:1;flex-wrap:wrap">
+      <a href="#">Orders</a><a href="#" class="on">Planning</a><a href="#">Purchasing</a><a href="#">Production</a><a href="#">Billing</a><a href="#">Finance</a>
+    </nav>
+    <button class="primary">+ New plan</button>
+  </div>
+</header>
+
+<main class="wrap" style="padding-top:40px;padding-bottom:64px;display:flex;flex-direction:column;gap:28px">
+
+  <!-- page header -->
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap">
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <h1 style="margin:0;font-size:34px;font-weight:700;letter-spacing:-0.02em">Order manufacturing plan</h1>
+      <p style="margin:0;font-size:16px;color:#64748B">Pick the accepted orders, set their priority, and check the plan is feasible before it goes to production.</p>
+    </div>
+    <div class="seg" role="tablist" aria-label="Plan view">
+      <button class="on" data-mode="plan">Original plan</button>
+      <button data-mode="compare">Plan comparison</button>
+    </div>
+  </div>
+
+  <!-- ============ ORIGINAL PLAN VIEW ============ -->
+  <div id="mode-plan" style="display:flex;flex-direction:column;gap:28px">
+
+    <nav class="steps" aria-label="Plan steps">
+      <a href="#" class="on" data-tab="1"><span class="n">1</span>Selected orders</a>
+      <a href="#" class="lock" data-tab="2"><span class="n">2</span>Proposed manufacturing sequence</a>
+      <a href="#" class="lock" data-tab="3"><span class="n">3</span>Production schedule</a>
+      <a href="#" class="lock" data-tab="4"><span class="n">4</span>Resource feasibility</a>
+      <a href="#" class="lock" data-tab="5"><span class="n">5</span>Financial analysis</a>
+      <a href="#" class="lock" data-tab="6"><span class="n">6</span>Final plan approval</a>
+    </nav>
+
+    <!-- ---------- TAB 1: SELECTED ORDERS ---------- -->
+    <section class="panel on" id="tab-1" style="flex-direction:column;gap:28px">
+
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <h2 style="margin:0;font-size:22px;font-weight:600;letter-spacing:-0.01em">Selected orders</h2>
+          <p style="margin:0;font-size:15px;color:#64748B">Pulled from <a href="#">Orders received</a>. Add or remove orders to change the combination that gets planned.</p>
+        </div>
+        <div style="display:flex;border:1px solid #E5E9F0;border-radius:16px;background:#F8FAFC">
+          <div style="padding:14px 24px;display:flex;flex-direction:column;gap:2px"><span style="font-size:26px;font-weight:700">4</span><span style="font-size:13px;color:#64748B">Orders selected</span></div>
+          <div style="padding:14px 24px;display:flex;flex-direction:column;gap:2px;border-left:1px solid #E5E9F0"><span style="font-size:26px;font-weight:700">₹31.0 L</span><span style="font-size:13px;color:#64748B">Total value</span></div>
+          <div style="padding:14px 24px;display:flex;flex-direction:column;gap:2px;border-left:1px solid #E5E9F0"><span style="font-size:26px;font-weight:700;color:#15803D">22.1%</span><span style="font-size:13px;color:#64748B">Weighted est. margin</span></div>
+          <div style="padding:14px 24px;display:flex;flex-direction:column;gap:2px;border-left:1px solid #E5E9F0"><span style="font-size:26px;font-weight:700;color:#9A5205">16 Nov</span><span style="font-size:13px;color:#64748B">Earliest deadline</span></div>
+        </div>
+      </div>
+
+      <!-- selected orders table -->
+      <section style="border:1px solid #E5E9F0;border-radius:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:18px 20px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <h3 style="margin:0;font-size:17px;font-weight:600">In this plan</h3>
+            <span class="tag lo">4 of 5</span>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="pill">Sort: Deadline ▾</button>
+            <button class="pill">Columns (8) ▾</button>
+            <button class="pill" style="color:#1D4ED8;border-color:#C7D7FB">+ Add from Orders received</button>
+          </div>
+        </div>
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse">
+            <thead style="background:#F8FAFC"><tr>
+              <th style="width:44px"><input type="checkbox" class="chk" checked aria-label="Select all"></th>
+              <th>Order</th><th>Customer</th><th>Product</th><th>Priority</th>
+              <th class="r">Quantity</th><th class="r">Value</th><th>Deadline</th><th class="r">Est. margin</th>
+              <th style="width:48px"></th>
+            </tr></thead>
+            <tbody>
+              <tr>
+                <td><input type="checkbox" class="chk" checked aria-label="Include ORD-1044"></td>
+                <td class="mono">ORD-1044</td><td>LMN Components</td><td>Steel assembly</td><td><span class="tag hi">High</span></td>
+                <td class="r">2,000 pcs</td><td class="r">₹5.0 L</td><td style="color:#B42318">Mon 16 Nov</td><td class="r">25%</td>
+                <td><button class="x" aria-label="Remove ORD-1044">×</button></td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" class="chk" checked aria-label="Include ORD-1041"></td>
+                <td class="mono">ORD-1041</td><td>ABC Ltd</td><td>M8 nylock nuts</td><td><span class="tag hi">High</span></td>
+                <td class="r">5,000 pcs</td><td class="r">₹8.0 L</td><td style="color:#9A5205">Wed 18 Nov</td><td class="r">22%</td>
+                <td><button class="x" aria-label="Remove ORD-1041">×</button></td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" class="chk" checked aria-label="Include ORD-1042"></td>
+                <td class="mono">ORD-1042</td><td>XYZ Ltd</td><td>M10 hex bolts</td><td><span class="tag md">Medium</span></td>
+                <td class="r">3,000 pcs</td><td class="r">₹6.0 L</td><td>Fri 20 Nov</td><td class="r" style="color:#15803D;font-weight:600">28%</td>
+                <td><button class="x" aria-label="Remove ORD-1042">×</button></td>
+              </tr>
+              <tr>
+                <td><input type="checkbox" class="chk" checked aria-label="Include ORD-1043"></td>
+                <td class="mono">ORD-1043</td><td>PQR Ltd</td><td>M12 flange bolts</td><td><span class="tag md">Medium</span></td>
+                <td class="r">8,000 pcs</td><td class="r">₹12.0 L</td><td>Wed 25 Nov</td><td class="r">18%</td>
+                <td><button class="x" aria-label="Remove ORD-1043">×</button></td>
+              </tr>
+              <tr class="off">
+                <td><input type="checkbox" class="chk" aria-label="Include ORD-1035"></td>
+                <td class="mono">ORD-1035</td><td>Ashok Leyland</td><td>U-bolts</td><td><span class="tag lo">Low</span></td>
+                <td class="r">4,500 pcs</td><td class="r">₹14.2 L</td><td>Fri 27 Nov</td><td class="r">13%</td>
+                <td><span style="font-size:12px;color:#94A3B8">Excluded</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:14px 20px;border-top:1px solid #EEF1F5;background:#F8FAFC;border-radius:0 0 16px 16px;font-size:14px;color:#334155">
+          <span>Total for 4 orders</span>
+          <span style="display:flex;gap:28px"><span>Qty <b>18,000 pcs</b></span><span>Value <b>₹31.0 L</b></span><span>Est. contribution <b style="color:#15803D">₹6.9 L</b></span></span>
+        </div>
+      </section>
+
+      <!-- generate bar -->
+      <div style="border:1px solid #E5E9F0;border-radius:16px;padding:20px 22px;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <span style="font-size:16px;font-weight:600">Ready to plan 4 orders</span>
+          <span style="font-size:14px;color:#64748B">We'll work out sequence, machine and labour load, materials and financials. Steps 2–6 open once the plan is generated.</span>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <span style="font-size:13px;color:#64748B">Last generated: never</span>
+          <button class="primary" style="padding:12px 24px">Generate plan →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- TAB 2: PROPOSED MANUFACTURING SEQUENCE ---------- -->
+    <section class="panel" id="tab-2" style="flex-direction:column;gap:28px">
+
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <h2 style="margin:0;font-size:22px;font-weight:600;letter-spacing:-0.01em">Proposed manufacturing sequence</h2>
+          <p style="margin:0;font-size:15px;color:#64748B">The order your 4 orders will be made in, and whether that plan holds up.</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#64748B">
+          <span>Generated today, 19:58</span>
+          <button class="pill">↻ Recalculate</button>
+        </div>
+      </div>
+
+      <!-- overview + feasibility -->
+      <div style="display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:20px">
+        <section style="border:1px solid #E5E9F0;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:18px">
+          <h3 style="margin:0;font-size:13px;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.06em">Plan overview</h3>
+          <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));row-gap:22px;column-gap:16px">
+            <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:28px;font-weight:700">4</span><span style="font-size:13px;color:#64748B">Orders included</span></div>
+            <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:28px;font-weight:700">11 <span style="font-size:15px;font-weight:500;color:#64748B">days</span></span><span style="font-size:13px;color:#64748B">13 Nov → 23 Nov</span></div>
+            <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:28px;font-weight:700;color:#9A5205">94%</span>
+              <span style="height:6px;border-radius:999px;background:#EEF1F5;overflow:hidden"><span style="display:block;width:94%;height:100%;background:#E59E2E"></span></span>
+              <span style="font-size:13px;color:#64748B">Capacity utilisation</span></div>
+            <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:28px;font-weight:700">3 <span style="font-size:15px;font-weight:500;color:#64748B">of 4</span></span><span style="font-size:13px;color:#64748B">Ship on time</span></div>
+            <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:28px;font-weight:700;color:#B42318">2</span><span style="font-size:13px;color:#64748B">Bottlenecks</span></div>
+            <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:28px;font-weight:700">2</span><span style="font-size:13px;color:#64748B">Parallel runs</span></div>
+          </div>
+        </section>
+
+        <section style="border:1px solid #F1CF9B;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <h3 style="margin:0;font-size:13px;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.06em">Plan feasibility</h3>
+            <span class="tag md">Needs adjustment</span>
+          </div>
+          <div style="display:flex;flex-direction:column">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-top:1px solid #EEF1F5">
+              <span style="display:flex;gap:10px;align-items:center;font-size:14px"><span style="width:8px;height:8px;border-radius:50%;background:#B42318;flex:none"></span>CNC 01 over capacity by 15 hrs, 19–20 Nov</span>
+              <a href="#" data-goto="4" style="font-size:13px;white-space:nowrap;text-decoration:none">Resolve →</a>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-top:1px solid #EEF1F5">
+              <span style="display:flex;gap:10px;align-items:center;font-size:14px"><span style="width:8px;height:8px;border-radius:50%;background:#B42318;flex:none"></span>Steel short by 500 kg · affects ORD-1043</span>
+              <a href="#" data-goto="4" style="font-size:13px;white-space:nowrap;text-decoration:none">Resolve →</a>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-top:1px solid #EEF1F5">
+              <span style="display:flex;gap:10px;align-items:center;font-size:14px"><span style="width:8px;height:8px;border-radius:50%;background:#E59E2E;flex:none"></span>ORD-1042 ships 1 day late</span>
+              <a href="#hint" style="font-size:13px;white-space:nowrap;text-decoration:none">See hint ↓</a>
+            </div>
+          </div>
+          <span style="font-size:12px;color:#94A3B8">Resource fixes are in Resource feasibility. Ordering fixes are shown below.</span>
+        </section>
+      </div>
+
+      <!-- smarter order hint -->
+      <section id="hint" style="border:1px solid #C7D7FB;background:#F5F8FF;border-radius:16px;padding:20px 22px;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap">
+        <div style="display:flex;gap:14px;align-items:flex-start">
+          <span style="width:36px;height:36px;border-radius:50%;background:#1D63ED;color:#fff;display:grid;place-items:center;flex:none">
+            <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 4v16"/><path d="M3 8l4-4 4 4"/><path d="M17 20V4"/><path d="M21 16l-4 4-4-4"/></svg>
+          </span>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <span style="display:flex;align-items:center;gap:8px"><span style="font-size:16px;font-weight:600">Run ORD-1042 before ORD-1043</span><span class="tag bl">Suggested sequence</span></span>
+            <span style="font-size:14px;color:#334155">All 4 orders ship on time. ORD-1043 still finishes 24 Nov, 1 day before its deadline. Plan length stays 11 days.</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="pill">Dismiss</button>
+          <button class="primary">Apply this order</button>
+        </div>
+      </section>
+
+      <!-- sequence list -->
+      <section style="border:1px solid #E5E9F0;border-radius:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:18px 20px">
+          <h3 style="margin:0;font-size:17px;font-weight:600">Order sequence</h3>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <span style="font-size:13px;color:#64748B">Sequenced by</span>
+            <div class="seg" style="padding:3px">
+              <button style="padding:6px 12px;font-size:13px">Deadline</button>
+              <button class="on" style="padding:6px 12px;font-size:13px">Highest value</button>
+              <button style="padding:6px 12px;font-size:13px">Margin</button>
+              <button style="padding:6px 12px;font-size:13px">Customer priority</button>
+              <button style="padding:6px 12px;font-size:13px">Custom</button>
+            </div>
+            <button class="pill">Start: Fri 13 Nov ▾</button>
+          </div>
+        </div>
+
+        <div class="sq sq-head">
+          <span></span><span>#</span><span>Order</span><span>Route</span><span>Start</span><span>Finish</span><span>Deadline</span><span class="r">Buffer</span><span>Delivery</span><span></span>
+        </div>
+
+        <!-- parallel group A -->
+        <div class="grp">
+          <span class="grp-lbl">∥ Run in parallel <em>· different lines, same days</em></span>
+          <div class="sq">
+            <span class="grip">⋮⋮</span><span class="rk">1</span>
+            <span class="who"><b class="mono">ORD-1044</b><small>LMN Components · Steel assembly · 2,000 pcs</small></span>
+            <span><span class="chip">Assembly 2</span></span>
+            <span>Fri 13 Nov</span><span>Sun 15 Nov</span><span>Mon 16 Nov</span>
+            <span class="r">1 day</span><span><span class="tag ok">On time</span></span>
+            <span class="lk on" title="Locked: keeps its slot when recalculated">🔒</span>
+          </div>
+          <div class="sq">
+            <span class="grip">⋮⋮</span><span class="rk">2</span>
+            <span class="who"><b class="mono">ORD-1041</b><small>ABC Ltd · M8 nylock nuts · 5,000 pcs</small></span>
+            <span><span class="chip">Press 01</span><i>→</i><span class="chip">CNC 01</span></span>
+            <span>Fri 13 Nov</span><span>Tue 17 Nov</span><span>Wed 18 Nov</span>
+            <span class="r">1 day</span><span><span class="tag ok">On time</span></span>
+            <span class="lk" title="Unlocked">🔓</span>
+          </div>
+        </div>
+
+        <!-- parallel group B -->
+        <div class="grp">
+          <span class="grp-lbl">∥ Run in parallel <em style="color:#B42318">· both need CNC 01, which causes the overload</em></span>
+          <div class="sq">
+            <span class="grip">⋮⋮</span><span class="rk">3</span>
+            <span class="who"><b class="mono">ORD-1043</b><small>PQR Ltd · M12 flange bolts · 8,000 pcs</small></span>
+            <span><span class="chip warn">CNC 01</span><i>→</i><span class="chip">Press 01</span></span>
+            <span>Wed 18 Nov</span><span>Mon 23 Nov</span><span>Wed 25 Nov</span>
+            <span class="r">2 days</span><span><span class="tag ok">On time</span></span>
+            <span class="lk" title="Unlocked">🔓</span>
+          </div>
+          <div class="sq late">
+            <span class="grip">⋮⋮</span><span class="rk">4</span>
+            <span class="who"><b class="mono">ORD-1042</b><small>XYZ Ltd · M10 hex bolts · 3,000 pcs</small></span>
+            <span><span class="chip warn">CNC 01</span><i>→</i><span class="chip">QC</span></span>
+            <span>Thu 19 Nov</span><span style="color:#B42318;font-weight:600">Sat 21 Nov</span><span>Fri 20 Nov</span>
+            <span class="r" style="color:#B42318">−1 day</span><span><span class="tag hi">Late · 1 day</span></span>
+            <span class="lk" title="Unlocked">🔓</span>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:14px 20px;border-top:1px solid #EEF1F5;background:#F8FAFC;border-radius:0 0 16px 16px;font-size:13px;color:#64748B">
+          <span style="display:flex;gap:20px;flex-wrap:wrap"><span>⋮⋮ Drag to reorder</span><span>🔒 Locked orders keep their slot on recalculate</span><span><span class="chip warn" style="font-size:11px">CNC 01</span> Overloaded machine</span></span>
+          <a href="#" data-goto="3" style="text-decoration:none">Day-by-day view in Production schedule →</a>
+        </div>
+      </section>
+
+      <div style="display:flex;justify-content:space-between;gap:12px">
+        <button class="pill" data-goto="1">← Selected orders</button>
+        <button class="dark" data-goto="3">Next: Production schedule →</button>
+      </div>
+    </section>
+
+
+    <!-- ---------- TAB 3: PRODUCTION SCHEDULE ---------- -->
+    <section class="panel" id="tab-3" style="flex-direction:column;gap:24px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <h2 style="margin:0;font-size:22px;font-weight:600;letter-spacing:-0.01em">Production schedule</h2>
+          <p style="margin:0;font-size:15px;color:#64748B">Which machine runs which order, day by day. Drag an order by ⋮⋮ to reorder it, or drag a bar's edge to change its dates.</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="pill" disabled style="opacity:.5">↶ Undo</button>
+          <button class="pill">‹ 13 – 30 Nov 2026 ›</button>
+          <button class="dark">Save schedule</button>
+        </div>
+      </div>
+
+      <!-- bottleneck summary (details + fixes live in Resource feasibility) -->
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <div class="bn"><span class="bn-dot"></span><b>CNC 01 overloaded</b><span>19–20 Nov · +15 hrs · ORD-1043 &amp; ORD-1042 overlap</span><a href="#" data-goto="4">Resolve →</a></div>
+        <div class="bn"><span class="bn-dot" style="background:#E59E2E"></span><b>Steel short 500 kg</b><span>needed 18 Nov for ORD-1043</span><a href="#" data-goto="4">Resolve →</a></div>
+      </div>
+
+      <section style="border:1px solid #E5E9F0;border-radius:16px;overflow:hidden">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 20px;border-bottom:1px solid #EEF1F5">
+          <div class="legend">
+            <span><i class="sw m-press"></i>Press 01</span><span><i class="sw m-cnc"></i>CNC 01</span><span><i class="sw m-asm"></i>Assembly 2</span><span><i class="sw m-qc"></i>QC</span><span><i class="sw m-setup"></i>Setup / changeover</span><span><i class="sw og"></i>In production</span>
+            <span><i class="sw ovl-sw"></i>Bottleneck</span><span><i class="dl-sw"></i>Deadline</span>
+          </div>
+          <span class="tag bl">Proposed plan</span>
+        </div>
+
+        <div class="gantt" id="gantt">
+          <div class="g-bg"><div class="g-col today" style="grid-column:2"></div><div class="g-col" style="grid-column:3"></div><div class="g-col sun" style="grid-column:4"></div><div class="g-col" style="grid-column:5"></div><div class="g-col" style="grid-column:6"></div><div class="g-col" style="grid-column:7"></div><div class="g-col hot" style="grid-column:8"></div><div class="g-col hot" style="grid-column:9"></div><div class="g-col" style="grid-column:10"></div><div class="g-col sun" style="grid-column:11"></div><div class="g-col" style="grid-column:12"></div><div class="g-col" style="grid-column:13"></div><div class="g-col" style="grid-column:14"></div><div class="g-col" style="grid-column:15"></div><div class="g-col" style="grid-column:16"></div><div class="g-col" style="grid-column:17"></div><div class="g-col sun" style="grid-column:18"></div><div class="g-col" style="grid-column:19"></div></div>
+          <div class="g-row g-head"><div class="g-lbl" style="font-size:12px;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.04em">Order</div><div class="g-day today"><small>Fri</small><b>13</b></div><div class="g-day"><small>Sat</small><b>14</b></div><div class="g-day sun"><small>Sun</small><b>15</b></div><div class="g-day"><small>Mon</small><b>16</b></div><div class="g-day"><small>Tue</small><b>17</b></div><div class="g-day"><small>Wed</small><b>18</b></div><div class="g-day"><small>Thu</small><b>19</b></div><div class="g-day"><small>Fri</small><b>20</b></div><div class="g-day"><small>Sat</small><b>21</b></div><div class="g-day sun"><small>Sun</small><b>22</b></div><div class="g-day"><small>Mon</small><b>23</b></div><div class="g-day"><small>Tue</small><b>24</b></div><div class="g-day"><small>Wed</small><b>25</b></div><div class="g-day"><small>Thu</small><b>26</b></div><div class="g-day"><small>Fri</small><b>27</b></div><div class="g-day"><small>Sat</small><b>28</b></div><div class="g-day sun"><small>Sun</small><b>29</b></div><div class="g-day"><small>Mon</small><b>30</b></div></div>
+          <div class="g-sec">In production · locked</div>
+          <div class="g-row og-row"><div class="g-lbl"><span class="g-lock" title="In production, can't be moved">🔒</span><span class="g-id"><b class="mono">O-201</b><small>Bajaj Auto</small></span><span class="tag lo">Ongoing</span></div><div class="bar m-cnc og first last" style="grid-column:2/4" data-tip='{"id": "O-201", "cust": "Bajaj Auto", "prod": "Wheel studs", "status": "In production", "a": "Progress", "av": "62% done", "b": "Note", "bv": "frees CNC 01 on 15 Nov"}'><span>CNC 01</span></div></div><div class="g-row og-row"><div class="g-lbl"><span class="g-lock" title="In production, can't be moved">🔒</span><span class="g-id"><b class="mono">O-202</b><small>Hero MotoCorp</small></span><span class="tag lo">Ongoing</span></div><div class="bar m-qc og first last" style="grid-column:2/4" data-tip='{"id": "O-202", "cust": "Hero MotoCorp", "prod": "M6 socket screws", "status": "In production", "a": "Progress", "av": "In QC", "b": "Note", "bv": "ships 14 Nov"}'><span>QC</span></div></div>
+          <div class="g-sec">This plan · drag ⋮⋮ to reorder</div>
+          <div id="pl-rows"><div class="g-row pl-row" draggable="false" data-id="ORD-1044"><div class="g-lbl"><span class="g-grip" title="Drag to reorder">⋮⋮</span><span class="rk">1</span><span class="g-id"><b class="mono">ORD-1044</b><small>LMN Components</small></span><span class="tag ok">On time</span></div><div class="bar m-asm first last" style="grid-column:2/5" data-tip='{"id": "ORD-1044", "cust": "LMN Components", "prod": "Steel assembly", "units": "2,000 pcs", "value": "\u20b95.0 L", "deadline": "Mon 16 Nov", "buffer": "1 day", "route": "Assembly 2", "status": "On time"}'><span>Assembly 2</span></div><div class="dl" style="grid-column:5/6" title="Deadline Mon 16 Nov"></div></div><div class="g-row pl-row" draggable="false" data-id="ORD-1041"><div class="g-lbl"><span class="g-grip" title="Drag to reorder">⋮⋮</span><span class="rk">2</span><span class="g-id"><b class="mono">ORD-1041</b><small>ABC Ltd</small></span><span class="tag ok">On time</span></div><div class="bar m-setup first" style="grid-column:2/3" data-tip='{"id": "ORD-1041", "cust": "ABC Ltd", "prod": "M8 nylock nuts", "units": "5,000 pcs", "value": "\u20b98.0 L", "deadline": "Wed 18 Nov", "buffer": "1 day", "route": "Press 01 \u2192 CNC 01", "status": "On time"}'><span>Setup</span></div><div class="bar m-press" style="grid-column:3/5" data-tip='{"id": "ORD-1041", "cust": "ABC Ltd", "prod": "M8 nylock nuts", "units": "5,000 pcs", "value": "\u20b98.0 L", "deadline": "Wed 18 Nov", "buffer": "1 day", "route": "Press 01 \u2192 CNC 01", "status": "On time"}'><span>Press 01</span></div><div class="bar m-cnc last" style="grid-column:5/7" data-tip='{"id": "ORD-1041", "cust": "ABC Ltd", "prod": "M8 nylock nuts", "units": "5,000 pcs", "value": "\u20b98.0 L", "deadline": "Wed 18 Nov", "buffer": "1 day", "route": "Press 01 \u2192 CNC 01", "status": "On time"}'><span>CNC 01</span></div><div class="dl" style="grid-column:7/8" title="Deadline Wed 18 Nov"></div></div><div class="g-row pl-row" draggable="false" data-id="ORD-1043"><div class="g-lbl"><span class="g-grip" title="Drag to reorder">⋮⋮</span><span class="rk">3</span><span class="g-id"><b class="mono">ORD-1043</b><small>PQR Ltd</small></span><span class="tag md">Steel short</span></div><div class="bar m-cnc first" style="grid-column:7/11" data-tip='{"id": "ORD-1043", "cust": "PQR Ltd", "prod": "M12 flange bolts", "units": "8,000 pcs", "value": "\u20b912.0 L", "deadline": "Wed 25 Nov", "buffer": "2 days", "route": "CNC 01 \u2192 Press 01", "status": "Steel short"}'><span>CNC 01</span></div><div class="bar m-press last" style="grid-column:11/13" data-tip='{"id": "ORD-1043", "cust": "PQR Ltd", "prod": "M12 flange bolts", "units": "8,000 pcs", "value": "\u20b912.0 L", "deadline": "Wed 25 Nov", "buffer": "2 days", "route": "CNC 01 \u2192 Press 01", "status": "Steel short"}'><span>Press 01</span></div><div class="ovl" style="grid-column:8/10" title="CNC 01 overloaded"></div><div class="flag" style="grid-column:7/8" title="Steel short 500 kg">!</div><div class="dl" style="grid-column:14/15" title="Deadline Wed 25 Nov"></div></div><div class="g-row pl-row" draggable="false" data-id="ORD-1042"><div class="g-lbl"><span class="g-grip" title="Drag to reorder">⋮⋮</span><span class="rk">4</span><span class="g-id"><b class="mono">ORD-1042</b><small>XYZ Ltd</small></span><span class="tag hi">Late 1 day</span></div><div class="bar m-cnc first" style="grid-column:8/10" data-tip='{"id": "ORD-1042", "cust": "XYZ Ltd", "prod": "M10 hex bolts", "units": "3,000 pcs", "value": "\u20b96.0 L", "deadline": "Fri 20 Nov", "buffer": "\u22121 day", "route": "CNC 01 \u2192 QC", "status": "Late 1 day"}'><span>CNC 01</span></div><div class="bar m-qc late last" style="grid-column:10/11" data-tip='{"id": "ORD-1042", "cust": "XYZ Ltd", "prod": "M10 hex bolts", "units": "3,000 pcs", "value": "\u20b96.0 L", "deadline": "Fri 20 Nov", "buffer": "\u22121 day", "route": "CNC 01 \u2192 QC", "status": "Late 1 day"}'><span>QC</span></div><div class="ovl" style="grid-column:8/10" title="CNC 01 overloaded"></div><div class="dl" style="grid-column:9/10" title="Deadline Fri 20 Nov"></div></div></div>
+          <div class="g-sec">Machine load</div>
+          <div class="g-row ld-row"><div class="g-lbl"><span class="sw m-press"></span><span style="font-size:14px;font-weight:500">Press 01</span></div><div class="ld lo2">40%</div><div class="ld hi2">100%</div><div class="ld hi2">100%</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld hi2">90%</div><div class="ld hi2">90%</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div></div><div class="g-row ld-row"><div class="g-lbl"><span class="sw m-cnc"></span><span style="font-size:14px;font-weight:500">CNC 01</span><span class="tag hi" style="margin-left:auto">Over</span></div><div class="ld hi2">100%</div><div class="ld hi2">90%</div><div class="ld z">–</div><div class="ld hi2">95%</div><div class="ld hi2">95%</div><div class="ld hi2">100%</div><div class="ld ov">150%</div><div class="ld ov">145%</div><div class="ld hi2">100%</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div></div><div class="g-row ld-row"><div class="g-lbl"><span class="sw m-asm"></span><span style="font-size:14px;font-weight:500">Assembly 2</span></div><div class="ld hi2">85%</div><div class="ld hi2">85%</div><div class="ld hi2">85%</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div></div><div class="g-row ld-row"><div class="g-lbl"><span class="sw m-qc"></span><span style="font-size:14px;font-weight:500">QC</span></div><div class="ld lo2">60%</div><div class="ld lo2">60%</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld lo2">70%</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div><div class="ld z">–</div></div>
+        </div>
+      </section>
+
+      <div style="display:flex;justify-content:space-between;gap:12px">
+        <button class="pill" data-goto="2">← Proposed sequence</button>
+        <button class="dark" data-goto="4">Next: Resource feasibility →</button>
+      </div>
+
+      <!-- design-only note (not part of the website) -->
+      <div style="border:1px dashed #CBD5E1;border-radius:12px;padding:12px 16px;font-size:13px;color:#64748B;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+        <span><b style="color:#334155">Design note (not part of the website).</b> Drag an order by ⋮⋮ to preview the reorder warning, or open it directly.</span>
+        <button class="pill" onclick="openWarn()">Preview reorder warning</button>
+      </div>
+    </section>
+
+<!--
+================================================================
+BUILD NOTE: REORDER WARNING POPUP (for the real website build)
+================================================================
+1. Owner drags an order row by its left handle (⋮⋮). The WHOLE row moves,
+   and every bar of that order and of the orders below it re-flows.
+2. Before applying, the scheduler simulates the new order and compares it
+   with the current plan: machine hours/day, labour hours per department,
+   material availability dates, changeover/setup time, maintenance windows,
+   shift availability and deadlines.
+3. If the new order creates or worsens any bottleneck or late delivery, show
+   the "Reordering creates bottlenecks" popup (#warn-modal) listing each one
+   (resource, dates, size, orders affected) and the delivery impact.
+     - Cancel → revert the row to its old position.
+     - Continue anyway → apply; draw the bottlenecks on the Gantt
+       (red hatched cells on the bars + red day in the machine-load strip)
+       and update Tabs 2, 4, 5 and the plan comparison.
+4. If it only removes or reduces bottlenecks → apply with no popup and show a small
+   "Reordered · 1 bottleneck cleared" toast.
+5. Hard blocks (no "continue" option): moving above a locked/ongoing order,
+   or before a material's earliest arrival date with no stock.
+6. Bottlenecks that already exist in the generated plan are ALWAYS drawn on
+   the chart, even before any reordering.
+7. Horizontal drag of a bar edge (change finish date) runs the same check.
+================================================================
+-->
+
+
+    <!-- ---------- TAB 4: RESOURCE FEASIBILITY ---------- -->
+    <section class="panel" id="tab-4" style="flex-direction:column;gap:24px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <h2 style="margin:0;font-size:22px;font-weight:600;letter-spacing:-0.01em">Resource feasibility</h2>
+          <p style="margin:0;font-size:15px;color:#64748B">How big each bottleneck is (left) and the ways out of it (right). Changeover, maintenance, shifts and lead times are already counted.</p>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <span class="tag hi" style="font-size:13px;padding:6px 12px">2 bottlenecks</span>
+          <span class="tag md" style="font-size:13px;padding:6px 12px">1 tight</span>
+          <span class="tag ok" style="font-size:13px;padding:6px 12px">8 resources OK</span>
+        </div>
+      </div>
+
+      <div class="rf-grid">
+        <!-- LEFT: how big is it -->
+        <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
+
+          <!-- machines -->
+          <section class="card">
+            <div class="card-h"><h3>Machine capacity <small>13 – 30 Nov</small></h3><span class="tag hi">CNC 01 overloaded</span></div>
+            <table class="rt">
+              <thead><tr><th>Machine</th><th class="r">Available hrs</th><th class="r">Required hrs</th><th style="width:150px">Load</th><th class="r">Gap</th></tr></thead>
+              <tbody>
+                <tr><td>Press 01</td><td class="r">128<small>144 − 6 changeover − 10 maint.</small></td><td class="r">96</td><td><span class="lb"><i style="width:75%"></i></span>75%</td><td class="r ok-t">32 free</td></tr>
+                <tr class="bad"><td><b>CNC 01</b></td><td class="r">132<small>144 − 8 changeover − 4 maint.</small></td><td class="r"><b>147</b></td><td><span class="lb"><i style="width:100%;background:#B42318"></i></span><b style="color:#B42318">111%</b></td><td class="r" style="color:#B42318;font-weight:600">+15 over</td></tr>
+                <tr><td>CNC 02</td><td class="r">112<small>144 − 32 maint. (18–19 Nov)</small></td><td class="r">0</td><td><span class="lb"><i style="width:0"></i></span>0%</td><td class="r ok-t">112 free</td></tr>
+                <tr><td>Assembly 2</td><td class="r">140<small>144 − 4 changeover</small></td><td class="r">48</td><td><span class="lb"><i style="width:34%"></i></span>34%</td><td class="r ok-t">92 free</td></tr>
+                <tr><td>QC</td><td class="r">144</td><td class="r">30</td><td><span class="lb"><i style="width:21%"></i></span>21%</td><td class="r ok-t">114 free</td></tr>
+              </tbody>
+            </table>
+            <div class="mg-wrap">
+              <div class="mg-cap"><b>Where it happens</b><span>CNC 01 runs 16 hrs/day. On 19 Nov it needs 24 hrs (+8), on 20 Nov 23 hrs (+7).</span></div>
+              <div class="mg"><div class="mg-row mg-head"><span></span><span class="">13</span><span class="">14</span><span class="sun">15</span><span class="">16</span><span class="">17</span><span class="">18</span><span class="">19</span><span class="">20</span><span class="">21</span><span class="sun">22</span><span class="">23</span></div><div class="mg-row"><span class="mg-l">CNC 01 · lane 1<small></small></span><i class="mg-c" style="grid-column:2"></i><i class="mg-c" style="grid-column:3"></i><i class="mg-c sun" style="grid-column:4"></i><i class="mg-c" style="grid-column:5"></i><i class="mg-c" style="grid-column:6"></i><i class="mg-c" style="grid-column:7"></i><i class="mg-c" style="grid-column:8"></i><i class="mg-c" style="grid-column:9"></i><i class="mg-c" style="grid-column:10"></i><i class="mg-c sun" style="grid-column:11"></i><i class="mg-c" style="grid-column:12"></i><b class="mg-b g" style="grid-column:2/4">O-201</b><b class="mg-b n" style="grid-column:5/7">ORD-1041</b><b class="mg-b n" style="grid-column:7/11">ORD-1043</b></div><div class="mg-row"><span class="mg-l">CNC 01 · lane 2<small></small></span><i class="mg-c" style="grid-column:2"></i><i class="mg-c" style="grid-column:3"></i><i class="mg-c sun" style="grid-column:4"></i><i class="mg-c" style="grid-column:5"></i><i class="mg-c" style="grid-column:6"></i><i class="mg-c" style="grid-column:7"></i><i class="mg-c" style="grid-column:8"></i><i class="mg-c" style="grid-column:9"></i><i class="mg-c" style="grid-column:10"></i><i class="mg-c sun" style="grid-column:11"></i><i class="mg-c" style="grid-column:12"></i><b class="mg-b r" style="grid-column:8/10">ORD-1042 · over capacity</b></div><div class="mg-row"><span class="mg-l">CNC 02<small></small></span><i class="mg-c" style="grid-column:2"></i><i class="mg-c" style="grid-column:3"></i><i class="mg-c sun" style="grid-column:4"></i><i class="mg-c" style="grid-column:5"></i><i class="mg-c" style="grid-column:6"></i><i class="mg-c" style="grid-column:7"></i><i class="mg-c" style="grid-column:8"></i><i class="mg-c" style="grid-column:9"></i><i class="mg-c" style="grid-column:10"></i><i class="mg-c sun" style="grid-column:11"></i><i class="mg-c" style="grid-column:12"></i><b class="mg-b m" style="grid-column:7/9">Maintenance</b></div></div>
+            </div>
+          </section>
+
+          <!-- materials -->
+          <section class="card">
+            <div class="card-h"><h3>Raw materials</h3><span class="tag hi">Steel short 500 kg</span></div>
+            <table class="rt">
+              <thead><tr><th>Material</th><th class="r">Required</th><th class="r">In stock</th><th class="r">On order</th><th>Lead time</th><th>Needed by</th><th class="r">Gap</th></tr></thead>
+              <tbody>
+                <tr class="bad"><td><b>Steel (EN8 rod)</b></td><td class="r">2,000 kg</td><td class="r">1,500 kg</td><td class="r">0</td><td>7 days</td><td>Wed 18 Nov</td><td class="r" style="color:#B42318;font-weight:600">−500 kg</td></tr>
+                <tr><td>Aluminium</td><td class="r">800 kg</td><td class="r">1,000 kg</td><td class="r">0</td><td>5 days</td><td>Fri 13 Nov</td><td class="r ok-t">200 spare</td></tr>
+                <tr><td>Nylon inserts</td><td class="r">5,000 pcs</td><td class="r">3,500 pcs</td><td class="r">2,000 · 16 Nov</td><td>4 days</td><td>Tue 17 Nov</td><td class="r ok-t">500 spare</td></tr>
+                <tr><td>Zinc plating</td><td class="r">180 L</td><td class="r">220 L</td><td class="r">0</td><td>3 days</td><td>Sat 21 Nov</td><td class="r ok-t">40 spare</td></tr>
+              </tbody>
+            </table>
+            <div class="mg-wrap">
+              <div class="mg-cap"><b>Where it happens</b><span>A regular order placed today arrives 20 Nov, 2 days after ORD-1043 needs it.</span></div>
+              <div class="mg"><div class="mg-row mg-head"><span></span><span class="">13</span><span class="">14</span><span class="sun">15</span><span class="">16</span><span class="">17</span><span class="">18</span><span class="">19</span><span class="">20</span><span class="">21</span><span class="sun">22</span><span class="">23</span></div><div class="mg-row"><span class="mg-l">Steel needed<small></small></span><i class="mg-c" style="grid-column:2"></i><i class="mg-c" style="grid-column:3"></i><i class="mg-c sun" style="grid-column:4"></i><i class="mg-c" style="grid-column:5"></i><i class="mg-c" style="grid-column:6"></i><i class="mg-c" style="grid-column:7"></i><i class="mg-c" style="grid-column:8"></i><i class="mg-c" style="grid-column:9"></i><i class="mg-c" style="grid-column:10"></i><i class="mg-c sun" style="grid-column:11"></i><i class="mg-c" style="grid-column:12"></i><b class="mg-b n" style="grid-column:7/9">ORD-1043 starts</b></div><div class="mg-row"><span class="mg-l">Regular PO<small></small></span><i class="mg-c" style="grid-column:2"></i><i class="mg-c" style="grid-column:3"></i><i class="mg-c sun" style="grid-column:4"></i><i class="mg-c" style="grid-column:5"></i><i class="mg-c" style="grid-column:6"></i><i class="mg-c" style="grid-column:7"></i><i class="mg-c" style="grid-column:8"></i><i class="mg-c" style="grid-column:9"></i><i class="mg-c" style="grid-column:10"></i><i class="mg-c sun" style="grid-column:11"></i><i class="mg-c" style="grid-column:12"></i><b class="mg-b g" style="grid-column:2/9">7-day lead time</b><b class="mg-b r" style="grid-column:9/10">Arrives</b></div><div class="mg-row"><span class="mg-l">Express buy<small></small></span><i class="mg-c" style="grid-column:2"></i><i class="mg-c" style="grid-column:3"></i><i class="mg-c sun" style="grid-column:4"></i><i class="mg-c" style="grid-column:5"></i><i class="mg-c" style="grid-column:6"></i><i class="mg-c" style="grid-column:7"></i><i class="mg-c" style="grid-column:8"></i><i class="mg-c" style="grid-column:9"></i><i class="mg-c" style="grid-column:10"></i><i class="mg-c sun" style="grid-column:11"></i><i class="mg-c" style="grid-column:12"></i><b class="mg-b g" style="grid-column:2/4">2 days</b><b class="mg-b ok" style="grid-column:4/5">Arrives</b></div></div>
+            </div>
+          </section>
+
+          <!-- labour -->
+          <section class="card">
+            <div class="card-h"><h3>Labour &amp; shifts</h3><span class="tag md">Assembly tight</span></div>
+            <table class="rt">
+              <thead><tr><th>Department</th><th>Shifts</th><th class="r">Available hrs</th><th class="r">Required hrs</th><th style="width:150px">Load</th><th class="r">Gap</th></tr></thead>
+              <tbody>
+                <tr><td>Machining</td><td>2 · Sun 1</td><td class="r">180</td><td class="r">160</td><td><span class="lb"><i style="width:89%;background:#E59E2E"></i></span>89%</td><td class="r ok-t">20 free</td></tr>
+                <tr><td>Pressing</td><td>1</td><td class="r">100</td><td class="r">80</td><td><span class="lb"><i style="width:80%"></i></span>80%</td><td class="r ok-t">20 free</td></tr>
+                <tr><td>Assembly</td><td>1</td><td class="r">80</td><td class="r">72</td><td><span class="lb"><i style="width:90%;background:#E59E2E"></i></span><b style="color:#9A5205">90%</b></td><td class="r" style="color:#9A5205">8 free</td></tr>
+                <tr><td>QC</td><td>1</td><td class="r">60</td><td class="r">30</td><td><span class="lb"><i style="width:50%"></i></span>50%</td><td class="r ok-t">30 free</td></tr>
+              </tbody>
+            </table>
+            <div class="mg-wrap">
+              <div class="mg-cap"><b>Where it's tight</b><span>Assembly is near its limit 13–15 Nov. No action needed unless the plan changes.</span></div>
+              <div class="mg"><div class="mg-row mg-head"><span></span><span class="">13</span><span class="">14</span><span class="sun">15</span><span class="">16</span><span class="">17</span><span class="">18</span><span class="">19</span><span class="">20</span><span class="">21</span><span class="sun">22</span><span class="">23</span></div><div class="mg-row"><span class="mg-l">Assembly<small></small></span><i class="mg-c" style="grid-column:2"></i><i class="mg-c" style="grid-column:3"></i><i class="mg-c sun" style="grid-column:4"></i><i class="mg-c" style="grid-column:5"></i><i class="mg-c" style="grid-column:6"></i><i class="mg-c" style="grid-column:7"></i><i class="mg-c" style="grid-column:8"></i><i class="mg-c" style="grid-column:9"></i><i class="mg-c" style="grid-column:10"></i><i class="mg-c sun" style="grid-column:11"></i><i class="mg-c" style="grid-column:12"></i><b class="mg-b n" style="grid-column:2/5">ORD-1044 · 24 of 26 hrs/day</b></div><div class="mg-row"><span class="mg-l">Machining<small></small></span><i class="mg-c" style="grid-column:2"></i><i class="mg-c" style="grid-column:3"></i><i class="mg-c sun" style="grid-column:4"></i><i class="mg-c" style="grid-column:5"></i><i class="mg-c" style="grid-column:6"></i><i class="mg-c" style="grid-column:7"></i><i class="mg-c" style="grid-column:8"></i><i class="mg-c" style="grid-column:9"></i><i class="mg-c" style="grid-column:10"></i><i class="mg-c sun" style="grid-column:11"></i><i class="mg-c" style="grid-column:12"></i><b class="mg-b n" style="grid-column:5/7">ORD-1041</b><b class="mg-b n" style="grid-column:7/11">ORD-1043 + ORD-1042</b></div></div>
+            </div>
+          </section>
+        </div>
+
+        <!-- RIGHT: ways out -->
+        <aside class="wo-panel">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <h3 style="margin:0;font-size:13px;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.06em">Ways out</h3>
+            <span class="ai">✦ Planning assistant</span>
+          </div>
+
+          <div class="wo-grp">
+            <div class="wo-h"><span class="bn-dot"></span><b>CNC 01 · +15 hrs</b><small>19–20 Nov</small></div>
+            <label class="wo sel"><input type="radio" name="cnc" checked>
+      <span class="wo-b"><span class="wo-t"><b>Night shift on CNC 01, 19–20 Nov</b><span class="tag bl">Top pick</span></span>
+      <span class="wo-m"><span class="mono">+₹18,400 overtime</span> · <span style="color:#15803D">all 4 ship on time</span></span></span></label>
+            <label class="wo"><input type="radio" name="cnc" >
+      <span class="wo-b"><span class="wo-t"><b>Subcontract threading of 1,000 pcs (ORD-1042)</b></span>
+      <span class="wo-m"><span class="mono">+₹32,000</span> · <span style="color:#15803D">all on time · extra QC on return</span></span></span></label>
+            <label class="wo"><input type="radio" name="cnc" >
+      <span class="wo-b"><span class="wo-t"><b>Move ORD-1042 to CNC 02 after maintenance</b></span>
+      <span class="wo-m"><span class="mono">₹0 · +3 hrs changeover</span> · <span style="color:#9A5205">ORD-1042 ships 2 days late · ₹40,000 penalty</span></span></span></label>
+          </div>
+
+          <div class="wo-grp">
+            <div class="wo-h"><span class="bn-dot"></span><b>Steel · −500 kg</b><small>needed 18 Nov</small></div>
+            <label class="wo sel"><input type="radio" name="st" checked>
+      <span class="wo-b"><span class="wo-t"><b>Express buy from Shree Steels</b><span class="tag bl">Top pick</span></span>
+      <span class="wo-m"><span class="mono">+₹6,200 freight</span> · <span style="color:#15803D">arrives 15 Nov · all on time</span></span></span></label>
+            <label class="wo"><input type="radio" name="st" >
+      <span class="wo-b"><span class="wo-t"><b>Use 500 kg reserved for ORD-1035</b></span>
+      <span class="wo-m"><span class="mono">₹0</span> · <span style="color:#15803D">ORD-1035 is not in this plan · rebuy later</span></span></span></label>
+            <label class="wo"><input type="radio" name="st" >
+      <span class="wo-b"><span class="wo-t"><b>Regular PO, 7-day lead time</b></span>
+      <span class="wo-m"><span class="mono">₹0</span> · <span style="color:#9A5205">ORD-1043 starts 20 Nov · 0 days buffer</span></span></span></label>
+          </div>
+
+          <div class="wo-sum">
+            <div class="tr2"><span>Extra cost</span><b>₹24,600</b></div>
+            <div class="tr2"><span>Bottlenecks after fixes</span><b style="color:#15803D">0</b></div>
+            <div class="tr2"><span>Ship on time</span><b style="color:#15803D">4 of 4</b></div>
+            <div class="tr2"><span>Contribution change</span><b>−₹24,600 · 22.1% → 21.3%</b></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <button class="primary" style="width:100%">Apply 2 fixes to this plan</button>
+            <button class="pill" style="width:100%;padding:10px 14px;font-weight:600">Save as Plan B for comparison</button>
+          </div>
+          <span style="font-size:12px;color:#94A3B8">Costs from Purchasing (supplier rates) and Production (overtime rates). Options are suggested by the planning assistant; nothing changes until you apply.</span>
+        </aside>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;gap:12px">
+        <button class="pill" data-goto="3">← Production schedule</button>
+        <button class="dark" data-goto="5">Next: Financial analysis →</button>
+      </div>
+    </section>
+
+
+    <!-- ---------- TAB 5: FINANCIAL ANALYSIS ---------- -->
+    <section class="panel" id="tab-5" style="flex-direction:column;gap:24px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <h2 style="margin:0;font-size:22px;font-weight:600;letter-spacing:-0.01em">Financial analysis</h2>
+          <p style="margin:0;font-size:15px;color:#64748B">What this plan earns, what it costs, and what the fixes from Resource feasibility change.</p>
+        </div>
+        <div class="seg" id="fin-seg">
+          <button class="on" data-v="a">Before fixes</button>
+          <button data-v="b">With selected fixes (2)</button>
+        </div>
+      </div>
+
+      <!-- overview -->
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid #E5E9F0;border-radius:16px;background:#F8FAFC">
+        <div class="fk"><span>Total sales value</span><b>₹31.0 L</b><small>4 selected orders</small></div>
+        <div class="fk"><span>Manufacturing cost</span><b><span data-a="₹24.15 L" data-b="₹24.40 L">₹24.15 L</span></b><small><span data-a="Estimated cost" data-b="Incl. ₹24,600 in fixes">Estimated cost</span></small></div>
+        <div class="fk"><span>Expected contribution</span><b style="color:#15803D"><span data-a="₹6.65 L" data-b="₹6.60 L">₹6.65 L</span></b><small><span data-a="After ₹20,000 penalty at risk" data-b="No penalties · all on time">After ₹20,000 penalty at risk</span></small></div>
+        <div class="fk"><span>Contribution margin <em class="cmp">In Plan comparison</em></span><b><span data-a="21.5%" data-b="21.3%">21.5%</span></b><small>Before fixed corporate costs and tax</small></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:20px;align-items:start">
+        <!-- cost breakdown -->
+        <section class="card" style="padding:20px;display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline"><h3 style="margin:0;font-size:17px;font-weight:600">Cost breakdown</h3><span style="font-size:14px;color:#64748B">Total <b style="color:#0F172A">₹24.15 L</b></span></div>
+          <div class="cb-bar"><i style="width:63.4%;background:#1D63ED"></i><i style="width:15.7%;background:#5B8DF2"></i><i style="width:11.2%;background:#93B4F7"></i><i style="width:6.6%;background:#C7D7FB"></i><i style="width:3.1%;background:#E2E8F0"></i></div>
+          <div><div class="cb-r"><span><i style="background:#1D63ED"></i>Raw materials</span><span><b>₹15.30 L</b><small>63.4%</small></span></div><div class="cb-r"><span><i style="background:#5B8DF2"></i>Labour</span><span><b>₹3.80 L</b><small>15.7%</small></span></div><div class="cb-r"><span><i style="background:#93B4F7"></i>Machine / power</span><span><b>₹2.70 L</b><small>11.2%</small></span></div><div class="cb-r"><span><i style="background:#C7D7FB"></i>Factory overheads</span><span><b>₹1.60 L</b><small>6.6%</small></span></div><div class="cb-r"><span><i style="background:#E2E8F0"></i>Packaging & logistics</span><span><b>₹0.75 L</b><small>3.1%</small></span></div></div>
+        </section>
+
+        <!-- adjustments
+             BUILD NOTE: this card is driven by Tab 4 (selected/applied fixes) and by
+             Tabs 2/3 (late deliveries -> penalties). Any change there must update these
+             lines, the totals, the KPI row, Profit by order, Tab 6 and Plan comparison.
+             The insight line (fix cost vs penalty avoided) is recalculated each time. -->
+        <section class="card" style="padding:20px;display:flex;flex-direction:column;gap:14px">
+          <h3 style="margin:0;font-size:17px;font-weight:600">Plan adjustments</h3>
+          <div>
+            <div class="tr2"><span>Base contribution</span><b>₹6.85 L</b></div>
+            <div class="tr2"><span>Late-delivery penalty at risk<small style="display:block;font-size:12px;color:#94A3B8">ORD-1042 · 1 day × ₹20,000</small></span><b style="color:#B42318"><span data-a="−₹20,000" data-b="₹0">−₹20,000</span></b></div>
+            <div class="tr2"><span>Night shift on CNC 01</span><b><span data-a="–" data-b="−₹18,400">–</span></b></div>
+            <div class="tr2"><span>Express steel freight</span><b><span data-a="–" data-b="−₹6,200">–</span></b></div>
+            <div class="tr2" style="border-top:1px solid #E2E8F0"><span style="color:#0F172A;font-weight:600">Expected contribution</span><b style="color:#15803D"><span data-a="₹6.65 L" data-b="₹6.60 L">₹6.65 L</span></b></div>
+          </div>
+          <div style="background:#FEF3E2;border-radius:10px;padding:10px 12px;font-size:13px;color:#7A4304">The fixes cost <b>₹4,600 more</b> than the penalty they avoid, but every order ships on time.</div>
+        </section>
+      </div>
+
+      <!-- profit by order -->
+      <section class="card">
+        <div class="card-h"><h3>Profit by order</h3><button class="pill">Columns (8) ▾</button></div>
+        <table class="rt">
+          <thead><tr><th>Order</th><th>Customer</th><th class="r">Value</th><th class="r">Mfg. cost</th><th class="r">Penalty risk</th><th class="r">Fix cost</th><th class="r">Contribution</th><th>Margin</th></tr></thead>
+          <tbody><tr><td class="mono">ORD-1044</td><td>LMN Components</td><td class="r">₹5.0 L</td><td class="r">₹3.75 L</td>
+<td class="r"><span data-a="–" data-b="–">–</span></td><td class="r"><span data-a="–" data-b="–">–</span></td>
+<td class="r"><b><span data-a="₹1.25 L" data-b="₹1.25 L">₹1.25 L</span></b></td>
+<td><span class="lb" style="width:70px"><i style="width:83%;background:#15803D" data-wa="83%" data-wb="83%"></i></span><span data-a="25.0%" data-b="25.0%">25.0%</span></td></tr><tr><td class="mono">ORD-1041</td><td>ABC Ltd</td><td class="r">₹8.0 L</td><td class="r">₹6.24 L</td>
+<td class="r"><span data-a="–" data-b="–">–</span></td><td class="r"><span data-a="–" data-b="–">–</span></td>
+<td class="r"><b><span data-a="₹1.76 L" data-b="₹1.76 L">₹1.76 L</span></b></td>
+<td><span class="lb" style="width:70px"><i style="width:73%;background:#1D63ED" data-wa="73%" data-wb="73%"></i></span><span data-a="22.0%" data-b="22.0%">22.0%</span></td></tr><tr><td class="mono">ORD-1042</td><td>XYZ Ltd</td><td class="r">₹6.0 L</td><td class="r">₹4.32 L</td>
+<td class="r"><span data-a="₹20,000" data-b="–">₹20,000</span></td><td class="r"><span data-a="–" data-b="₹18,400">–</span></td>
+<td class="r"><b><span data-a="₹1.48 L" data-b="₹1.50 L">₹1.48 L</span></b></td>
+<td><span class="lb" style="width:70px"><i style="width:82%;background:#15803D" data-wa="82%" data-wb="83%"></i></span><span data-a="24.7%" data-b="24.9%">24.7%</span></td></tr><tr><td class="mono">ORD-1043</td><td>PQR Ltd</td><td class="r">₹12.0 L</td><td class="r">₹9.84 L</td>
+<td class="r"><span data-a="–" data-b="–">–</span></td><td class="r"><span data-a="–" data-b="₹6,200">–</span></td>
+<td class="r"><b><span data-a="₹2.16 L" data-b="₹2.10 L">₹2.16 L</span></b></td>
+<td><span class="lb" style="width:70px"><i style="width:60%;background:#1D63ED" data-wa="60%" data-wb="58%"></i></span><span data-a="18.0%" data-b="17.5%">18.0%</span></td></tr></tbody>
+        </table>
+        <div style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:14px 20px;border-top:1px solid #EEF1F5;background:#F8FAFC;font-size:14px;color:#334155">
+          <span>Total for 4 orders</span>
+          <span style="display:flex;gap:28px;flex-wrap:wrap"><span>Value <b>₹31.0 L</b></span><span>Cost <b>₹24.15 L</b></span><span>Contribution <b style="color:#15803D"><span data-a="₹6.65 L" data-b="₹6.60 L">₹6.65 L</span></b></span><span>Margin <b><span data-a="21.5%" data-b="21.3%">21.5%</span></b></span></span>
+        </div>
+      </section>
+
+      <div style="display:flex;justify-content:space-between;gap:12px">
+        <button class="pill" data-goto="4">← Resource feasibility</button>
+        <button class="dark" data-goto="6">Next: Final plan approval →</button>
+      </div>
+    </section>
+
+
+    <!-- ---------- TAB 6: FINAL PLAN APPROVAL ---------- -->
+    <section class="panel" id="tab-6" style="flex-direction:column;gap:24px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <h2 style="margin:0;font-size:22px;font-weight:600;letter-spacing:-0.01em">Final plan approval</h2>
+          <p style="margin:0;font-size:15px;color:#64748B">Check the final order combination and schedule, then approve it to send it to Purchasing and Production.</p>
+        </div>
+        <span class="tag md" style="font-size:13px;padding:6px 12px">Awaiting owner approval</span>
+      </div>
+
+      <div class="rf-grid">
+        <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
+          <!-- summary -->
+          <section class="card">
+            <div class="card-h"><h3>Plan A <small>13 – 24 Nov · 2 fixes applied</small></h3><a href="#" data-goto="3" style="font-size:13px;text-decoration:none">View schedule →</a></div>
+            <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border-top:1px solid #EEF1F5;border-bottom:1px solid #EEF1F5;background:#F8FAFC">
+              <div class="fk" style="padding:14px 20px"><span>Orders</span><b style="font-size:22px">4</b></div>
+              <div class="fk" style="padding:14px 20px"><span>Production days</span><b style="font-size:22px">12</b></div>
+              <div class="fk" style="padding:14px 20px"><span>Sales value</span><b style="font-size:22px">₹31.0 L</b></div>
+              <div class="fk" style="padding:14px 20px"><span>Contribution</span><b style="font-size:22px;color:#15803D">₹6.60 L</b></div>
+              <div class="fk" style="padding:14px 20px"><span>Margin</span><b style="font-size:22px">21.3%</b></div>
+            </div>
+            <table class="rt">
+              <thead><tr><th>Order</th><th>Customer</th><th>Finishes</th><th>Deadline</th><th>Delivery</th></tr></thead>
+              <tbody><tr><td class="mono">ORD-1044</td><td>LMN Components</td><td>Sun 15 Nov</td><td>Mon 16 Nov</td><td><span class="tag ok">On time</span></td></tr><tr><td class="mono">ORD-1041</td><td>ABC Ltd</td><td>Tue 17 Nov</td><td>Wed 18 Nov</td><td><span class="tag ok">On time</span></td></tr><tr><td class="mono">ORD-1042</td><td>XYZ Ltd</td><td>Fri 20 Nov</td><td>Fri 20 Nov</td><td><span class="tag ok">On time</span></td></tr><tr><td class="mono">ORD-1043</td><td>PQR Ltd</td><td>Tue 24 Nov</td><td>Wed 25 Nov</td><td><span class="tag ok">On time</span></td></tr></tbody>
+            </table>
+            <div style="padding:14px 20px;border-top:1px solid #EEF1F5;display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:13px;color:#64748B">
+              <span>Fixes applied:</span>
+              <span class="chip" style="font-family:Inter,sans-serif">Night shift on CNC 01 · 19–20 Nov · ₹18,400</span>
+              <span class="chip" style="font-family:Inter,sans-serif">Express steel, Shree Steels · ₹6,200</span>
+              <span class="chip" style="font-family:Inter,sans-serif">ORD-1042 run before ORD-1043</span>
+            </div>
+          </section>
+
+          <!-- checklist -->
+          <section class="card">
+            <div class="card-h"><h3>Readiness checklist</h3><span class="tag md">4 of 5 ready</span></div>
+            <div style="padding:0 20px 8px">
+              <div class="ck"><span class="ck-i" style="color:#15803D;background:#E7F6EC">✓</span><div style="flex:1;min-width:0"><b>All 4 orders ship on time</b><small>Smallest buffer: ORD-1042, 0 days</small></div></div>
+              <div class="ck"><span class="ck-i" style="color:#15803D;background:#E7F6EC">✓</span><div style="flex:1;min-width:0"><b>Machine capacity within limits</b><small>CNC 01 at 100% on 19–20 Nov with the night shift</small></div></div>
+              <div class="ck"><span class="ck-i" style="color:#9A5205;background:#FEF3E2">!</span><div style="flex:1;min-width:0"><b>Express steel PO not raised yet</b><small>500 kg must arrive by 18 Nov. The PO goes to Purchasing when you approve, or raise it now.</small></div><button class="pill" style="white-space:nowrap">Raise PO now</button></div>
+              <div class="ck"><span class="ck-i" style="color:#15803D;background:#E7F6EC">✓</span><div style="flex:1;min-width:0"><b>Labour and shifts covered</b><small>Assembly tight at 90% on 13–15 Nov · night-shift crew confirmed</small></div></div>
+              <div class="ck"><span class="ck-i" style="color:#15803D;background:#E7F6EC">✓</span><div style="flex:1;min-width:0"><b>Margin above your 18% minimum</b><small>21.3% after fixes</small></div></div>
+            </div>
+          </section>
+        </div>
+
+        <!-- right: approve + notes + history -->
+        <aside class="wo-panel">
+          <h3 style="margin:0;font-size:13px;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.06em">Owner approval</h3>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <label for="ap-note" style="font-size:14px;font-weight:600">Note <span style="font-weight:400;color:#94A3B8">(optional)</span></label>
+            <textarea id="ap-note" rows="3" placeholder="e.g. Confirm night-shift crew with the supervisor" style="font:14px Inter,sans-serif;border:1px solid #E2E8F0;border-radius:12px;padding:10px 12px;resize:vertical;outline:none"></textarea>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <button class="primary" style="width:100%;padding:12px" onclick="document.getElementById('appr-modal').style.display='flex'">Approve plan</button>
+            <button class="pill" style="width:100%;padding:10px 14px;font-weight:600" data-goto="2">Send back to edit</button>
+          </div>
+          <span style="font-size:12px;color:#94A3B8">When approved, POs go to Purchasing, the schedule goes to Production, and promised dates are added to each order.</span>
+
+          <div style="border-top:1px solid #EEF1F5;padding-top:16px;display:flex;flex-direction:column;gap:2px">
+            <h4 style="margin:0 0 8px;font-size:13px;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.06em">History</h4>
+            <div class="hi-r"><i></i><div><b>Fixes applied</b><small>Night shift + express steel · today 20:10</small></div></div>
+            <div class="hi-r"><i></i><div><b>Sequence changed</b><small>ORD-1042 moved before ORD-1043 · today 20:04</small></div></div>
+            <div class="hi-r"><i></i><div><b>Plan generated</b><small>4 orders from Orders received · today 19:58</small></div></div>
+            <div class="hi-r"><i style="background:#CBD5E1"></i><div><b>Orders selected</b><small>ORD-1035 excluded · today 19:52</small></div></div>
+          </div>
+        </aside>
+      </div>
+
+      <div style="display:flex;justify-content:flex-start;gap:12px">
+        <button class="pill" data-goto="5">← Financial analysis</button>
+      </div>
+    </section>
+
+    <!-- ---------- LOCKED STATE (before Generate plan) ---------- -->
+    <section class="panel" id="tab-locked" style="flex-direction:column;align-items:center;text-align:center;gap:14px;border:1px dashed #CBD5E1;border-radius:16px;padding:64px 24px;background:#F8FAFC">
+      <span style="width:44px;height:44px;border-radius:50%;background:#EAF1FE;display:grid;place-items:center;color:#1D63ED">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>
+      </span>
+      <h2 id="locked-title" style="margin:0;font-size:20px;font-weight:600">No plan generated yet</h2>
+      <p style="margin:0;font-size:15px;color:#64748B;max-width:460px">Generate a plan from your 4 selected orders to see this step.</p>
+      <div style="display:flex;gap:10px;margin-top:6px">
+        <button class="pill" data-goto="1">Review selected orders</button>
+        <button class="primary">Generate plan →</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ PLAN COMPARISON VIEW ============ -->
+  <section id="mode-compare" style="display:none;flex-direction:column;gap:24px">
+<!--
+BUILD NOTE: PLAN COMPARISON + BACK-TO-BACK PLANS (not displayed)
+- Up to 4 plans can be compared at once ("Generate more than one plan"); slots beyond 4 are disabled.
+- Variants are generated automatically from the main plan (drop lowest margin, add an excluded
+  order, fastest delivery, highest margin). Each variant is a full plan with its own 6 tabs.
+- "Make main plan" swaps it in as the Original plan, re-runs all tabs and opens Tab 6.
+  Other variants stay as drafts. Any change to the main plan refreshes every column here.
+- Follow-on plans (Plan 2) cover a later date window. They are NOT alternatives, so they sit
+  on the Plan timeline, not as columns. On overlapping days, capacity, labour and material are
+  checked across BOTH plans together; clashes appear as bottlenecks in both plans
+  (Tabs 3 and 4) and in "Overlap check". Changing either plan re-runs the overlap check.
+- The key financial figure (contribution margin from Tab 5) is always the last row here.
+-->
+    <!-- plan timeline + overlap -->
+    <section class="card">
+      <div class="card-h"><h3>Plan timeline <small>Plans running back to back</small></h3><button class="pill">+ Add follow-on plan</button></div>
+      <div style="padding:0 20px 18px;display:flex;flex-direction:column;gap:14px">
+        <div class="tl"><div class="tl-row tl-h"><span class="tl-l"></span><span class="">13</span><span class="">14</span><span class="sun">15</span><span class="">16</span><span class="">17</span><span class="">18</span><span class="">19</span><span class="">20</span><span class="">21</span><span class="sun">22</span><span class="">23</span><span class="">24</span><span class="">25</span><span class="">26</span><span class="">27</span><span class="">28</span><span class="sun">29</span><span class="">30</span><span class="">1</span><span class="">2</span></div>
+<div class="tl-row"><span class="tl-l"><b>Plan A</b><small>Main · 4 orders</small></span><i class="tl-c" style="grid-column:2"></i><i class="tl-c" style="grid-column:3"></i><i class="tl-c sun" style="grid-column:4"></i><i class="tl-c" style="grid-column:5"></i><i class="tl-c" style="grid-column:6"></i><i class="tl-c" style="grid-column:7"></i><i class="tl-c" style="grid-column:8"></i><i class="tl-c" style="grid-column:9"></i><i class="tl-c" style="grid-column:10"></i><i class="tl-c sun ov" style="grid-column:11"></i><i class="tl-c ov" style="grid-column:12"></i><i class="tl-c ov" style="grid-column:13"></i><i class="tl-c" style="grid-column:14"></i><i class="tl-c" style="grid-column:15"></i><i class="tl-c" style="grid-column:16"></i><i class="tl-c" style="grid-column:17"></i><i class="tl-c sun" style="grid-column:18"></i><i class="tl-c" style="grid-column:19"></i><i class="tl-c" style="grid-column:20"></i><i class="tl-c" style="grid-column:21"></i><b class="tl-b a" style="grid-column:2/14">13 – 24 Nov</b></div>
+<div class="tl-row"><span class="tl-l"><b>Plan 2</b><small>Follow-on · draft · 3 orders</small></span><i class="tl-c" style="grid-column:2"></i><i class="tl-c" style="grid-column:3"></i><i class="tl-c sun" style="grid-column:4"></i><i class="tl-c" style="grid-column:5"></i><i class="tl-c" style="grid-column:6"></i><i class="tl-c" style="grid-column:7"></i><i class="tl-c" style="grid-column:8"></i><i class="tl-c" style="grid-column:9"></i><i class="tl-c" style="grid-column:10"></i><i class="tl-c sun ov" style="grid-column:11"></i><i class="tl-c ov" style="grid-column:12"></i><i class="tl-c ov" style="grid-column:13"></i><i class="tl-c" style="grid-column:14"></i><i class="tl-c" style="grid-column:15"></i><i class="tl-c" style="grid-column:16"></i><i class="tl-c" style="grid-column:17"></i><i class="tl-c sun" style="grid-column:18"></i><i class="tl-c" style="grid-column:19"></i><i class="tl-c" style="grid-column:20"></i><i class="tl-c" style="grid-column:21"></i><b class="tl-b f" style="grid-column:11/22">22 Nov – 2 Dec</b></div>
+</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+          <span style="font-size:13px;font-weight:600;color:#334155">Overlap check · 22–24 Nov</span>
+          <span class="bn" style="padding:6px 14px;font-size:13px"><span class="bn-dot"></span><b>CNC 01 +6 hrs</b><span>23 Nov · ORD-1043 (Plan A) &amp; ORD-1047 (Plan 2)</span></span>
+          <span class="tag ok">Press 01 OK</span><span class="tag ok">Labour OK</span><span class="tag ok">Steel OK after express PO</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- assistant summary -->
+    <section style="border:1px solid #E9DDFE;background:#FAF7FF;border-radius:16px;padding:18px 22px;display:flex;gap:14px;align-items:flex-start">
+      <span class="ai" style="flex:none">✦ Summary</span>
+      <span style="font-size:14px;color:#334155;line-height:1.55"><b>Plan C</b> earns ₹1.44 L more than Plan A, but needs 2 more fixes, ships ORD-1035 a day late and drops below your 18% margin minimum. <b>Plan B</b> has the best margin and frees CNC 01 from 21 Nov, but leaves ₹12 L of sales out. <b>Plan A</b> is the balanced choice.</span>
+    </section>
+
+    <!-- side-by-side -->
+    <section class="card">
+      <div class="card-h">
+        <h3>Compare plans <small>3 of 4 slots used</small></h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <span style="font-size:13px;color:#64748B">Suggested:</span>
+          <button class="pill">Fastest delivery</button>
+          <button class="pill">All deadlines + max value</button>
+          <button class="primary" style="min-height:36px;padding:8px 16px;font-size:13px">+ Generate variant</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+      <table class="cmp-t">
+        <thead><tr>
+          <th></th>
+          <th class="ph main"><div class="ph-t"><b>Plan A</b><span class="tag bl">Main plan</span></div><small>All 4 orders · 2 fixes</small><span class="tag ok">Feasible</span></th>
+          <th class="ph"><div class="ph-t"><b>Plan B</b><span class="tag lo">Variant</span></div><small>Drop lowest margin (ORD-1043)</small><span class="tag ok">Feasible</span></th>
+          <th class="ph"><div class="ph-t"><b>Plan C</b><span class="tag lo">Variant</span></div><small>Add ORD-1035, Ashok Leyland</small><span class="tag md">Capacity stretched</span></th>
+          <th class="ph slot"><button class="slot-b">+<small>Generate another plan</small></button></th>
+        </tr></thead>
+        <tbody>
+          <tr><th scope="row">Orders in plan</th>
+            <td class="cv"><div class="ocs"><span class="oc">1044</span><span class="oc">1041</span><span class="oc">1042</span><span class="oc">1043</span></div></td>
+            <td class="cv"><div class="ocs"><span class="oc">1044</span><span class="oc">1041</span><span class="oc">1042</span><span class="oc drop">1043</span></div></td>
+            <td class="cv"><div class="ocs"><span class="oc">1044</span><span class="oc">1041</span><span class="oc">1042</span><span class="oc">1043</span><span class="oc add">1035</span></div></td>
+            <td class="cv empty"></td></tr>
+          <tr><th scope="row">Orders</th><td class="cv"><span>4</span></td><td class="cv"><span>3</span></td><td class="cv"><span>5</span></td><td class="cv empty"></td></tr><tr><th scope="row">Production days</th><td class="cv"><span>12</span></td><td class="cv best"><span>8</span></td><td class="cv"><span>15</span></td><td class="cv empty"></td></tr><tr><th scope="row">Machine utilisation</th><td class="cv"><span>94%</span></td><td class="cv best"><span>71%</span></td><td class="cv"><span style="color:#B42318;font-weight:600">102%</span></td><td class="cv empty"></td></tr><tr><th scope="row">Bottlenecks</th><td class="cv best"><span>0</span></td><td class="cv best"><span>0</span></td><td class="cv"><span style="color:#B42318;font-weight:600">2</span></td><td class="cv empty"></td></tr><tr><th scope="row">Material shortage</th><td class="cv best"><span>0</span></td><td class="cv best"><span>0</span></td><td class="cv"><span style="color:#B42318;font-weight:600">Steel −1,100 kg</span></td><td class="cv empty"></td></tr><tr><th scope="row">Labour shortage</th><td class="cv best"><span>0</span></td><td class="cv best"><span>0</span></td><td class="cv"><span style="color:#B42318;font-weight:600">Assembly −10 hrs</span></td><td class="cv empty"></td></tr><tr><th scope="row">Late deliveries</th><td class="cv best"><span>0</span></td><td class="cv best"><span>0</span></td><td class="cv"><span style="color:#B42318;font-weight:600">1 · ORD-1035</span></td><td class="cv empty"></td></tr><tr><th scope="row">Extra cost of fixes</th><td class="cv"><span>₹24,600</span></td><td class="cv best"><span>₹0</span></td><td class="cv"><span style="color:#9A5205;font-weight:600">₹65,600</span></td><td class="cv empty"></td></tr><tr><th scope="row">Sales value</th><td class="cv"><span>₹31.0 L</span></td><td class="cv"><span>₹19.0 L</span></td><td class="cv best"><span>₹45.2 L</span></td><td class="cv empty"></td></tr>
+          <tr class="sep"><th scope="row" colspan="5">Financials · from Financial analysis</th></tr>
+          <tr class="key"><th scope="row">Contribution</th><td class="cv"><span>₹6.60 L</span></td><td class="cv"><span>₹4.69 L</span></td><td class="cv best"><span>₹8.04 L</span></td><td class="cv empty"></td></tr><tr class="key"><th scope="row">Contribution margin</th><td class="cv"><span>21.3%</span></td><td class="cv best"><span>24.7%</span></td><td class="cv"><span style="color:#9A5205;font-weight:600">17.8%</span></td><td class="cv empty"></td></tr>
+          <tr class="act"><th scope="row"></th>
+            <td class="cv"><button class="pill" data-goto-plan="1" style="width:100%">Open in tabs</button></td>
+            <td class="cv"><div style="display:flex;flex-direction:column;gap:6px"><button class="dark" style="width:100%;min-height:36px;font-size:13px" data-make-main>Make main plan</button><button class="pill" style="width:100%">Open in tabs</button></div></td>
+            <td class="cv"><div style="display:flex;flex-direction:column;gap:6px"><button class="dark" style="width:100%;min-height:36px;font-size:13px" data-make-main>Make main plan</button><button class="pill" style="width:100%">Open in tabs</button></div></td>
+            <td class="cv empty"></td></tr>
+        </tbody>
+      </table>
+      </div>
+      <div style="padding:12px 20px;border-top:1px solid #EEF1F5;background:#F8FAFC;font-size:12px;color:#64748B;display:flex;gap:16px;flex-wrap:wrap">
+        <span><span class="best-sw"></span> Best in row</span><span>Plans recalculate when the main plan or any order changes</span>
+      </div>
+    </section>
+  </section>
+
+</main>
+
+<div id="tip"></div>
+
+<!-- Reorder warning popup (design mock; see BUILD NOTE in Tab 3) -->
+<div id="warn-modal" role="dialog" aria-modal="true" aria-labelledby="warn-t">
+  <div class="box">
+    <div style="display:flex;gap:14px;align-items:flex-start">
+      <span style="width:40px;height:40px;border-radius:50%;background:#FDECEC;color:#B42318;display:grid;place-items:center;font-weight:700;flex:none">!</span>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <h3 id="warn-t" style="margin:0;font-size:18px;font-weight:600">Moving <span class="mono" id="warn-id">ORD-1042</span> creates bottlenecks</h3>
+        <p style="margin:0;font-size:14px;color:#64748B">Here's what changes if you continue. You can still fix these later in Resource feasibility.</p>
+      </div>
+    </div>
+    <div>
+      <div class="wi"><span class="bn-dot" style="margin-top:6px;flex:none"></span><div><b>CNC 01 over capacity · 18–19 Nov</b><small>+22 hrs (was +15 hrs on 19–20 Nov) · ORD-1041, ORD-1042</small></div></div>
+      <div class="wi"><span class="bn-dot" style="margin-top:6px;flex:none;background:#E59E2E"></span><div><b>Machining labour short · 18 Nov</b><small>6 hrs over the 2-shift limit</small></div></div>
+      <div class="wi"><span class="bn-dot" style="margin-top:6px;flex:none;background:#15803D"></span><div><b>Deliveries</b><small>ORD-1042 now on time · ORD-1041 slips to 19 Nov (1 day late)</small></div></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:10px">
+      <button class="pill" onclick="closeWarn()">Cancel, keep old order</button>
+      <button class="primary" style="background:#B42318" onclick="closeWarn()">Continue anyway</button>
+    </div>
+  </div>
+</div>
+
+<!-- Approve with open item (design mock) -->
+<div id="appr-modal" style="position:fixed;inset:0;background:rgba(15,23,42,.35);display:none;align-items:center;justify-content:center;z-index:60;padding:24px" role="dialog" aria-modal="true">
+  <div class="box" style="background:#fff;border-radius:20px;max-width:480px;width:100%;padding:26px;display:flex;flex-direction:column;gap:16px;box-shadow:0 24px 64px rgba(15,23,42,.25)">
+    <div style="display:flex;gap:14px;align-items:flex-start">
+      <span style="width:40px;height:40px;border-radius:50%;background:#FEF3E2;color:#9A5205;display:grid;place-items:center;font-weight:700;flex:none">!</span>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <h3 style="margin:0;font-size:18px;font-weight:600">Approve with 1 open item?</h3>
+        <p style="margin:0;font-size:14px;color:#64748B">The express steel PO isn't raised yet. If you approve, it goes to Purchasing straight away. It must arrive by 18 Nov.</p>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:10px">
+      <button class="pill" onclick="document.getElementById('appr-modal').style.display='none'">Go back</button>
+      <button class="primary" onclick="document.getElementById('appr-modal').style.display='none'">Approve and raise PO</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// visual-only switching
+const tabs=[...document.querySelectorAll('.steps a')];
+const names={2:'Proposed manufacturing sequence',3:'Production schedule',4:'Resource feasibility',5:'Financial analysis',6:'Final plan approval'};
+let generated=false;
+function show(n){
+  n=+n;
+  tabs.forEach(t=>t.classList.toggle('on',t.dataset.tab==n));
+  const built=[1].concat(generated?[2,3,4,5,6]:[]);   // tabs that are designed so far
+  [1,2,3,4,5,6].forEach(i=>document.getElementById('tab-'+i).classList.toggle('on',n===i&&built.includes(i)));
+  const locked=!built.includes(n);
+  document.getElementById('tab-locked').classList.toggle('on',locked);
+  if(locked)document.getElementById('locked-title').textContent=names[n]+(generated?' · coming next':' · no plan generated yet');
+  window.scrollTo({top:0});
+}
+function generate(){
+  generated=true;
+  tabs.slice(1).forEach(t=>t.classList.remove('lock'));
+  document.querySelectorAll('#tab-1 .primary').forEach(b=>{if(b.textContent.includes('Generate'))b.textContent='Recalculate plan →'});
+  const lg=[...document.querySelectorAll('#tab-1 span')].find(s=>s.textContent==='Last generated: never');
+  if(lg)lg.textContent='Last generated: just now';
+  show(2);
+}
+tabs.forEach(t=>t.onclick=e=>{e.preventDefault();show(t.dataset.tab)});
+document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=e=>{e.preventDefault();show(b.dataset.goto)});
+document.querySelectorAll('.primary').forEach(b=>{if(/Generate plan|Recalculate plan/.test(b.textContent))b.addEventListener('click',generate)});
+if(location.hash==='#tab2')generate();
+if(location.hash==='#tab3'){generate();show(3);}
+if(location.hash==='#tab4'){generate();show(4);}
+if(location.hash==='#tab5'){generate();show(5);}
+if(location.hash==='#tab6'){generate();show(6);}
+if(location.hash==='#compare'){generate();setTimeout(()=>document.querySelector('.seg button[data-mode=compare]').click(),0);}
+document.querySelectorAll('[data-make-main],[data-goto-plan]').forEach(b=>b.addEventListener('click',()=>{document.querySelector('.seg button[data-mode=plan]').click();if(!generated)generate();show(b.hasAttribute('data-make-main')?6:2);}));
+document.querySelectorAll('#tab-2 .seg button').forEach(b=>b.onclick=()=>b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)));
+document.querySelectorAll('#fin-seg button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#fin-seg button').forEach(x=>x.classList.toggle('on',x===b));
+  const v=b.dataset.v;
+  document.querySelectorAll('#tab-5 [data-a]').forEach(e=>e.textContent=e.dataset[v]);
+  document.querySelectorAll('#tab-5 [data-wa]').forEach(e=>e.style.width=e.dataset['w'+v]);
+});
+document.querySelectorAll('.wo input').forEach(r=>r.addEventListener('change',()=>document.querySelectorAll(`.wo input[name=${r.name}]`).forEach(x=>x.closest('.wo').classList.toggle('sel',x.checked))));
+
+// tooltip on bars
+const tip=document.getElementById('tip');
+const L={cust:'Customer',prod:'Product',units:'Units',value:'Sales value',deadline:'Deadline',buffer:'Buffer',route:'Route'};
+document.querySelectorAll('.bar[data-tip]').forEach(b=>{
+  b.addEventListener('mousemove',e=>{
+    const d=JSON.parse(b.dataset.tip);
+    let rows='';
+    if(d.a){rows=`<div class="tr"><span>Customer</span><span>${d.cust}</span></div><div class="tr"><span>Product</span><span>${d.prod}</span></div><div class="tr"><span>${d.a}</span><span>${d.av}</span></div><div class="tr"><span>${d.b}</span><span>${d.bv}</span></div>`;}
+    else for(const k in L) if(d[k]) rows+=`<div class="tr"><span>${L[k]}</span><span>${d[k]}</span></div>`;
+    const st=d.status||'';const cls=/Late/.test(st)?'hi':/short/.test(st)?'md':/production/.test(st)?'lo':'ok';
+    tip.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><b class="mono" style="font-size:14px">${d.id}</b><span class="tag ${cls}" style="font-size:11px">${st}</span></div>`+rows;
+    tip.style.display='block';
+    const x=Math.min(e.clientX+16,innerWidth-280),y=Math.min(e.clientY+16,innerHeight-tip.offsetHeight-10);
+    tip.style.left=x+'px';tip.style.top=y+'px';
+  });
+  b.addEventListener('mouseleave',()=>tip.style.display='none');
+});
+
+// row drag (visual only): drag by ⋮⋮, whole row moves, then warning popup
+const wrapRows=document.getElementById('pl-rows');let dragRow=null;
+document.querySelectorAll('.pl-row .g-grip').forEach(g=>{
+  const row=g.closest('.pl-row');
+  g.addEventListener('mousedown',()=>row.draggable=true);
+  row.addEventListener('dragstart',e=>{dragRow=row;row.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
+  row.addEventListener('dragend',()=>{row.draggable=false;row.classList.remove('dragging');document.querySelectorAll('.drop-above').forEach(r=>r.classList.remove('drop-above'));});
+  row.addEventListener('dragover',e=>{e.preventDefault();document.querySelectorAll('.drop-above').forEach(r=>r.classList.remove('drop-above'));if(row!==dragRow)row.classList.add('drop-above');});
+  row.addEventListener('drop',e=>{e.preventDefault();if(dragRow&&row!==dragRow){wrapRows.insertBefore(dragRow,row);[...wrapRows.children].forEach((r,i)=>r.querySelector('.rk').textContent=i+1);openWarn(dragRow.dataset.id);}});
+});
+function openWarn(id){if(id)document.getElementById('warn-id').textContent=id;document.getElementById('warn-modal').style.display='flex';}
+function closeWarn(){document.getElementById('warn-modal').style.display='none';}
+document.querySelectorAll('.seg[aria-label="Plan view"] button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.seg[aria-label="Plan view"] button').forEach(x=>x.classList.toggle('on',x===b));
+  const c=b.dataset.mode==='compare';
+  document.getElementById('mode-plan').style.display=c?'none':'flex';
+  document.getElementById('mode-compare').style.display=c?'flex':'none';
+});
+</script>
+</body>
+</html>

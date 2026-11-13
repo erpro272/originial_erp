@@ -69,9 +69,7 @@ async def seed(session: AsyncSession) -> dict[str, uuid.UUID]:
     await session.flush()
     for email, _, roles in USERS:
         for slug, role in roles:
-            session.add(
-                Membership(tenant_id=tenants[slug].id, user_id=users[email].id, role=role.value)
-            )
+            session.add(Membership(tenant_id=tenants[slug].id, user_id=users[email].id, role=role.value))
     await session.flush()
     for slug, tenant in tenants.items():
         await set_tenant(session, tenant.id)
