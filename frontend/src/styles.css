@@ -1,0 +1,109 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens, copied from the mockups (clean-wall Orders + planning.html).
+ * Use these via Tailwind classes (bg-primary, text-ink, border-line, rounded-card, ...).
+ * ESLint forbids raw hex colours in TS/TSX so every screen stays on these tokens.
+ */
+@theme {
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* brand / interactive */
+  --color-primary: #1d63ed;
+  --color-primary-hover: #1a56d0;
+  --color-link: #1d4ed8;
+  --color-link-hover: #1e40af;
+
+  /* text */
+  --color-ink: #0f172a;
+  --color-ink-2: #334155;
+  --color-ink-3: #475569;
+  --color-muted: #64748b;
+  --color-subtle: #94a3b8;
+  --color-faint: #cbd5e1;
+
+  /* lines and surfaces */
+  --color-line: #e5e9f0;
+  --color-line-input: #e2e8f0;
+  --color-divider: #eef1f5;
+  --color-divider-2: #f1f4f8;
+  --color-surface: #f8fafc;
+  --color-surface-2: #f1f5f9;
+  --color-surface-blue: #f5f8ff;
+
+  /* soft status tags: hi / md / lo / ok / bl */
+  --color-hi-bg: #fdecec;
+  --color-hi: #b42318;
+  --color-hi-line: #f3b4ae;
+  --color-hi-wash: #fffbfa;
+  --color-md-bg: #fef3e2;
+  --color-md: #9a5205;
+  --color-md-line: #f1cf9b;
+  --color-md-accent: #e59e2e;
+  --color-lo-bg: #eef2f6;
+  --color-lo: #475569;
+  --color-ok-bg: #e7f6ec;
+  --color-ok: #15803d;
+  --color-ok-line: #b7e2c4;
+  --color-bl-bg: #eaf1fe;
+  --color-bl: #1d4ed8;
+  --color-bl-line: #b9cefa;
+
+  /* assistant (✦) */
+  --color-ai-bg: #f3eeff;
+  --color-ai: #6d28d9;
+  --color-ai-wash: #faf7ff;
+  --color-ai-line: #e9ddfe;
+
+  /* radii */
+  --radius-chip: 6px;
+  --radius-bar: 8px;
+  --radius-tip: 12px;
+  --radius-card: 16px;
+  --radius-modal: 20px;
+
+  /* shadows */
+  --shadow-seg: 0 1px 2px rgba(15, 23, 42, 0.08), 0 0 0 1px #e5e9f0;
+  --shadow-tip: 0 12px 32px rgba(15, 23, 42, 0.14);
+  --shadow-modal: 0 24px 64px rgba(15, 23, 42, 0.25);
+  --shadow-lift: 0 2px 6px rgba(15, 23, 42, 0.12);
+
+  --animate-fade-in: fade-in 120ms ease-out;
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    @apply bg-white font-sans text-ink;
+    margin: 0;
+  }
+  a {
+    @apply text-link hover:text-link-hover;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+  input[type="checkbox"],
+  input[type="radio"] {
+    accent-color: var(--color-primary);
+  }
+}
+
+/* Overlay colour used by modals. */
+.overlay {
+  background: rgba(15, 23, 42, 0.35);
+}
