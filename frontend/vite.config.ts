@@ -12,6 +12,8 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
+    // Dev server only: accept any Host header so remote/preview proxies can reach it.
+    allowedHosts: true,
     proxy: { "/api": { target: apiTarget, changeOrigin: false } },
   },
   test: {

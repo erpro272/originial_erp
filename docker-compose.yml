@@ -88,7 +88,7 @@ services:
     environment:
       VITE_API_PROXY: http://api:8000
     ports: ["5173:5173"]
-    volumes: ["./frontend/src:/app/src", "./frontend/public:/app/public"]
+    volumes: ["./frontend/src:/app/src", "./frontend/public:/app/public", "./frontend/vite.config.ts:/app/vite.config.ts:ro"]
     depends_on:
       api: { condition: service_healthy }
 
