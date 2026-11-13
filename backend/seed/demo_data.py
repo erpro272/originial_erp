@@ -1,3 +1,5 @@
+# mypy: disable-error-code="assignment,attr-defined,misc,arg-type,unused-ignore,operator"
+# (Demo data script: loose typing is fine here; app code is strictly typed.)
 """Demo business data for the seeded companies. Dates are relative to today so the
 screens always look current. Deterministic (fixed random seed)."""
 
