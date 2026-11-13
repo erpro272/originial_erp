@@ -83,7 +83,7 @@ def fmt_qty(q: Decimal, unit: str) -> str:
 def _indian(n: int) -> str:
     s = str(n)
     head, tail = s[:-3], s[-3:]
-    parts = []
+    parts: list[str] = []
     while len(head) > 2:
         parts.insert(0, head[-2:])
         head = head[:-2]
