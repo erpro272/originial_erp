@@ -11,6 +11,7 @@ os.environ.setdefault(
     "ERP_DATABASE_OWNER_URL", "postgresql+asyncpg://erp_owner:erp_owner@localhost:5432/erp_test"
 )
 os.environ.setdefault("ERP_REDIS_URL", "redis://localhost:6379/15")
+os.environ["ERP_JOBS_INLINE"] = "true"
 os.environ.pop("ANTHROPIC_API_KEY", None)  # tests always run the AI in mock mode
 
 import uuid

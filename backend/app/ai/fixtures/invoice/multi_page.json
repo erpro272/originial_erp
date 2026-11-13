@@ -1,0 +1,3258 @@
+{
+ "is_invoice": true,
+ "fields": {
+  "invoice_number": {
+   "raw": "DMC/26-27/0420",
+   "confidence": 0.98,
+   "page": 1,
+   "bbox": [
+    0.7258,
+    0.0604,
+    0.846,
+    0.0684
+   ]
+  },
+  "invoice_date": {
+   "raw": "05/11/2026",
+   "confidence": 0.96,
+   "page": 1,
+   "bbox": [
+    0.7258,
+    0.0753,
+    0.8065,
+    0.0832
+   ]
+  },
+  "invoice_type": {
+   "raw": "TAX INVOICE",
+   "confidence": 0.94,
+   "page": 1,
+   "bbox": [
+    0.0484,
+    0.0336,
+    0.2121,
+    0.0473
+   ]
+  },
+  "due_date": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "original_invoice_ref": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "irn": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "ack_no": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "ack_date": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "seller_name": {
+   "raw": "Demo Manufacturing Co.",
+   "confidence": 0.98,
+   "page": 1,
+   "bbox": [
+    0.0484,
+    0.0599,
+    0.2565,
+    0.0718
+   ]
+  },
+  "seller_gstin": {
+   "raw": "27AAFCD5512K1ZM",
+   "confidence": 0.96,
+   "page": 1,
+   "bbox": [
+    0.2097,
+    0.1083,
+    0.354,
+    0.1157
+   ]
+  },
+  "seller_pan": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "seller_address": {
+   "raw": "Plot 14, MIDC Bhosari, Pune 411026",
+   "confidence": 0.98,
+   "page": 1,
+   "bbox": [
+    0.0484,
+    0.0781,
+    0.2976,
+    0.0872
+   ]
+  },
+  "seller_state": {
+   "raw": "Maharashtra",
+   "confidence": 0.95,
+   "page": 1,
+   "bbox": [
+    0.1048,
+    0.0935,
+    0.1903,
+    0.1009
+   ]
+  },
+  "seller_state_code": {
+   "raw": "27",
+   "confidence": 0.91,
+   "page": 1,
+   "bbox": [
+    0.3105,
+    0.0935,
+    0.3282,
+    0.1009
+   ]
+  },
+  "seller_phone": {
+   "raw": "+91 20 2712 4455",
+   "confidence": 0.92,
+   "page": 1,
+   "bbox": [
+    0.2097,
+    0.1231,
+    0.3355,
+    0.1306
+   ]
+  },
+  "seller_email": {
+   "raw": "accounts@demomfg.example",
+   "confidence": 0.91,
+   "page": 1,
+   "bbox": [
+    0.2097,
+    0.1374,
+    0.4185,
+    0.1477
+   ]
+  },
+  "buyer_name": {
+   "raw": "Mahindra & Mahindra Ltd",
+   "confidence": 0.93,
+   "page": 1,
+   "bbox": [
+    0.0484,
+    0.183,
+    0.2581,
+    0.1921
+   ]
+  },
+  "buyer_gstin": {
+   "raw": "27AAACM9999Z1ZP",
+   "confidence": 0.94,
+   "page": 1,
+   "bbox": [
+    0.2097,
+    0.2149,
+    0.3532,
+    0.2223
+   ]
+  },
+  "buyer_pan": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "buyer_billing_address": {
+   "raw": "Kandivali, Mumbai 400067",
+   "confidence": 0.92,
+   "page": 1,
+   "bbox": [
+    0.0484,
+    0.1995,
+    0.229,
+    0.2087
+   ]
+  },
+  "buyer_shipping_address": {
+   "raw": "Kandivali, Mumbai 400067",
+   "confidence": 0.96,
+   "page": 1,
+   "bbox": [
+    0.5645,
+    0.1824,
+    0.7452,
+    0.1916
+   ]
+  },
+  "buyer_state": {
+   "raw": "Maharashtra",
+   "confidence": 0.92,
+   "page": 1,
+   "bbox": [
+    0.1048,
+    0.2298,
+    0.1903,
+    0.2372
+   ]
+  },
+  "buyer_state_code": {
+   "raw": "27",
+   "confidence": 0.97,
+   "page": 1,
+   "bbox": [
+    0.3105,
+    0.2298,
+    0.3282,
+    0.2372
+   ]
+  },
+  "buyer_contact_person": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "buyer_phone": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "buyer_email": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "subtotal": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "total_quantity": {
+   "raw": "171,000",
+   "confidence": 0.98,
+   "page": 2,
+   "bbox": [
+    0.8952,
+    0.1916,
+    0.9516,
+    0.2001
+   ]
+  },
+  "total_discount": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "total_taxable": {
+   "raw": "8,26,500.00",
+   "confidence": 0.97,
+   "page": 2,
+   "bbox": [
+    0.871,
+    0.2087,
+    0.9516,
+    0.2172
+   ]
+  },
+  "total_cgst": {
+   "raw": "74,385.00",
+   "confidence": 0.99,
+   "page": 2,
+   "bbox": [
+    0.8831,
+    0.2258,
+    0.9516,
+    0.2343
+   ]
+  },
+  "total_sgst": {
+   "raw": "74,385.00",
+   "confidence": 0.98,
+   "page": 2,
+   "bbox": [
+    0.8831,
+    0.2429,
+    0.9516,
+    0.2514
+   ]
+  },
+  "total_igst": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "total_cess": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "freight": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "packing": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "other_charges": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "round_off": {
+   "raw": "0.00",
+   "confidence": 0.91,
+   "page": 2,
+   "bbox": [
+    0.9218,
+    0.26,
+    0.9516,
+    0.2674
+   ]
+  },
+  "grand_total": {
+   "raw": "9,75,270.00",
+   "confidence": 0.95,
+   "page": 2,
+   "bbox": [
+    0.8556,
+    0.2777,
+    0.9516,
+    0.2879
+   ]
+  },
+  "amount_in_words": {
+   "raw": "Rupees Nine Lakh Seventy Five Thousand Two Hundred Seventy Only",
+   "confidence": 0.97,
+   "page": 2,
+   "bbox": [
+    0.0484,
+    0.2993,
+    0.5379,
+    0.3096
+   ]
+  },
+  "payment_terms": {
+   "raw": "30 days",
+   "confidence": 0.99,
+   "page": 2,
+   "bbox": [
+    0.2097,
+    0.3227,
+    0.2637,
+    0.3324
+   ]
+  },
+  "payment_mode": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "amount_paid": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "advance_received": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "balance_due": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "bank_name": {
+   "raw": "HDFC Bank, Bhosari",
+   "confidence": 0.92,
+   "page": 2,
+   "bbox": [
+    0.2097,
+    0.3369,
+    0.3476,
+    0.3461
+   ]
+  },
+  "bank_account_number": {
+   "raw": "50200012344417",
+   "confidence": 0.92,
+   "page": 2,
+   "bbox": [
+    0.2097,
+    0.3523,
+    0.3339,
+    0.3597
+   ]
+  },
+  "bank_ifsc": {
+   "raw": "HDFC0001234",
+   "confidence": 0.96,
+   "page": 2,
+   "bbox": [
+    0.2097,
+    0.3672,
+    0.3137,
+    0.3746
+   ]
+  },
+  "upi_id": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "utr": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "cheque_number": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "transporter_name": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "transporter_id": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "vehicle_number": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "lr_number": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "eway_bill_number": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "eway_bill_date": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "dispatch_date": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "delivery_date": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "transport_mode": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "place_of_dispatch": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "place_of_delivery": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "reverse_charge": {
+   "raw": "No",
+   "confidence": 0.99,
+   "page": 1,
+   "bbox": [
+    0.7258,
+    0.2149,
+    0.7468,
+    0.2223
+   ]
+  },
+  "place_of_supply": {
+   "raw": "27-Maharashtra",
+   "confidence": 0.95,
+   "page": 1,
+   "bbox": [
+    0.7258,
+    0.2001,
+    0.8339,
+    0.2075
+   ]
+  },
+  "state_of_supply": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "delivery_terms": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "payment_terms_conditions": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "warranty": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "declaration": {
+   "raw": "Declaration: We declare that this invoice shows the actual price of the goods described.",
+   "confidence": 0.98,
+   "page": 2,
+   "bbox": [
+    0.0484,
+    0.4019,
+    0.6556,
+    0.4122
+   ]
+  },
+  "authorised_signatory": {
+   "raw": "Authorised Signatory",
+   "confidence": 0.97,
+   "page": 2,
+   "bbox": [
+    0.6613,
+    0.4761,
+    0.8089,
+    0.4863
+   ]
+  },
+  "digital_signature_present": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "digital_signature_name": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  }
+ },
+ "lines": [
+  {
+   "product_name": {
+    "raw": "Fastener kit A",
+    "confidence": 0.91,
+    "page": 1,
+    "bbox": [
+     0.0806,
+     0.2759,
+     0.175,
+     0.2839
+    ]
+   },
+   "description": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "sku": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "hsn": {
+    "raw": "7318",
+    "confidence": 0.93,
+    "page": 1,
+    "bbox": [
+     0.371,
+     0.2765,
+     0.4065,
+     0.2839
+    ]
+   },
+   "quantity": {
+    "raw": "1,000",
+    "confidence": 0.95,
+    "page": 1,
+    "bbox": [
+     0.4516,
+     0.2765,
+     0.4903,
+     0.2851
+    ]
+   },
+   "uom": {
+    "raw": "PCS",
+    "confidence": 0.94,
+    "page": 1,
+    "bbox": [
+     0.5484,
+     0.2765,
+     0.5782,
+     0.2839
+    ]
+   },
+   "unit_price": {
+    "raw": "2.00",
+    "confidence": 0.96,
+    "page": 1,
+    "bbox": [
+     0.6048,
+     0.2765,
+     0.6347,
+     0.2839
+    ]
+   },
+   "discount_pct": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "discount_amount": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "taxable_value": {
+    "raw": "2,000.00",
+    "confidence": 0.91,
+    "page": 1,
+    "bbox": [
+     0.871,
+     0.2765,
+     0.9306,
+     0.2851
+    ]
+   },
+   "gst_rate": {
+    "raw": "18%",
+    "confidence": 0.98,
+    "page": 1,
+    "bbox": [
+     0.7097,
+     0.2765,
+     0.7395,
+     0.2839
+    ]
+   },
+   "cgst": {
+    "raw": "180.00",
+    "confidence": 0.98,
+    "page": 1,
+    "bbox": [
+     0.7742,
+     0.2765,
+     0.8218,
+     0.2839
+    ]
+   },
+   "sgst": {
+    "raw": "180.00",
+    "confidence": 0.98,
+    "page": 1,
+    "bbox": [
+     0.7742,
+     0.2765,
+     0.8218,
+     0.2839
+    ]
+   },
+   "igst": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "cess": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "total": {
+    "raw": "2,360.00",
+    "confidence": 0.92,
+    "page": 1,
+    "bbox": [
+     0.871,
+     0.2765,
+     0.9306,
+     0.2851
+    ]
+   }
+  },
+  {
+   "product_name": {
+    "raw": "Fastener kit B",
+    "confidence": 0.95,
+    "page": 1,
+    "bbox": [
+     0.0806,
+     0.293,
+     0.175,
+     0.301
+    ]
+   },
+   "description": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "sku": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "hsn": {
+    "raw": "7318",
+    "confidence": 0.96,
+    "page": 1,
+    "bbox": [
+     0.371,
+     0.2936,
+     0.4065,
+     0.301
+    ]
+   },
+   "quantity": {
+    "raw": "2,000",
+    "confidence": 0.94,
+    "page": 1,
+    "bbox": [
+     0.4516,
+     0.2936,
+     0.4903,
+     0.3022
+    ]
+   },
+   "uom": {
+    "raw": "PCS",
+    "confidence": 0.91,
+    "page": 1,
+    "bbox": [
+     0.5484,
+     0.2936,
+     0.5782,
+     0.301
+    ]
+   },
+   "unit_price": {
+    "raw": "2.25",
+    "confidence": 0.99,
+    "page": 1,
+    "bbox": [
+     0.6048,
+     0.2936,
+     0.6347,
+     0.301
+    ]
+   },
+   "discount_pct": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "discount_amount": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "taxable_value": {
+    "raw": "4,500.00",
+    "confidence": 0.94,
+    "page": 1,
+    "bbox": [
+     0.871,
+     0.2936,
+     0.9306,
+     0.3022
+    ]
+   },
+   "gst_rate": {
+    "raw": "18%",
+    "confidence": 0.98,
+    "page": 1,
+    "bbox": [
+     0.7097,
+     0.2936,
+     0.7395,
+     0.301
+    ]
+   },
+   "cgst": {
+    "raw": "405.00",
+    "confidence": 0.92,
+    "page": 1,
+    "bbox": [
+     0.7742,
+     0.2936,
+     0.8218,
+     0.301
+    ]
+   },
+   "sgst": {
+    "raw": "405.00",
+    "confidence": 0.92,
+    "page": 1,
+    "bbox": [
+     0.7742,
+     0.2936,
+     0.8218,
+     0.301
+    ]
+   },
+   "igst": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "cess": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "total": {
+    "raw": "5,310.00",
+    "confidence": 0.94,
+    "page": 1,
+    "bbox": [
+     0.871,
+     0.2936,
+     0.9306,
+     0.3022
+    ]
+   }
+  },
+  {
+   "product_name": {
+    "raw": "Fastener kit C",
+    "confidence": 0.96,
+    "page": 1,
+    "bbox": [
+     0.0806,
+     0.3101,
+     0.1758,
+     0.3181
+    ]
+   },
+   "description": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "sku": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "hsn": {
+    "raw": "7318",
+    "confidence": 0.96,
+    "page": 1,
+    "bbox": [
+     0.371,
+     0.3107,
+     0.4065,
+     0.3181
+    ]
+   },
+   "quantity": {
+    "raw": "3,000",
+    "confidence": 0.93,
+    "page": 1,
+    "bbox": [
+     0.4516,
+     0.3107,
+     0.4903,
+     0.3193
+    ]
+   },
+   "uom": {
+    "raw": "PCS",
+    "confidence": 0.97,
+    "page": 1,
+    "bbox": [
+     0.5484,
+     0.3107,
+     0.5782,
+     0.3181
+    ]
+   },
+   "unit_price": {
+    "raw": "2.50",
+    "confidence": 0.99,
+    "page": 1,
+    "bbox": [
+     0.6048,
+     0.3107,
+     0.6347,
+     0.3181
+    ]
+   },
+   "discount_pct": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "discount_amount": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "taxable_value": {
+    "raw": "7,500.00",
+    "confidence": 0.9,
+    "page": 1,
+    "bbox": [
+     0.871,
+     0.3107,
+     0.9306,
+     0.3193
+    ]
+   },
+   "gst_rate": {
+    "raw": "18%",
+    "confidence": 0.99,
+    "page": 1,
+    "bbox": [
+     0.7097,
+     0.3107,
+     0.7395,
+     0.3181
+    ]
+   },
+   "cgst": {
+    "raw": "675.00",
+    "confidence": 0.95,
+    "page": 1,
+    "bbox": [
+     0.7742,
+     0.3107,
+     0.8339,
+     0.3193
+    ]
+   },
+   "sgst": {
+    "raw": "675.00",
+    "confidence": 0.95,
+    "page": 1,
+    "bbox": [
+     0.7742,
+     0.3107,
+     0.8339,
+     0.3193
+    ]
+   },
+   "igst": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "cess": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "total": {
+    "raw": "8,850.00",
+    "confidence": 0.98,
+    "page": 1,
+    "bbox": [
+     0.871,
+     0.3107,
+     0.9306,
+     0.3193
+    ]
+   }
+  },
+  {
+   "product_name": {
+    "raw": "Fastener kit D",
+    "confidence": 0.99,
+    "page": 1,
+    "bbox": [
+     0.0806,
+     0.3273,
+     0.1766,
+     0.3352
+    ]
+   },
+   "description": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "sku": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "hsn": {
+    "raw": "7318",
+    "confidence": 0.95,
+    "page": 1,
+    "bbox": [
+     0.371,
+     0.3278,
+     0.4065,
+     0.3352
+    ]
+   },
+   "quantity": {
+    "raw": "4,000",
+    "confidence": 0.95,
+    "page": 1,
+    "bbox": [
+     0.4516,
+     0.3278,
+     0.4903,
+     0.3364
+    ]
+   },
+   "uom": {
+    "raw": "PCS",
+    "confidence": 0.98,
+    "page": 1,
+    "bbox": [
+     0.5484,
+     0.3278,
+     0.5782,
+     0.3352
+    ]
+   },
+   "unit_price": {
+    "raw": "2.75",
+    "confidence": 0.93,
+    "page": 1,
+    "bbox": [
+     0.6048,
+     0.3278,
+     0.6347,
+     0.3352
+    ]
+   },
+   "discount_pct": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "discount_amount": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "taxable_value": {
+    "raw": "11,000.00",
+    "confidence": 0.92,
+    "page": 1,
+    "bbox": [
+     0.871,
+     0.3278,
+     0.9395,
+     0.3364
+    ]
+   },
+   "gst_rate": {
+    "raw": "18%",
+    "confidence": 0.97,
+    "page": 1,
+    "bbox": [
+     0.7097,
+     0.3278,
+     0.7395,
+     0.3352
+    ]
+   },
+   "cgst": {
+    "raw": "990.00",
+    "confidence": 0.92,
+    "page": 1,
+    "bbox": [
+     0.7742,
+     0.3278,
+     0.8339,
+     0.3364
+    ]
+   },
+   "sgst": {
+    "raw": "990.00",
+    "confidence": 0.92,
+    "page": 1,
+    "bbox": [
+     0.7742,
+     0.3278,
+     0.8339,
+     0.3364
+    ]
+   },
+   "igst": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "cess": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "total": {
+    "raw": "12,980.00",
+    "confidence": 0.98,
+    "page": 1,
+    "bbox": [
+     0.871,
+     0.3278,
+     0.9395,
+     0.3364
+    ]
+   }
+  },
+  {
+   "product_name": {
+    "raw": "Fastener kit E",
+    "confidence": 0.95,
+    "page": 1,
+    "bbox": [
+     0.0806,
+     0.3444,
+     0.1742,
+     0.3523
+    ]
+   },
+   "description": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "sku": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "hsn": {
+    "raw": "7318",
+    "confidence": 0.92,
+    "page": 1,
+    "bbox": [
+     0.371,
+     0.3449,
+     0.4065,
+     0.3523
+    ]
+   },
+   "quantity": {
+    "raw": "5,000",
+    "confidence": 0.94,
+    "page": 1,
+    "bbox": [
+     0.4516,
+     0.3449,
+     0.4903,
+     0.3535
+    ]
+   },
+   "uom": {
+    "raw": "PCS",
+    "confidence": 0.99,
+    "page": 1,
+    "bbox": [
+     0.5484,
+     0.3449,
+     0.5782,
+     0.3523
+    ]
+   },
+   "unit_price": {
+    "raw": "3.00",
+    "confidence": 0.93,
+    "page": 1,
+    "bbox": [
+     0.6048,
+     0.3449,
+     0.6347,
+     0.3523
+    ]
+   },
+   "discount_pct": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "discount_amount": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "taxable_value": {
+    "raw": "15,000.00",
+    "confidence": 0.94,
+    "page": 1,
+    "bbox": [
+     0.871,
+     0.3449,
+     0.9395,
+     0.3535
+    ]
+   },
+   "gst_rate": {
+    "raw": "18%",
+    "confidence": 0.92,
+    "page": 1,
+    "bbox": [
+     0.7097,
+     0.3449,
+     0.7395,
+     0.3523
+    ]
+   },
+   "cgst": {
+    "raw": "1,350.00",
+    "confidence": 0.98,
+    "page": 1,
+    "bbox": [
+     0.7742,
+     0.3449,
+     0.8339,
+     0.3535
+    ]
+   },
+   "sgst": {
+    "raw": "1,350.00",
+    "confidence": 0.98,
+    "page": 1,
+    "bbox": [
+     0.7742,
+     0.3449,
+     0.8339,
+     0.3535
+    ]
+   },
+   "igst": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "cess": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "total": {
+    "raw": "17,700.00",
+    "confidence": 0.99,
+    "page": 1,
+    "bbox": [
+     0.871,
+     0.3449,
+     0.9395,
+     0.3535
+    ]
+   }
+  },
+  {
+   "product_name": {
+    "raw": "Fastener kit F",
+    "confidence": 0.99,
+    "page": 1,
+    "bbox": [
+     0.0806,
+     0.3615,
+     0.1742,
+     0.3694
+    ]
+   },
+   "description": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "sku": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "hsn": {
+    "raw": "7318",
+    "confidence": 0.97,
+    "page": 1,
+    "bbox": [
+     0.371,
+     0.362,
+     0.4065,
+     0.3694
+    ]
+   },
+   "quantity": {
+    "raw": "6,000",
+    "confidence": 0.96,
+    "page": 1,
+    "bbox": [
+     0.4516,
+     0.362,
+     0.4903,
+     0.3706
+    ]
+   },
+   "uom": {
+    "raw": "PCS",
+    "confidence": 0.96,
+    "page": 1,
+    "bbox": [
+     0.5484,
+     0.362,
+     0.5782,
+     0.3694
+    ]
+   },
+   "unit_price": {
+    "raw": "3.25",
+    "confidence": 0.99,
+    "page": 1,
+    "bbox": [
+     0.6048,
+     0.362,
+     0.6347,
+     0.3694
+    ]
+   },
+   "discount_pct": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "discount_amount": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "taxable_value": {
+    "raw": "19,500.00",
+    "confidence": 0.93,
+    "page": 1,
+    "bbox": [
+     0.871,
+     0.362,
+     0.9395,
+     0.3706
+    ]
+   },
+   "gst_rate": {
+    "raw": "18%",
+    "confidence": 0.94,
+    "page": 1,
+    "bbox": [
+     0.7097,
+     0.362,
+     0.7395,
+     0.3694
+    ]
+   },
+   "cgst": {
+    "raw": "1,755.00",
+    "confidence": 0.91,
+    "page": 1,
+    "bbox": [
+     0.7742,
+     0.362,
+     0.8339,
+     0.3706
+    ]
+   },
+   "sgst": {
+    "raw": "1,755.00",
+    "confidence": 0.91,
+    "page": 1,
+    "bbox": [
+     0.7742,
+     0.362,
+     0.8339,
+     0.3706
+    ]
+   },
+   "igst": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "cess": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "total": {
+    "raw": "23,010.00",
+    "confidence": 0.93,
+    "page": 1,
+    "bbox": [
+     0.871,
+     0.362,
+     0.9395,
+     0.3706
+    ]
+   }
+  },
+  {
+   "product_name": {
+    "raw": "Fastener kit G",
+    "confidence": 0.98,
+    "page": 1,
+    "bbox": [
+     0.0806,
+     0.3786,
+     0.1766,
+     0.3865
+    ]
+   },
+   "description": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "sku": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "hsn": {
+    "raw": "7318",
+    "confidence": 0.92,
+    "page": 1,
+    "bbox": [
+     0.371,
+     0.3791,
+     0.4065,
+     0.3865
+    ]
+   },
+   "quantity": {
+    "raw": "7,000",
+    "confidence": 0.94,
+    "page": 1,
+    "bbox": [
+     0.4516,
+     0.3791,
+     0.4903,
+     0.3877
+    ]
+   },
+   "uom": {
+    "raw": "PCS",
+    "confidence": 0.96,
+    "page": 1,
+    "bbox": [
+     0.5484,
+     0.3791,
+     0.5782,
+     0.3865
+    ]
+   },
+   "unit_price": {
+    "raw": "3.50",
+    "confidence": 0.98,
+    "page": 1,
+    "bbox": [
+     0.6048,
+     0.3791,
+     0.6347,
+     0.3865
+    ]
+   },
+   "discount_pct": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "discount_amount": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "taxable_value": {
+    "raw": "24,500.00",
+    "confidence": 0.88,
+    "page": 1,
+    "bbox": [
+     0.871,
+     0.3791,
+     0.9395,
+     0.3877
+    ]
+   },
+   "gst_rate": {
+    "raw": "18%",
+    "confidence": 0.96,
+    "page": 1,
+    "bbox": [
+     0.7097,
+     0.3791,
+     0.7395,
+     0.3865
+    ]
+   },
+   "cgst": {
+    "raw": "2,205.00",
+    "confidence": 0.92,
+    "page": 1,
+    "bbox": [
+     0.7742,
+     0.3791,
+     0.8339,
+     0.3877
+    ]
+   },
+   "sgst": {
+    "raw": "2,205.00",
+    "confidence": 0.92,
+    "page": 1,
+    "bbox": [
+     0.7742,
+     0.3791,
+     0.8339,
+     0.3877
+    ]
+   },
+   "igst": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "cess": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "total": {
+    "raw": "28,910.00",
+    "confidence": 0.94,
+    "page": 1,
+    "bbox": [
+     0.871,
+     0.3791,
+     0.9395,
+     0.3877
+    ]
+   }
+  },
+  {
+   "product_name": {
+    "raw": "Fastener kit H",
+    "confidence": 0.96,
+    "page": 1,
+    "bbox": [
+     0.0806,
+     0.3957,
+     0.1766,
+     0.4036
+    ]
+   },
+   "description": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "sku": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "hsn": {
+    "raw": "7318",
+    "confidence": 0.96,
+    "page": 1,
+    "bbox": [
+     0.371,
+     0.3962,
+     0.4065,
+     0.4036
+    ]
+   },
+   "quantity": {
+    "raw": "8,000",
+    "confidence": 0.95,
+    "page": 1,
+    "bbox": [
+     0.4516,
+     0.3962,
+     0.4903,
+     0.4048
+    ]
+   },
+   "uom": {
+    "raw": "PCS",
+    "confidence": 0.98,
+    "page": 1,
+    "bbox": [
+     0.5484,
+     0.3962,
+     0.5782,
+     0.4036
+    ]
+   },
+   "unit_price": {
+    "raw": "3.75",
+    "confidence": 0.96,
+    "page": 1,
+    "bbox": [
+     0.6048,
+     0.3962,
+     0.6347,
+     0.4036
+    ]
+   },
+   "discount_pct": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "discount_amount": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "taxable_value": {
+    "raw": "30,000.00",
+    "confidence": 0.87,
+    "page": 1,
+    "bbox": [
+     0.871,
+     0.3962,
+     0.9395,
+     0.4048
+    ]
+   },
+   "gst_rate": {
+    "raw": "18%",
+    "confidence": 0.92,
+    "page": 1,
+    "bbox": [
+     0.7097,
+     0.3962,
+     0.7395,
+     0.4036
+    ]
+   },
+   "cgst": {
+    "raw": "2,700.00",
+    "confidence": 0.94,
+    "page": 1,
+    "bbox": [
+     0.7742,
+     0.3962,
+     0.8339,
+     0.4048
+    ]
+   },
+   "sgst": {
+    "raw": "2,700.00",
+    "confidence": 0.94,
+    "page": 1,
+    "bbox": [
+     0.7742,
+     0.3962,
+     0.8339,
+     0.4048
+    ]
+   },
+   "igst": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "cess": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "total": {
+    "raw": "35,400.00",
+    "confidence": 0.97,
+    "page": 1,
+    "bbox": [
+     0.871,
+     0.3962,
+     0.9395,
+     0.4048
+    ]
+   }
+  },
+  {
+   "product_name": {
+    "raw": "Fastener kit I",
+    "confidence": 0.96,
+    "page": 1,
+    "bbox": [
+     0.0806,
+     0.4128,
+     0.1694,
+     0.4208
+    ]
+   },
+   "description": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "sku": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "hsn": {
+    "raw": "7318",
+    "confidence": 0.97,
+    "page": 1,
+    "bbox": [
+     0.371,
+     0.4133,
+     0.4065,
+     0.4208
+    ]
+   },
+   "quantity": {
+    "raw": "9,000",
+    "confidence": 0.98,
+    "page": 1,
+    "bbox": [
+     0.4516,
+     0.4133,
+     0.4903,
+     0.4219
+    ]
+   },
+   "uom": {
+    "raw": "PCS",
+    "confidence": 0.96,
+    "page": 1,
+    "bbox": [
+     0.5484,
+     0.4133,
+     0.5782,
+     0.4208
+    ]
+   },
+   "unit_price": {
+    "raw": "4.00",
+    "confidence": 0.93,
+    "page": 1,
+    "bbox": [
+     0.6048,
+     0.4133,
+     0.6347,
+     0.4208
+    ]
+   },
+   "discount_pct": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "discount_amount": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "taxable_value": {
+    "raw": "36,000.00",
+    "confidence": 0.9,
+    "page": 1,
+    "bbox": [
+     0.871,
+     0.4133,
+     0.9395,
+     0.4219
+    ]
+   },
+   "gst_rate": {
+    "raw": "18%",
+    "confidence": 0.98,
+    "page": 1,
+    "bbox": [
+     0.7097,
+     0.4133,
+     0.7395,
+     0.4208
+    ]
+   },
+   "cgst": {
+    "raw": "3,240.00",
+    "confidence": 0.96,
+    "page": 1,
+    "bbox": [
+     0.7742,
+     0.4133,
+     0.8339,
+     0.4219
+    ]
+   },
+   "sgst": {
+    "raw": "3,240.00",
+    "confidence": 0.96,
+    "page": 1,
+    "bbox": [
+     0.7742,
+     0.4133,
+     0.8339,
+     0.4219
+    ]
+   },
+   "igst": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "cess": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "total": {
+    "raw": "42,480.00",
+    "confidence": 0.98,
+    "page": 1,
+    "bbox": [
+     0.871,
+     0.4133,
+     0.9395,
+     0.4219
+    ]
+   }
+  },
+  {
+   "product_name": {
+    "raw": "Fastener kit J",
+    "confidence": 0.99,
+    "page": 1,
+    "bbox": [
+     0.0806,
+     0.4299,
+     0.1734,
+     0.4379
+    ]
+   },
+   "description": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "sku": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "hsn": {
+    "raw": "7318",
+    "confidence": 0.98,
+    "page": 1,
+    "bbox": [
+     0.371,
+     0.4304,
+     0.4065,
+     0.4379
+    ]
+   },
+   "quantity": {
+    "raw": "10,000",
+    "confidence": 0.93,
+    "page": 1,
+    "bbox": [
+     0.4516,
+     0.4304,
+     0.4992,
+     0.439
+    ]
+   },
+   "uom": {
+    "raw": "PCS",
+    "confidence": 0.98,
+    "page": 1,
+    "bbox": [
+     0.5484,
+     0.4304,
+     0.5782,
+     0.4379
+    ]
+   },
+   "unit_price": {
+    "raw": "4.25",
+    "confidence": 0.91,
+    "page": 1,
+    "bbox": [
+     0.6048,
+     0.4304,
+     0.6347,
+     0.4379
+    ]
+   },
+   "discount_pct": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "discount_amount": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "taxable_value": {
+    "raw": "42,500.00",
+    "confidence": 0.91,
+    "page": 1,
+    "bbox": [
+     0.871,
+     0.4304,
+     0.9395,
+     0.439
+    ]
+   },
+   "gst_rate": {
+    "raw": "18%",
+    "confidence": 0.99,
+    "page": 1,
+    "bbox": [
+     0.7097,
+     0.4304,
+     0.7395,
+     0.4379
+    ]
+   },
+   "cgst": {
+    "raw": "3,825.00",
+    "confidence": 0.99,
+    "page": 1,
+    "bbox": [
+     0.7742,
+     0.4304,
+     0.8339,
+     0.439
+    ]
+   },
+   "sgst": {
+    "raw": "3,825.00",
+    "confidence": 0.99,
+    "page": 1,
+    "bbox": [
+     0.7742,
+     0.4304,
+     0.8339,
+     0.439
+    ]
+   },
+   "igst": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "cess": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "total": {
+    "raw": "50,150.00",
+    "confidence": 0.92,
+    "page": 1,
+    "bbox": [
+     0.871,
+     0.4304,
+     0.9395,
+     0.439
+    ]
+   }
+  },
+  {
+   "product_name": {
+    "raw": "Fastener kit K",
+    "confidence": 0.96,
+    "page": 1,
+    "bbox": [
+     0.0806,
+     0.447,
+     0.1758,
+     0.455
+    ]
+   },
+   "description": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "sku": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "hsn": {
+    "raw": "7318",
+    "confidence": 0.93,
+    "page": 1,
+    "bbox": [
+     0.371,
+     0.4475,
+     0.4065,
+     0.455
+    ]
+   },
+   "quantity": {
+    "raw": "11,000",
+    "confidence": 0.95,
+    "page": 1,
+    "bbox": [
+     0.4516,
+     0.4475,
+     0.4992,
+     0.4561
+    ]
+   },
+   "uom": {
+    "raw": "PCS",
+    "confidence": 0.96,
+    "page": 1,
+    "bbox": [
+     0.5484,
+     0.4475,
+     0.5782,
+     0.455
+    ]
+   },
+   "unit_price": {
+    "raw": "4.50",
+    "confidence": 0.94,
+    "page": 1,
+    "bbox": [
+     0.6048,
+     0.4475,
+     0.6347,
+     0.455
+    ]
+   },
+   "discount_pct": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "discount_amount": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "taxable_value": {
+    "raw": "49,500.00",
+    "confidence": 0.87,
+    "page": 1,
+    "bbox": [
+     0.871,
+     0.4475,
+     0.9395,
+     0.4561
+    ]
+   },
+   "gst_rate": {
+    "raw": "18%",
+    "confidence": 0.92,
+    "page": 1,
+    "bbox": [
+     0.7097,
+     0.4475,
+     0.7395,
+     0.455
+    ]
+   },
+   "cgst": {
+    "raw": "4,455.00",
+    "confidence": 0.98,
+    "page": 1,
+    "bbox": [
+     0.7742,
+     0.4475,
+     0.8339,
+     0.4561
+    ]
+   },
+   "sgst": {
+    "raw": "4,455.00",
+    "confidence": 0.98,
+    "page": 1,
+    "bbox": [
+     0.7742,
+     0.4475,
+     0.8339,
+     0.4561
+    ]
+   },
+   "igst": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "cess": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "total": {
+    "raw": "58,410.00",
+    "confidence": 0.99,
+    "page": 1,
+    "bbox": [
+     0.871,
+     0.4475,
+     0.9395,
+     0.4561
+    ]
+   }
+  },
+  {
+   "product_name": {
+    "raw": "Fastener kit L",
+    "confidence": 0.98,
+    "page": 1,
+    "bbox": [
+     0.0806,
+     0.4641,
+     0.1742,
+     0.4721
+    ]
+   },
+   "description": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "sku": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "hsn": {
+    "raw": "7318",
+    "confidence": 0.93,
+    "page": 1,
+    "bbox": [
+     0.371,
+     0.4647,
+     0.4065,
+     0.4721
+    ]
+   },
+   "quantity": {
+    "raw": "12,000",
+    "confidence": 0.98,
+    "page": 1,
+    "bbox": [
+     0.4516,
+     0.4647,
+     0.4992,
+     0.4732
+    ]
+   },
+   "uom": {
+    "raw": "PCS",
+    "confidence": 0.99,
+    "page": 1,
+    "bbox": [
+     0.5484,
+     0.4647,
+     0.5782,
+     0.4721
+    ]
+   },
+   "unit_price": {
+    "raw": "4.75",
+    "confidence": 0.99,
+    "page": 1,
+    "bbox": [
+     0.6048,
+     0.4647,
+     0.6347,
+     0.4721
+    ]
+   },
+   "discount_pct": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "discount_amount": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "taxable_value": {
+    "raw": "57,000.00",
+    "confidence": 0.88,
+    "page": 1,
+    "bbox": [
+     0.871,
+     0.4647,
+     0.9395,
+     0.4732
+    ]
+   },
+   "gst_rate": {
+    "raw": "18%",
+    "confidence": 0.99,
+    "page": 1,
+    "bbox": [
+     0.7097,
+     0.4647,
+     0.7395,
+     0.4721
+    ]
+   },
+   "cgst": {
+    "raw": "5,130.00",
+    "confidence": 0.95,
+    "page": 1,
+    "bbox": [
+     0.7742,
+     0.4647,
+     0.8427,
+     0.4732
+    ]
+   },
+   "sgst": {
+    "raw": "5,130.00",
+    "confidence": 0.95,
+    "page": 1,
+    "bbox": [
+     0.7742,
+     0.4647,
+     0.8427,
+     0.4732
+    ]
+   },
+   "igst": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "cess": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "total": {
+    "raw": "67,260.00",
+    "confidence": 0.99,
+    "page": 1,
+    "bbox": [
+     0.871,
+     0.4647,
+     0.9395,
+     0.4732
+    ]
+   }
+  },
+  {
+   "product_name": {
+    "raw": "Fastener kit M",
+    "confidence": 0.92,
+    "page": 2,
+    "bbox": [
+     0.0806,
+     0.0678,
+     0.1782,
+     0.0758
+    ]
+   },
+   "description": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "sku": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "hsn": {
+    "raw": "7318",
+    "confidence": 0.98,
+    "page": 2,
+    "bbox": [
+     0.371,
+     0.0684,
+     0.4065,
+     0.0758
+    ]
+   },
+   "quantity": {
+    "raw": "13,000",
+    "confidence": 0.92,
+    "page": 2,
+    "bbox": [
+     0.4516,
+     0.0684,
+     0.4992,
+     0.077
+    ]
+   },
+   "uom": {
+    "raw": "PCS",
+    "confidence": 0.96,
+    "page": 2,
+    "bbox": [
+     0.5484,
+     0.0684,
+     0.5782,
+     0.0758
+    ]
+   },
+   "unit_price": {
+    "raw": "5.00",
+    "confidence": 0.95,
+    "page": 2,
+    "bbox": [
+     0.6048,
+     0.0684,
+     0.6347,
+     0.0758
+    ]
+   },
+   "discount_pct": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "discount_amount": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "taxable_value": {
+    "raw": "65,000.00",
+    "confidence": 0.92,
+    "page": 2,
+    "bbox": [
+     0.871,
+     0.0684,
+     0.9395,
+     0.077
+    ]
+   },
+   "gst_rate": {
+    "raw": "18%",
+    "confidence": 0.97,
+    "page": 2,
+    "bbox": [
+     0.7097,
+     0.0684,
+     0.7395,
+     0.0758
+    ]
+   },
+   "cgst": {
+    "raw": "5,850.00",
+    "confidence": 0.92,
+    "page": 2,
+    "bbox": [
+     0.7742,
+     0.0684,
+     0.8427,
+     0.077
+    ]
+   },
+   "sgst": {
+    "raw": "5,850.00",
+    "confidence": 0.92,
+    "page": 2,
+    "bbox": [
+     0.7742,
+     0.0684,
+     0.8427,
+     0.077
+    ]
+   },
+   "igst": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "cess": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "total": {
+    "raw": "76,700.00",
+    "confidence": 0.97,
+    "page": 2,
+    "bbox": [
+     0.871,
+     0.0684,
+     0.9395,
+     0.077
+    ]
+   }
+  },
+  {
+   "product_name": {
+    "raw": "Fastener kit N",
+    "confidence": 0.99,
+    "page": 2,
+    "bbox": [
+     0.0806,
+     0.0849,
+     0.1766,
+     0.0929
+    ]
+   },
+   "description": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "sku": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "hsn": {
+    "raw": "7318",
+    "confidence": 0.94,
+    "page": 2,
+    "bbox": [
+     0.371,
+     0.0855,
+     0.4065,
+     0.0929
+    ]
+   },
+   "quantity": {
+    "raw": "14,000",
+    "confidence": 0.92,
+    "page": 2,
+    "bbox": [
+     0.4516,
+     0.0855,
+     0.4992,
+     0.0941
+    ]
+   },
+   "uom": {
+    "raw": "PCS",
+    "confidence": 0.98,
+    "page": 2,
+    "bbox": [
+     0.5484,
+     0.0855,
+     0.5782,
+     0.0929
+    ]
+   },
+   "unit_price": {
+    "raw": "5.25",
+    "confidence": 0.95,
+    "page": 2,
+    "bbox": [
+     0.6048,
+     0.0855,
+     0.6347,
+     0.0929
+    ]
+   },
+   "discount_pct": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "discount_amount": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "taxable_value": {
+    "raw": "73,500.00",
+    "confidence": 0.92,
+    "page": 2,
+    "bbox": [
+     0.871,
+     0.0855,
+     0.9395,
+     0.0941
+    ]
+   },
+   "gst_rate": {
+    "raw": "18%",
+    "confidence": 0.98,
+    "page": 2,
+    "bbox": [
+     0.7097,
+     0.0855,
+     0.7395,
+     0.0929
+    ]
+   },
+   "cgst": {
+    "raw": "6,615.00",
+    "confidence": 0.91,
+    "page": 2,
+    "bbox": [
+     0.7742,
+     0.0855,
+     0.8427,
+     0.0941
+    ]
+   },
+   "sgst": {
+    "raw": "6,615.00",
+    "confidence": 0.91,
+    "page": 2,
+    "bbox": [
+     0.7742,
+     0.0855,
+     0.8427,
+     0.0941
+    ]
+   },
+   "igst": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "cess": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "total": {
+    "raw": "86,730.00",
+    "confidence": 0.91,
+    "page": 2,
+    "bbox": [
+     0.871,
+     0.0855,
+     0.9395,
+     0.0941
+    ]
+   }
+  },
+  {
+   "product_name": {
+    "raw": "Fastener kit O",
+    "confidence": 0.93,
+    "page": 2,
+    "bbox": [
+     0.0806,
+     0.1021,
+     0.1766,
+     0.11
+    ]
+   },
+   "description": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "sku": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "hsn": {
+    "raw": "7318",
+    "confidence": 0.91,
+    "page": 2,
+    "bbox": [
+     0.371,
+     0.1026,
+     0.4065,
+     0.11
+    ]
+   },
+   "quantity": {
+    "raw": "15,000",
+    "confidence": 0.99,
+    "page": 2,
+    "bbox": [
+     0.4516,
+     0.1026,
+     0.4992,
+     0.1112
+    ]
+   },
+   "uom": {
+    "raw": "PCS",
+    "confidence": 0.95,
+    "page": 2,
+    "bbox": [
+     0.5484,
+     0.1026,
+     0.5782,
+     0.11
+    ]
+   },
+   "unit_price": {
+    "raw": "5.50",
+    "confidence": 0.92,
+    "page": 2,
+    "bbox": [
+     0.6048,
+     0.1026,
+     0.6347,
+     0.11
+    ]
+   },
+   "discount_pct": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "discount_amount": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "taxable_value": {
+    "raw": "82,500.00",
+    "confidence": 0.93,
+    "page": 2,
+    "bbox": [
+     0.871,
+     0.1026,
+     0.9395,
+     0.1112
+    ]
+   },
+   "gst_rate": {
+    "raw": "18%",
+    "confidence": 0.94,
+    "page": 2,
+    "bbox": [
+     0.7097,
+     0.1026,
+     0.7395,
+     0.11
+    ]
+   },
+   "cgst": {
+    "raw": "7,425.00",
+    "confidence": 0.95,
+    "page": 2,
+    "bbox": [
+     0.7742,
+     0.1026,
+     0.8427,
+     0.1112
+    ]
+   },
+   "sgst": {
+    "raw": "7,425.00",
+    "confidence": 0.95,
+    "page": 2,
+    "bbox": [
+     0.7742,
+     0.1026,
+     0.8427,
+     0.1112
+    ]
+   },
+   "igst": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "cess": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "total": {
+    "raw": "97,350.00",
+    "confidence": 0.98,
+    "page": 2,
+    "bbox": [
+     0.871,
+     0.1026,
+     0.9395,
+     0.1112
+    ]
+   }
+  },
+  {
+   "product_name": {
+    "raw": "Fastener kit P",
+    "confidence": 0.93,
+    "page": 2,
+    "bbox": [
+     0.0806,
+     0.1192,
+     0.175,
+     0.1271
+    ]
+   },
+   "description": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "sku": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "hsn": {
+    "raw": "7318",
+    "confidence": 0.96,
+    "page": 2,
+    "bbox": [
+     0.371,
+     0.1197,
+     0.4065,
+     0.1271
+    ]
+   },
+   "quantity": {
+    "raw": "16,000",
+    "confidence": 0.95,
+    "page": 2,
+    "bbox": [
+     0.4516,
+     0.1197,
+     0.4992,
+     0.1283
+    ]
+   },
+   "uom": {
+    "raw": "PCS",
+    "confidence": 0.91,
+    "page": 2,
+    "bbox": [
+     0.5484,
+     0.1197,
+     0.5782,
+     0.1271
+    ]
+   },
+   "unit_price": {
+    "raw": "5.75",
+    "confidence": 0.97,
+    "page": 2,
+    "bbox": [
+     0.6048,
+     0.1197,
+     0.6347,
+     0.1271
+    ]
+   },
+   "discount_pct": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "discount_amount": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "taxable_value": {
+    "raw": "92,000.00",
+    "confidence": 0.91,
+    "page": 2,
+    "bbox": [
+     0.871,
+     0.1197,
+     0.9516,
+     0.1283
+    ]
+   },
+   "gst_rate": {
+    "raw": "18%",
+    "confidence": 0.91,
+    "page": 2,
+    "bbox": [
+     0.7097,
+     0.1197,
+     0.7395,
+     0.1271
+    ]
+   },
+   "cgst": {
+    "raw": "8,280.00",
+    "confidence": 0.94,
+    "page": 2,
+    "bbox": [
+     0.7742,
+     0.1197,
+     0.8427,
+     0.1283
+    ]
+   },
+   "sgst": {
+    "raw": "8,280.00",
+    "confidence": 0.94,
+    "page": 2,
+    "bbox": [
+     0.7742,
+     0.1197,
+     0.8427,
+     0.1283
+    ]
+   },
+   "igst": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "cess": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "total": {
+    "raw": "1,08,560.00",
+    "confidence": 0.94,
+    "page": 2,
+    "bbox": [
+     0.871,
+     0.1197,
+     0.9516,
+     0.1283
+    ]
+   }
+  },
+  {
+   "product_name": {
+    "raw": "Fastener kit Q",
+    "confidence": 0.92,
+    "page": 2,
+    "bbox": [
+     0.0806,
+     0.1363,
+     0.1766,
+     0.1448
+    ]
+   },
+   "description": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "sku": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "hsn": {
+    "raw": "7318",
+    "confidence": 0.96,
+    "page": 2,
+    "bbox": [
+     0.371,
+     0.1368,
+     0.4065,
+     0.1442
+    ]
+   },
+   "quantity": {
+    "raw": "17,000",
+    "confidence": 0.92,
+    "page": 2,
+    "bbox": [
+     0.4516,
+     0.1368,
+     0.4992,
+     0.1454
+    ]
+   },
+   "uom": {
+    "raw": "PCS",
+    "confidence": 0.93,
+    "page": 2,
+    "bbox": [
+     0.5484,
+     0.1368,
+     0.5782,
+     0.1442
+    ]
+   },
+   "unit_price": {
+    "raw": "6.00",
+    "confidence": 0.97,
+    "page": 2,
+    "bbox": [
+     0.6048,
+     0.1368,
+     0.6347,
+     0.1442
+    ]
+   },
+   "discount_pct": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "discount_amount": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "taxable_value": {
+    "raw": "1,02,000.00",
+    "confidence": 0.92,
+    "page": 2,
+    "bbox": [
+     0.871,
+     0.1368,
+     0.9516,
+     0.1454
+    ]
+   },
+   "gst_rate": {
+    "raw": "18%",
+    "confidence": 0.98,
+    "page": 2,
+    "bbox": [
+     0.7097,
+     0.1368,
+     0.7395,
+     0.1442
+    ]
+   },
+   "cgst": {
+    "raw": "9,180.00",
+    "confidence": 0.91,
+    "page": 2,
+    "bbox": [
+     0.7742,
+     0.1368,
+     0.8427,
+     0.1454
+    ]
+   },
+   "sgst": {
+    "raw": "9,180.00",
+    "confidence": 0.91,
+    "page": 2,
+    "bbox": [
+     0.7742,
+     0.1368,
+     0.8427,
+     0.1454
+    ]
+   },
+   "igst": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "cess": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "total": {
+    "raw": "1,20,360.00",
+    "confidence": 0.92,
+    "page": 2,
+    "bbox": [
+     0.871,
+     0.1368,
+     0.9516,
+     0.1454
+    ]
+   }
+  },
+  {
+   "product_name": {
+    "raw": "Fastener kit R",
+    "confidence": 0.92,
+    "page": 2,
+    "bbox": [
+     0.0806,
+     0.1534,
+     0.175,
+     0.1613
+    ]
+   },
+   "description": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "sku": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "hsn": {
+    "raw": "7318",
+    "confidence": 0.94,
+    "page": 2,
+    "bbox": [
+     0.371,
+     0.1539,
+     0.4065,
+     0.1613
+    ]
+   },
+   "quantity": {
+    "raw": "18,000",
+    "confidence": 0.99,
+    "page": 2,
+    "bbox": [
+     0.4516,
+     0.1539,
+     0.4992,
+     0.1625
+    ]
+   },
+   "uom": {
+    "raw": "PCS",
+    "confidence": 0.94,
+    "page": 2,
+    "bbox": [
+     0.5484,
+     0.1539,
+     0.5782,
+     0.1613
+    ]
+   },
+   "unit_price": {
+    "raw": "6.25",
+    "confidence": 0.99,
+    "page": 2,
+    "bbox": [
+     0.6048,
+     0.1539,
+     0.6347,
+     0.1613
+    ]
+   },
+   "discount_pct": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "discount_amount": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "taxable_value": {
+    "raw": "1,12,500.00",
+    "confidence": 0.89,
+    "page": 2,
+    "bbox": [
+     0.871,
+     0.1539,
+     0.9516,
+     0.1625
+    ]
+   },
+   "gst_rate": {
+    "raw": "18%",
+    "confidence": 0.94,
+    "page": 2,
+    "bbox": [
+     0.7097,
+     0.1539,
+     0.7395,
+     0.1613
+    ]
+   },
+   "cgst": {
+    "raw": "10,125.00",
+    "confidence": 0.91,
+    "page": 2,
+    "bbox": [
+     0.7742,
+     0.1539,
+     0.8427,
+     0.1625
+    ]
+   },
+   "sgst": {
+    "raw": "10,125.00",
+    "confidence": 0.91,
+    "page": 2,
+    "bbox": [
+     0.7742,
+     0.1539,
+     0.8427,
+     0.1625
+    ]
+   },
+   "igst": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "cess": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "total": {
+    "raw": "1,32,750.00",
+    "confidence": 0.94,
+    "page": 2,
+    "bbox": [
+     0.871,
+     0.1539,
+     0.9516,
+     0.1625
+    ]
+   }
+  }
+ ]
+}

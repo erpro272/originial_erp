@@ -60,6 +60,7 @@ class InvoiceUpload(Base, TenantScoped, TimestampMixin):
         ForeignKey("invoices.id", use_alter=True, name="fk_invoice_uploads_invoice")
     )
     ai_mode: Mapped[str | None] = mapped_column(String(8))  # live | mock
+    customer_action: Mapped[str | None] = mapped_column(String(10))  # existing | new (on save)
 
 
 class ExtractionRun(Base, TenantScoped):
@@ -74,7 +75,9 @@ class ExtractionRun(Base, TenantScoped):
     version: Mapped[int]
     source: Mapped[str] = mapped_column(String(8))  # model | user
     model: Mapped[str | None] = mapped_column(String(64))
-    raw_output: Mapped[str | None] = mapped_column(Text)  # exact model text (model runs)
+    raw_output: Mapped[str | None] = mapped_column(
+        Text
+    )  # exact model text, encrypted (may hold bank details)
     data: Mapped[dict[str, Any]] = mapped_column(JSONB)
     created_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

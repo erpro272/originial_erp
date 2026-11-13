@@ -14,6 +14,7 @@ from botocore.config import Config
 from botocore.exceptions import ClientError
 
 from app.core.config import get_settings
+from app.core.crypto import TenantCipher
 
 
 class ObjectStorage(Protocol):
@@ -44,15 +45,12 @@ class S3Storage:
             "s3", endpoint_url=s.s3_public_endpoint_url or s.s3_endpoint_url, **common
         )
         self._ttl = s.signed_url_ttl_seconds
+        self._sse = s.s3_server_side_encryption
 
     async def put(self, key: str, data: bytes, content_type: str) -> None:
+        extra: dict[str, Any] = {"ServerSideEncryption": self._sse} if self._sse else {}
         await asyncio.to_thread(
-            self._client.put_object,
-            Bucket=self.bucket,
-            Key=key,
-            Body=data,
-            ContentType=content_type,
-            ServerSideEncryption="AES256",
+            self._client.put_object, Bucket=self.bucket, Key=key, Body=data, ContentType=content_type, **extra
         )
 
     async def get(self, key: str) -> bytes:
@@ -81,6 +79,15 @@ class S3Storage:
             return True
         except Exception:
             return False
+
+
+async def put_encrypted(cipher: TenantCipher, key: str, data: bytes) -> None:
+    """Layer 2 for files: encrypted with the company key; the store only sees ciphertext."""
+    await get_storage().put(key, cipher.encrypt_bytes(data, key), "application/octet-stream")
+
+
+async def get_decrypted(cipher: TenantCipher, key: str) -> bytes:
+    return cipher.decrypt_bytes(await get_storage().get(key), key)
 
 
 @lru_cache

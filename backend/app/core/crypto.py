@@ -82,6 +82,17 @@ class TenantCipher:
         nonce = os.urandom(_NONCE_LEN)
         return _VERSION + nonce + self._aes.encrypt(nonce, plaintext.encode(), self._aad(field))
 
+    def encrypt_bytes(self, data: bytes, context: str) -> bytes:
+        """For stored files: the object key is the context, so files can't be swapped."""
+        nonce = os.urandom(_NONCE_LEN)
+        return _VERSION + nonce + self._aes.encrypt(nonce, data, self._aad("file:" + context))
+
+    def decrypt_bytes(self, blob: bytes, context: str) -> bytes:
+        try:
+            return _open(self._aes, blob, self._aad("file:" + context))
+        except InvalidTag as exc:
+            raise DecryptionError("cannot decrypt file") from exc
+
     def decrypt(self, blob: bytes, field: str) -> str:
         try:
             return _open(self._aes, blob, self._aad(field)).decode()

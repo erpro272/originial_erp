@@ -483,3 +483,20 @@ async def reassign_customer(session: AsyncSession, source: uuid.UUID, target: uu
 
     res = await session.execute(update(Order).where(Order.customer_id == source).values(customer_id=target))
     return int(res.rowcount)  # type: ignore[attr-defined]
+
+
+async def find_order_for_invoice(
+    session: AsyncSession, customer_id: uuid.UUID, items: list[tuple[str | None, Decimal | None]]
+) -> Order | None:
+    """An order of this customer whose product and quantity appear on the invoice."""
+    rows = await session.execute(
+        select(Order, Product.name)
+        .join(Product, Product.id == Order.product_id)
+        .where(Order.customer_id == customer_id, Order.status != "cancelled")
+        .order_by(Order.ship_date.desc())
+    )
+    for o, pname in rows:
+        for name, qty in items:
+            if name and pname.lower() in name.lower() and qty is not None and qty == o.quantity:
+                return o
+    return None

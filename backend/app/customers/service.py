@@ -496,3 +496,26 @@ async def find_by_gstin(session: AsyncSession, gstin: str) -> Customer | None:
 
 async def active_customers(session: AsyncSession) -> list[Customer]:
     return list((await session.execute(select(Customer).where(Customer.merged_into_id.is_(None)))).scalars())
+
+
+async def fill_missing_from_invoice(
+    session: AsyncSession, customer_id: uuid.UUID, pre: dict[str, Any]
+) -> None:
+    """Non-destructive: only fills blanks on an existing customer from invoice buyer details."""
+    c = await session.get(Customer, customer_id)
+    if c is None:
+        return
+    for k in ("phone", "email"):
+        if not getattr(c, k) and pre.get(k):
+            setattr(c, k, pre[k])
+    has_billing = (
+        await session.execute(
+            select(CustomerAddress.id).where(
+                CustomerAddress.customer_id == c.id, CustomerAddress.kind == "billing"
+            )
+        )
+    ).first()
+    for a in pre.get("addresses", []):
+        if a["kind"] == "billing" and not has_billing:
+            session.add(CustomerAddress(customer_id=c.id, kind="billing", line1=a["line1"][:300],
+                                        state_code=a.get("state_code")))  # fmt: skip

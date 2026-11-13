@@ -1,0 +1,910 @@
+{
+ "is_invoice": true,
+ "fields": {
+  "invoice_number": {
+   "raw": "DMC/26-27/0412",
+   "confidence": 0.99,
+   "page": 1,
+   "bbox": [
+    0.7258,
+    0.0604,
+    0.846,
+    0.0684
+   ]
+  },
+  "invoice_date": {
+   "raw": "02/11/2026",
+   "confidence": 0.94,
+   "page": 1,
+   "bbox": [
+    0.7258,
+    0.0753,
+    0.8065,
+    0.0832
+   ]
+  },
+  "invoice_type": {
+   "raw": "TAX INVOICE",
+   "confidence": 0.98,
+   "page": 1,
+   "bbox": [
+    0.0484,
+    0.0336,
+    0.2121,
+    0.0473
+   ]
+  },
+  "due_date": {
+   "raw": "02/12/2026",
+   "confidence": 0.99,
+   "page": 1,
+   "bbox": [
+    0.7258,
+    0.0901,
+    0.8065,
+    0.0981
+   ]
+  },
+  "original_invoice_ref": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "irn": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "ack_no": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "ack_date": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "seller_name": {
+   "raw": "Demo Manufacturing Co.",
+   "confidence": 0.97,
+   "page": 1,
+   "bbox": [
+    0.0484,
+    0.0599,
+    0.2565,
+    0.0718
+   ]
+  },
+  "seller_gstin": {
+   "raw": "27AAFCD5512K1ZM",
+   "confidence": 0.93,
+   "page": 1,
+   "bbox": [
+    0.2097,
+    0.1083,
+    0.354,
+    0.1157
+   ]
+  },
+  "seller_pan": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "seller_address": {
+   "raw": "Plot 14, MIDC Bhosari, Pune 411026",
+   "confidence": 0.97,
+   "page": 1,
+   "bbox": [
+    0.0484,
+    0.0781,
+    0.2976,
+    0.0872
+   ]
+  },
+  "seller_state": {
+   "raw": "Maharashtra",
+   "confidence": 0.99,
+   "page": 1,
+   "bbox": [
+    0.1048,
+    0.0935,
+    0.1903,
+    0.1009
+   ]
+  },
+  "seller_state_code": {
+   "raw": "27",
+   "confidence": 0.95,
+   "page": 1,
+   "bbox": [
+    0.3105,
+    0.0935,
+    0.3282,
+    0.1009
+   ]
+  },
+  "seller_phone": {
+   "raw": "+91 20 2712 4455",
+   "confidence": 0.94,
+   "page": 1,
+   "bbox": [
+    0.2097,
+    0.1231,
+    0.3355,
+    0.1306
+   ]
+  },
+  "seller_email": {
+   "raw": "accounts@demomfg.example",
+   "confidence": 0.96,
+   "page": 1,
+   "bbox": [
+    0.2097,
+    0.1374,
+    0.4185,
+    0.1477
+   ]
+  },
+  "buyer_name": {
+   "raw": "Tata Motors Ltd",
+   "confidence": 0.96,
+   "page": 1,
+   "bbox": [
+    0.0484,
+    0.183,
+    0.1806,
+    0.1921
+   ]
+  },
+  "buyer_gstin": {
+   "raw": "27AAACT2727Q1ZW",
+   "confidence": 0.91,
+   "page": 1,
+   "bbox": [
+    0.2097,
+    0.2149,
+    0.3565,
+    0.2229
+   ]
+  },
+  "buyer_pan": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "buyer_billing_address": {
+   "raw": "Pimpri, Pune 411018",
+   "confidence": 0.91,
+   "page": 1,
+   "bbox": [
+    0.0484,
+    0.1995,
+    0.1903,
+    0.2098
+   ]
+  },
+  "buyer_shipping_address": {
+   "raw": "Pimpri, Pune 411018",
+   "confidence": 0.92,
+   "page": 1,
+   "bbox": [
+    0.5645,
+    0.1824,
+    0.7065,
+    0.1927
+   ]
+  },
+  "buyer_state": {
+   "raw": "Maharashtra",
+   "confidence": 0.96,
+   "page": 1,
+   "bbox": [
+    0.1048,
+    0.2298,
+    0.1903,
+    0.2372
+   ]
+  },
+  "buyer_state_code": {
+   "raw": "27",
+   "confidence": 0.93,
+   "page": 1,
+   "bbox": [
+    0.3105,
+    0.2298,
+    0.3282,
+    0.2372
+   ]
+  },
+  "buyer_contact_person": {
+   "raw": "R. Kulkarni",
+   "confidence": 0.98,
+   "page": 1,
+   "bbox": [
+    0.7258,
+    0.2292,
+    0.7976,
+    0.2372
+   ]
+  },
+  "buyer_phone": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "buyer_email": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "subtotal": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "total_quantity": {
+   "raw": "140,000",
+   "confidence": 0.99,
+   "page": 1,
+   "bbox": [
+    0.8952,
+    0.3312,
+    0.9516,
+    0.3398
+   ]
+  },
+  "total_discount": {
+   "raw": "20,000.00",
+   "confidence": 0.93,
+   "page": 1,
+   "bbox": [
+    0.8831,
+    0.3655,
+    0.9516,
+    0.374
+   ]
+  },
+  "total_taxable": {
+   "raw": "3,60,000.00",
+   "confidence": 0.96,
+   "page": 1,
+   "bbox": [
+    0.871,
+    0.3483,
+    0.9516,
+    0.3569
+   ]
+  },
+  "total_cgst": {
+   "raw": "32,400.00",
+   "confidence": 0.95,
+   "page": 1,
+   "bbox": [
+    0.8831,
+    0.3826,
+    0.9516,
+    0.3911
+   ]
+  },
+  "total_sgst": {
+   "raw": "32,400.00",
+   "confidence": 0.97,
+   "page": 1,
+   "bbox": [
+    0.8831,
+    0.3997,
+    0.9516,
+    0.4082
+   ]
+  },
+  "total_igst": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "total_cess": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "freight": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "packing": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "other_charges": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "round_off": {
+   "raw": "0.00",
+   "confidence": 0.94,
+   "page": 1,
+   "bbox": [
+    0.9218,
+    0.4168,
+    0.9516,
+    0.4242
+   ]
+  },
+  "grand_total": {
+   "raw": "4,24,800.00",
+   "confidence": 0.92,
+   "page": 1,
+   "bbox": [
+    0.8556,
+    0.4344,
+    0.9516,
+    0.4447
+   ]
+  },
+  "amount_in_words": {
+   "raw": "Rupees Four Lakh Twenty Four Thousand Eight Hundred Only",
+   "confidence": 0.92,
+   "page": 1,
+   "bbox": [
+    0.0484,
+    0.4561,
+    0.4798,
+    0.4664
+   ]
+  },
+  "payment_terms": {
+   "raw": "30 days",
+   "confidence": 0.94,
+   "page": 1,
+   "bbox": [
+    0.2097,
+    0.4795,
+    0.2637,
+    0.4892
+   ]
+  },
+  "payment_mode": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "amount_paid": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "advance_received": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "balance_due": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "bank_name": {
+   "raw": "HDFC Bank, Bhosari",
+   "confidence": 0.95,
+   "page": 1,
+   "bbox": [
+    0.2097,
+    0.4937,
+    0.3476,
+    0.5029
+   ]
+  },
+  "bank_account_number": {
+   "raw": "50200012344417",
+   "confidence": 0.94,
+   "page": 1,
+   "bbox": [
+    0.2097,
+    0.5091,
+    0.3339,
+    0.5165
+   ]
+  },
+  "bank_ifsc": {
+   "raw": "HDFC0001234",
+   "confidence": 0.95,
+   "page": 1,
+   "bbox": [
+    0.2097,
+    0.5239,
+    0.3137,
+    0.5314
+   ]
+  },
+  "upi_id": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "utr": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "cheque_number": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "transporter_name": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "transporter_id": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "vehicle_number": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "lr_number": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "eway_bill_number": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "eway_bill_date": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "dispatch_date": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "delivery_date": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "transport_mode": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "place_of_dispatch": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "place_of_delivery": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "reverse_charge": {
+   "raw": "No",
+   "confidence": 0.99,
+   "page": 1,
+   "bbox": [
+    0.7258,
+    0.2149,
+    0.7468,
+    0.2223
+   ]
+  },
+  "place_of_supply": {
+   "raw": "27-Maharashtra",
+   "confidence": 0.95,
+   "page": 1,
+   "bbox": [
+    0.7258,
+    0.2001,
+    0.8339,
+    0.2075
+   ]
+  },
+  "state_of_supply": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "delivery_terms": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "payment_terms_conditions": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "warranty": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "declaration": {
+   "raw": "Declaration: We declare that this invoice shows the actual price of the goods described.",
+   "confidence": 0.92,
+   "page": 1,
+   "bbox": [
+    0.0484,
+    0.5587,
+    0.6556,
+    0.569
+   ]
+  },
+  "authorised_signatory": {
+   "raw": "Authorised Signatory",
+   "confidence": 0.99,
+   "page": 1,
+   "bbox": [
+    0.6613,
+    0.6328,
+    0.8089,
+    0.6431
+   ]
+  },
+  "digital_signature_present": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "digital_signature_name": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  }
+ },
+ "lines": [
+  {
+   "product_name": {
+    "raw": "M8 nylock nuts",
+    "confidence": 0.95,
+    "page": 1,
+    "bbox": [
+     0.0806,
+     0.2765,
+     0.1863,
+     0.2862
+    ]
+   },
+   "description": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "sku": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "hsn": {
+    "raw": "7318",
+    "confidence": 0.91,
+    "page": 1,
+    "bbox": [
+     0.371,
+     0.2765,
+     0.4065,
+     0.2839
+    ]
+   },
+   "quantity": {
+    "raw": "120,000",
+    "confidence": 0.95,
+    "page": 1,
+    "bbox": [
+     0.4516,
+     0.2765,
+     0.5081,
+     0.2851
+    ]
+   },
+   "uom": {
+    "raw": "PCS",
+    "confidence": 0.94,
+    "page": 1,
+    "bbox": [
+     0.5484,
+     0.2765,
+     0.5782,
+     0.2839
+    ]
+   },
+   "unit_price": {
+    "raw": "1.50",
+    "confidence": 0.94,
+    "page": 1,
+    "bbox": [
+     0.6048,
+     0.2765,
+     0.6347,
+     0.2839
+    ]
+   },
+   "discount_pct": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "discount_amount": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "taxable_value": {
+    "raw": "1,80,000.00",
+    "confidence": 0.9,
+    "page": 1,
+    "bbox": [
+     0.871,
+     0.2765,
+     0.9516,
+     0.2851
+    ]
+   },
+   "gst_rate": {
+    "raw": "18%",
+    "confidence": 0.99,
+    "page": 1,
+    "bbox": [
+     0.7097,
+     0.2765,
+     0.7395,
+     0.2839
+    ]
+   },
+   "cgst": {
+    "raw": "16,200.00",
+    "confidence": 0.96,
+    "page": 1,
+    "bbox": [
+     0.7742,
+     0.2765,
+     0.8427,
+     0.2851
+    ]
+   },
+   "sgst": {
+    "raw": "16,200.00",
+    "confidence": 0.96,
+    "page": 1,
+    "bbox": [
+     0.7742,
+     0.2765,
+     0.8427,
+     0.2851
+    ]
+   },
+   "igst": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "cess": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "total": {
+    "raw": "2,12,400.00",
+    "confidence": 0.97,
+    "page": 1,
+    "bbox": [
+     0.871,
+     0.2765,
+     0.9516,
+     0.2851
+    ]
+   }
+  },
+  {
+   "product_name": {
+    "raw": "M10 hex bolts",
+    "confidence": 0.97,
+    "page": 1,
+    "bbox": [
+     0.0806,
+     0.2936,
+     0.1782,
+     0.301
+    ]
+   },
+   "description": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "sku": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "hsn": {
+    "raw": "7318",
+    "confidence": 0.97,
+    "page": 1,
+    "bbox": [
+     0.371,
+     0.2936,
+     0.4065,
+     0.301
+    ]
+   },
+   "quantity": {
+    "raw": "20,000",
+    "confidence": 0.95,
+    "page": 1,
+    "bbox": [
+     0.4516,
+     0.2936,
+     0.4992,
+     0.3022
+    ]
+   },
+   "uom": {
+    "raw": "PCS",
+    "confidence": 0.96,
+    "page": 1,
+    "bbox": [
+     0.5484,
+     0.2936,
+     0.5782,
+     0.301
+    ]
+   },
+   "unit_price": {
+    "raw": "10.00",
+    "confidence": 0.99,
+    "page": 1,
+    "bbox": [
+     0.6048,
+     0.2936,
+     0.6435,
+     0.301
+    ]
+   },
+   "discount_pct": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "discount_amount": {
+    "raw": "20,000.00",
+    "confidence": 0.99,
+    "page": 1,
+    "bbox": [
+     0.6048,
+     0.2936,
+     0.6435,
+     0.301
+    ]
+   },
+   "taxable_value": {
+    "raw": "1,80,000.00",
+    "confidence": 0.94,
+    "page": 1,
+    "bbox": [
+     0.871,
+     0.2936,
+     0.9516,
+     0.3022
+    ]
+   },
+   "gst_rate": {
+    "raw": "18%",
+    "confidence": 0.98,
+    "page": 1,
+    "bbox": [
+     0.7097,
+     0.2936,
+     0.7395,
+     0.301
+    ]
+   },
+   "cgst": {
+    "raw": "16,200.00",
+    "confidence": 0.95,
+    "page": 1,
+    "bbox": [
+     0.7742,
+     0.2936,
+     0.8427,
+     0.3022
+    ]
+   },
+   "sgst": {
+    "raw": "16,200.00",
+    "confidence": 0.95,
+    "page": 1,
+    "bbox": [
+     0.7742,
+     0.2936,
+     0.8427,
+     0.3022
+    ]
+   },
+   "igst": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "cess": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "total": {
+    "raw": "2,12,400.00",
+    "confidence": 0.95,
+    "page": 1,
+    "bbox": [
+     0.871,
+     0.2936,
+     0.9516,
+     0.3022
+    ]
+   }
+  }
+ ]
+}

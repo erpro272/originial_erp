@@ -1,0 +1,587 @@
+{
+ "is_invoice": true,
+ "fields": {
+  "invoice_number": {
+   "raw": "152",
+   "confidence": 0.77,
+   "page": 1,
+   "bbox": [
+    0.7258,
+    0.0604,
+    0.7524,
+    0.0678
+   ]
+  },
+  "invoice_date": {
+   "raw": "14/09/2026",
+   "confidence": 0.75,
+   "page": 1,
+   "bbox": [
+    0.7258,
+    0.0753,
+    0.8065,
+    0.0832
+   ]
+  },
+  "invoice_type": {
+   "raw": "CASH BILL",
+   "confidence": 0.79,
+   "page": 1,
+   "bbox": [
+    0.0484,
+    0.0336,
+    0.1823,
+    0.0473
+   ]
+  },
+  "due_date": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "original_invoice_ref": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "irn": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "ack_no": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "ack_date": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "seller_name": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "seller_gstin": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "seller_pan": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "seller_address": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "seller_state": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "seller_state_code": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "seller_phone": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "seller_email": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "buyer_name": {
+   "raw": "Shree Ganesh Engineering Works",
+   "confidence": 0.74,
+   "page": 1,
+   "bbox": [
+    0.0484,
+    0.183,
+    0.3169,
+    0.1944
+   ]
+  },
+  "buyer_gstin": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "buyer_pan": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "buyer_billing_address": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "buyer_shipping_address": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "buyer_state": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "buyer_state_code": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "buyer_contact_person": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "buyer_phone": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "buyer_email": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "subtotal": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "total_quantity": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "total_discount": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "total_taxable": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "total_cgst": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "total_sgst": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "total_igst": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "total_cess": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "freight": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "packing": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "other_charges": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "round_off": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "grand_total": {
+   "raw": "6,000.00",
+   "confidence": 0.77,
+   "page": 1,
+   "bbox": [
+    0.8806,
+    0.3147,
+    0.9516,
+    0.325
+   ]
+  },
+  "amount_in_words": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "payment_terms": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "payment_mode": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "amount_paid": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "advance_received": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "balance_due": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "bank_name": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "bank_account_number": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "bank_ifsc": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "upi_id": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "utr": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "cheque_number": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "transporter_name": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "transporter_id": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "vehicle_number": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "lr_number": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "eway_bill_number": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "eway_bill_date": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "dispatch_date": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "delivery_date": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "transport_mode": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "place_of_dispatch": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "place_of_delivery": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "reverse_charge": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "place_of_supply": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "state_of_supply": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "delivery_terms": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "payment_terms_conditions": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "warranty": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "declaration": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "authorised_signatory": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "digital_signature_present": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  },
+  "digital_signature_name": {
+   "raw": null,
+   "confidence": 0,
+   "page": null,
+   "bbox": null
+  }
+ },
+ "lines": [
+  {
+   "product_name": {
+    "raw": "MS nuts M16",
+    "confidence": 0.72,
+    "page": 1,
+    "bbox": [
+     0.0806,
+     0.2765,
+     0.171,
+     0.2839
+    ]
+   },
+   "description": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "sku": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "hsn": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "quantity": {
+    "raw": "500",
+    "confidence": 0.81,
+    "page": 1,
+    "bbox": [
+     0.4516,
+     0.2765,
+     0.4782,
+     0.2839
+    ]
+   },
+   "uom": {
+    "raw": "PCS",
+    "confidence": 0.77,
+    "page": 1,
+    "bbox": [
+     0.5484,
+     0.2765,
+     0.5782,
+     0.2839
+    ]
+   },
+   "unit_price": {
+    "raw": "12.00",
+    "confidence": 0.77,
+    "page": 1,
+    "bbox": [
+     0.6048,
+     0.2765,
+     0.6435,
+     0.2839
+    ]
+   },
+   "discount_pct": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "discount_amount": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "taxable_value": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "gst_rate": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "cgst": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "sgst": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "igst": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "cess": {
+    "raw": null,
+    "confidence": 0,
+    "page": null,
+    "bbox": null
+   },
+   "total": {
+    "raw": "6,000.00",
+    "confidence": 0.78,
+    "page": 1,
+    "bbox": [
+     0.871,
+     0.2765,
+     0.9306,
+     0.2851
+    ]
+   }
+  }
+ ]
+}

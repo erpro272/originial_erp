@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     database_owner_url: str = "postgresql+asyncpg://erp_owner:erp_owner@localhost:5432/erp"
 
     redis_url: str = "redis://localhost:6379/0"
+    jobs_inline: bool = False  # tests: run background jobs in-process
 
     # Object storage (S3-compatible; MinIO locally).
     s3_endpoint_url: str | None = "http://localhost:9000"
@@ -27,6 +28,9 @@ class Settings(BaseSettings):
     s3_secret_key: SecretStr = SecretStr("minioadmin")
     s3_bucket: str = "erp-files"
     signed_url_ttl_seconds: int = 300
+    # Optional extra at-rest encryption by the store (e.g. "AES256" on AWS S3). Files are
+    # already encrypted by the app with the company key before upload.
+    s3_server_side_encryption: str | None = None
 
     # Auth
     jwt_secret: SecretStr = SecretStr("dev-only-change-me-dev-only-change-me")

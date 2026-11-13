@@ -8,6 +8,7 @@ from arq.connections import RedisSettings
 from app.core.config import get_settings
 from app.core.events import dispatch_outbox
 from app.core.logging import configure_logging
+from app.invoices.jobs import extract_invoice
 
 
 async def startup(_: dict[str, Any]) -> None:
@@ -19,7 +20,7 @@ async def outbox_job(_: dict[str, Any]) -> int:
 
 
 class WorkerSettings:
-    functions: list[Any] = []
+    functions: list[Any] = [extract_invoice]
     cron_jobs = [
         cron(
             outbox_job,  # type: ignore[arg-type]  # arq types ctx loosely
