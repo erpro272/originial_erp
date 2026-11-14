@@ -35,7 +35,7 @@
   in code, every Appendix A field, deterministic checks, verification screen with
   click-to-highlight, customer matching, duplicate detection, single-transaction save,
   versioned extraction record, encrypted files and bank details.
-- Tests: 210 pytest, 30 Vitest, 12 Playwright.
+- Tests: 206 pytest, 30 Vitest, 12 Playwright.
 
 ## Next
 - Feature 2 — Planning (6 tabs + plan comparison), after the owner's review of Feature 1.
