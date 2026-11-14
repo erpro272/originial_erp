@@ -31,6 +31,7 @@ class RunningRow(BaseModel):
     start: date
     finish: date
     machines: list[str]
+    machine: str = ""  # the machine it is on now
 
 
 class OptionRow(BaseModel):
@@ -65,6 +66,8 @@ class Options(BaseModel):
     own: SelectionOption | None
     part: SelectionOption | None
     full: SelectionOption | None
+    best: Literal["own", "part", "full"] | None = None  # by the company's "Best score" rule
+    criteria: list[str] = []
 
 
 class Selection(BaseModel):
@@ -358,6 +361,19 @@ class PlanningRules(BaseModel):
     overhead_pct: float = Field(default=7.0, ge=0, le=100)
     packaging_paise_per_unit: int = Field(default=5, ge=0)
     min_margin_pct: float = Field(default=18.0, ge=0, le=100)
+
+
+Criterion = Literal["late", "idle", "per_day", "contribution", "bottlenecks", "days"]
+
+
+class PlanningObjective(BaseModel):
+    """How "Best score" ranks the selection options: criteria in priority order.
+
+    `method` is "rule" today; an AI method can be added later and plug into the same setting.
+    """
+
+    method: Literal["rule"] = "rule"
+    criteria: list[Criterion] = Field(default=["late", "per_day", "idle", "bottlenecks"], min_length=1)
 
 
 # ---- factory setup --------------------------------------------------------------------------

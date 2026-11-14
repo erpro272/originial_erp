@@ -99,6 +99,10 @@ class Rules:
     overhead_pct: float = 7.0
     packaging_per_unit: int = 0  # paise
     min_margin_pct: float = 18.0
+    # "Best score" rule, as an ordered list of criteria (company setting `planning-objective`).
+    # Default = the mockup rule: no late deliveries where possible, then the most contribution per
+    # production day, then prefer filling machines left idle by running orders, then fewer bottlenecks.
+    criteria: tuple[str, ...] = ("late", "per_day", "idle", "bottlenecks")
 
 
 @dataclass
@@ -668,17 +672,36 @@ def suggest_fixes(f: Factory, rules: Rules, running: list[Job], jobs: list[Job],
     return sorted(keep, key=lambda x: x["label"])
 
 
+def _idle(f: Factory, ev: Eval, running: list[Job], today: date) -> list[tuple[str, date]]:
+    """Machine-days with no work at all while the running orders are still on the floor."""
+    run_end = max((ev.sched.placed[j.id].finish for j in running), default=None)
+    if not run_end or not ev.a["start"]:
+        return []
+    return [(m.name, d) for d in days_in(max(ev.a["start"], next_working(today, f)), run_end, f)
+            for m in f.machines.values() if m.hours_per_day > 0 and ev.sched.used.get((m.id, d), 0.0) <= EPS]  # fmt: skip
+
+
+def objective(rules: Rules, ev: Eval, idle_days: int) -> tuple[Any, ...]:
+    """The 'Best score' key (smaller is better), built from the company's ordered criteria."""
+    late_days = sum(r["late_days"] for r in ev.a["rows"].values())
+    parts = {
+        "late": (ev.late, late_days),
+        "idle": (idle_days,),
+        # Contribution per production day over ONE window shared by all options (else a tiny plan always
+        # "wins" per day); with the window fixed, that ranks like total contribution.
+        "per_day": (-ev.fin["contribution"],),
+        "contribution": (-ev.fin["contribution"],),
+        "bottlenecks": (ev.problems,),
+        "days": (ev.a["days"],),
+    }
+    return tuple(x for c in rules.criteria if c in parts for x in parts[c])
+
+
 def _option_metrics(f: Factory, ev: Eval, running: list[Job], ids: list[str], today: date,
                     by: dict[str, Job]) -> dict[str, Any]:  # fmt: skip
     run_end = max((ev.sched.placed[j.id].finish for j in running), default=None)
-    alongside = 0
-    idle: list[tuple[str, date]] = []
-    if run_end and ev.a["start"]:
-        alongside = sum(1 for i in ids if ev.a["rows"][i]["start"] <= run_end)
-        for d in days_in(max(ev.a["start"], next_working(today, f)), run_end, f):
-            for m in f.machines.values():
-                if ev.sched.used.get((m.id, d), 0.0) <= EPS and m.hours_per_day > 0:
-                    idle.append((m.name, d))
+    alongside = sum(1 for i in ids if run_end and ev.a["rows"][i]["start"] <= run_end)
+    idle = _idle(f, ev, running, today)
     return {"orders": ids, "value": ev.fin["value"], "start": ev.a["start"], "end": ev.a["end"],
             "days": ev.a["days"], "alongside": alongside, "idle_days": len(idle),
             "idle_machines": sorted({n for n, _ in idle}), "utilisation": ev.a["utilisation"],
@@ -706,9 +729,7 @@ def options(f: Factory, rules: Rules, running: list[Job], cands: list[Job], sele
         return evaluate(f, rules, running, js, Inputs(inp.start, seq), today)
 
     def score(ev: Eval) -> tuple[Any, ...]:
-        # No late deliveries first; then contribution per production day over the SAME window for every
-        # option (so dropping work never looks better), then fewer bottlenecks, then a shorter plan.
-        return (ev.late, -ev.fin["contribution"], ev.problems, ev.a["days"])
+        return objective(rules, ev, len(_idle(f, ev, running, today)))
 
     def search(start: list[str], may_drop: bool) -> list[str]:
         cur = list(start)
@@ -730,16 +751,29 @@ def options(f: Factory, rules: Rules, running: list[Job], cands: list[Job], sele
     out: dict[str, Any] = {}
     own = [i for i in selected if i in by]
     own_ev = ev_of(own) if own else None
+    scores = {}
     for key, ids in (("own", own), ("part", search(own, False)), ("full", search(own, True))):
         ids = sorted(ids, key=lambda i: own.index(i) if i in own else len(own))
         if not ids:
             out[key] = None
             continue
-        m = _option_metrics(f, ev_of(ids), running, ids, today, by)
+        ev = ev_of(ids)
+        m = _option_metrics(f, ev, running, ids, today, by)
         if own_ev is not None:
             m["dropped"] = {i: _why_left_out(f, rules, by[i], own_ev) for i in own if i not in ids}
         out[key] = m
+        scores[key] = score(ev)
+    out["best"] = min(scores, key=lambda k: scores[k]) if scores else None
+    out["criteria"] = list(rules.criteria)
     return out
+
+
+def _current_machine(f: Factory, j: Job, p: Placed, today: date) -> str:
+    """The machine a running/booked order is on now (or will be on next)."""
+    for st, alloc in zip(j.steps, p.steps, strict=False):
+        if alloc and max(alloc) >= today and st.machine in f.machines:
+            return f.machines[st.machine].name
+    return f.machines[j.steps[0].machine].name if j.steps and j.steps[0].machine in f.machines else ""
 
 
 def _why_left_out(f: Factory, rules: Rules, j: Job, own: Eval) -> str:
@@ -808,7 +842,8 @@ def compute(f: Factory, rules: Rules, running: list[Job], cands: list[Job], sele
     running_rows = [{"id": j.id, "number": j.number, "customer": j.customer, "product": j.product,
                      "progress": j.progress, "start": cur.sched.placed[j.id].start,
                      "finish": cur.sched.placed[j.id].finish,
-                     "machines": [f.machines[s.machine].name for s in j.steps]} for j in running]  # fmt: skip
+                     "machines": [f.machines[s.machine].name for s in j.steps],
+                     "machine": _current_machine(f, j, cur.sched.placed[j.id], today)} for j in running]  # fmt: skip
     if opts is None:
         opts = _iso(options(f, rules, running, cands, base if base is not None else selected, inp, today))
     # Which option is in use: the one whose orders are exactly the ticked orders.

@@ -629,6 +629,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/planning/objective": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Objective
+         * @description How "Best score" ranks the selection options (edited in Factory setup later).
+         */
+        get: operations["get_objective_api_planning_objective_get"];
+        /** Put Objective */
+        put: operations["put_objective_api_planning_objective_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/planning/plan": {
         parameters: {
             query?: never;
@@ -1926,6 +1947,13 @@ export interface components {
         };
         /** Options */
         Options: {
+            /** Best */
+            best?: ("own" | "part" | "full") | null;
+            /**
+             * Criteria
+             * @default []
+             */
+            criteria: string[];
             full: components["schemas"]["SelectionOption"] | null;
             own: components["schemas"]["SelectionOption"] | null;
             part: components["schemas"]["SelectionOption"] | null;
@@ -2257,6 +2285,30 @@ export interface components {
             selection: components["schemas"]["Selection"];
             sequence: components["schemas"]["Sequence"];
         };
+        /**
+         * PlanningObjective
+         * @description How "Best score" ranks the selection options: criteria in priority order.
+         *
+         *     `method` is "rule" today; an AI method can be added later and plug into the same setting.
+         */
+        PlanningObjective: {
+            /**
+             * Criteria
+             * @default [
+             *       "late",
+             *       "per_day",
+             *       "idle",
+             *       "bottlenecks"
+             *     ]
+             */
+            criteria: ("late" | "idle" | "per_day" | "contribution" | "bottlenecks" | "days")[];
+            /**
+             * Method
+             * @default rule
+             * @constant
+             */
+            method: "rule";
+        };
         /** PlanningRules */
         PlanningRules: {
             /**
@@ -2508,6 +2560,11 @@ export interface components {
             finish: string;
             /** Id */
             id: string;
+            /**
+             * Machine
+             * @default
+             */
+            machine: string;
             /** Machines */
             machines: string[];
             /** Number */
@@ -4209,6 +4266,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Factory-Output"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_objective_api_planning_objective_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanningObjective"];
+                };
+            };
+        };
+    };
+    put_objective_api_planning_objective_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlanningObjective"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanningObjective"];
                 };
             };
             /** @description Validation Error */

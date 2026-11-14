@@ -268,3 +268,24 @@ async def test_approval_does_not_trigger_its_own_reapproval(client: AsyncClient)
     assert ap["status"] == "approved" and not ap["needs_reapproval"]
     again = (await client.get("/planning/plan", headers=h)).json()
     assert again["status"] == "approved" and not again["needs_reapproval"]
+
+
+async def test_best_score_rule_is_a_company_setting(client: AsyncClient) -> None:
+    """The ranking behind "Best score" is swappable (Factory setup / an AI method can set it later)."""
+    co = await make_company("plan-obj")
+    h = await headers_for(client, co)
+    assert (await client.get("/planning/objective", headers=h)).json()["criteria"][0] == "late"
+    bolts = str(await fx.product(co.id, "B1", "Bolts"))
+    cust = str(await fx.customer(co.id, "Obj Ltd"))
+    await _order(client, h, bolts, cust, "100", 10)
+    await _order(client, h, bolts, cust, "100", 12, mark=False)
+    opts = (await client.get("/planning/plan", headers=h)).json()["result"]["selection"]["options"]
+    assert opts["criteria"] == ["late", "per_day", "idle", "bottlenecks"] and opts["best"] in ("part", "full")
+    r = await client.put("/planning/objective", headers=h, json={"criteria": ["days"]})  # shortest plan wins
+    assert r.status_code == 200
+    opts = (await client.get("/planning/plan", headers=h)).json()["result"]["selection"]["options"]
+    assert opts["criteria"] == ["days"] and opts["best"] == "own"
+    planner = await headers_for(client, co, "planner")
+    assert (
+        await client.put("/planning/objective", headers=planner, json={"criteria": ["late"]})
+    ).status_code == 403

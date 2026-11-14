@@ -3516,6 +3516,30 @@
       },
       "Options": {
         "properties": {
+          "best": {
+            "anyOf": [
+              {
+                "enum": [
+                  "own",
+                  "part",
+                  "full"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Best"
+          },
+          "criteria": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Criteria",
+            "type": "array"
+          },
           "full": {
             "anyOf": [
               {
@@ -4595,6 +4619,41 @@
         "title": "PlanResult",
         "type": "object"
       },
+      "PlanningObjective": {
+        "description": "How \"Best score\" ranks the selection options: criteria in priority order.\n\n`method` is \"rule\" today; an AI method can be added later and plug into the same setting.",
+        "properties": {
+          "criteria": {
+            "default": [
+              "late",
+              "per_day",
+              "idle",
+              "bottlenecks"
+            ],
+            "items": {
+              "enum": [
+                "late",
+                "idle",
+                "per_day",
+                "contribution",
+                "bottlenecks",
+                "days"
+              ],
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Criteria",
+            "type": "array"
+          },
+          "method": {
+            "const": "rule",
+            "default": "rule",
+            "title": "Method",
+            "type": "string"
+          }
+        },
+        "title": "PlanningObjective",
+        "type": "object"
+      },
       "PlanningRules": {
         "properties": {
           "min_margin_pct": {
@@ -5106,6 +5165,11 @@
           },
           "id": {
             "title": "Id",
+            "type": "string"
+          },
+          "machine": {
+            "default": "",
+            "title": "Machine",
             "type": "string"
           },
           "machines": {
@@ -8774,6 +8838,77 @@
           }
         ],
         "summary": "Put Factory",
+        "tags": [
+          "planning"
+        ]
+      }
+    },
+    "/api/planning/objective": {
+      "get": {
+        "description": "How \"Best score\" ranks the selection options (edited in Factory setup later).",
+        "operationId": "get_objective_api_planning_objective_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanningObjective"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Objective",
+        "tags": [
+          "planning"
+        ]
+      },
+      "put": {
+        "operationId": "put_objective_api_planning_objective_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanningObjective"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanningObjective"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Put Objective",
         "tags": [
           "planning"
         ]

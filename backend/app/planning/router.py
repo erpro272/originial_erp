@@ -10,6 +10,7 @@ from app.planning.schemas import (
     ApproveIn,
     Factory,
     HistoryItem,
+    PlanningObjective,
     PlanningRules,
     PlanOut,
     PlanPatch,
@@ -77,6 +78,17 @@ async def get_rules(db: TenantDB, _: Reader) -> PlanningRules:
 @router.put("/rules")
 async def put_rules(db: TenantDB, p: SettingsWriter, body: PlanningRules) -> PlanningRules:
     return await service.put_rules(db, p.user_id, body)
+
+
+@router.get("/objective")
+async def get_objective(db: TenantDB, _: Reader) -> PlanningObjective:
+    """How "Best score" ranks the selection options (edited in Factory setup later)."""
+    return await service.get_objective(db)
+
+
+@router.put("/objective")
+async def put_objective(db: TenantDB, p: SettingsWriter, body: PlanningObjective) -> PlanningObjective:
+    return await service.put_objective(db, p.user_id, body)
 
 
 @router.get("/factory")

@@ -31,6 +31,7 @@ from app.planning.schemas import (
     Factory,
     HistoryItem,
     LastChange,
+    PlanningObjective,
     PlanningRules,
     PlanOut,
     PlanPatch,
@@ -40,6 +41,7 @@ from app.planning.schemas import (
 )
 
 RULES_KEY = "planning-rules"
+OBJECTIVE_KEY = "planning-objective"
 WORKING = ("draft", "generated")
 
 
@@ -58,8 +60,21 @@ async def put_rules(session: AsyncSession, actor: uuid.UUID, r: PlanningRules) -
     return r
 
 
-def _engine_rules(r: PlanningRules) -> eng.Rules:
+async def get_objective(session: AsyncSession) -> PlanningObjective:
+    try:
+        return PlanningObjective.model_validate(await kv.get_setting(session, OBJECTIVE_KEY))
+    except (NotFound, ValueError):
+        return PlanningObjective()
+
+
+async def put_objective(session: AsyncSession, actor: uuid.UUID, o: PlanningObjective) -> PlanningObjective:
+    await kv.put_setting(session, actor, OBJECTIVE_KEY, o.model_dump())
+    return o
+
+
+def _engine_rules(r: PlanningRules, o: PlanningObjective | None = None) -> eng.Rules:
     return eng.Rules(
+        criteria=tuple((o or PlanningObjective()).criteria),
         penalty_mode=r.penalty_mode,
         penalty_value=r.penalty_fixed_paise if r.penalty_mode == "fixed" else r.penalty_percent,
         overhead_pct=r.overhead_pct,
@@ -179,17 +194,18 @@ async def _compute(session: AsyncSession, plan: Plan, today: date) -> tuple[dict
     """(result, fingerprint, options fingerprint). Pure read: does not change the plan."""
     f = await load_factory(session)
     rules = await get_rules(session)
+    objective = await get_objective(session)
     cands, running, _ = await _jobs(session, plan)
     requested = await _requested(session, plan)
     inp = _inputs(plan)
     base = list((plan.inputs or {}).get("base", plan.selected))
-    ofp = _fp(f, rules.model_dump(), cands, running, base, plan.start_date, today)
+    ofp = _fp(f, rules.model_dump(), objective.model_dump(), cands, running, base, plan.start_date, today)
     opts = plan.result["selection"]["options"] if plan.result and plan.options_fingerprint == ofp else None
-    result = eng.compute(f, _engine_rules(rules), running, cands, list(plan.selected), plan.rule, inp, today,
-                         requested, opts, base)  # fmt: skip
+    result = eng.compute(f, _engine_rules(rules, objective), running, cands, list(plan.selected), plan.rule, inp,
+                         today, requested, opts, base)  # fmt: skip
     # Fingerprint the inputs as the engine tidied them (sequence by rule etc.), so a re-read is stable.
-    fp = _fp(f, rules.model_dump(), cands, running, plan.selected, plan.rule, result["inputs"],
-             plan.start_date, today, sorted(requested))  # fmt: skip
+    fp = _fp(f, rules.model_dump(), objective.model_dump(), cands, running, plan.selected, plan.rule,
+             result["inputs"], plan.start_date, today, sorted(requested))  # fmt: skip
     return result, fp, ofp
 
 
