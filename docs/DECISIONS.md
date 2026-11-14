@@ -101,3 +101,9 @@ Short records of choices and the reason for each. Newest at the bottom.
 34. **Orders sent to Planning when no plan is being worked on start the next plan** (PLAN-002, …)
     automatically. An approved plan only looks at its own orders and needs re-approval only when its
     sequence, schedule, money or checklist change; the approval itself is the new baseline.
+35. **Planning rebuild, step 1 only** (owner): steps 2–5 visible but locked. Running rows include
+    in-production and already-planned orders. Bar dates come from machine capacity + routes (demo data;
+    Factory setup screen later). Selection saved on the server; owner + planner edit.
+36. **"Best score" is a company setting** (`planning-objective`: ordered criteria). Default = mockup rule
+    (no late deliveries, then contribution per production day over one window shared by all options,
+    then filling idle machines, then fewer bottlenecks). An AI method can plug into the same setting.

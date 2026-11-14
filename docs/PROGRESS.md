@@ -58,8 +58,11 @@
 - Tests: 233 pytest, 32 Vitest, 14 Playwright.
 
 ## Next
-- Planning v1 archived in `archive/planning-v1/` (owner request); `/planning` shows Coming soon
-  until the rebuild from scratch. Backend planning module still live.
+- Planning v1 archived in `archive/planning-v1/` (owner request). Rebuild in progress:
+  **Step 1 Selected orders done (awaiting owner review)**: order timeline (running/planned orders +
+  your selection / partly / fully optimized, from/to range, default today + 3 weeks), "In this plan"
+  table synced both ways with Orders received, options comparison with "Use this selection",
+  swappable "Best score" rule (`planning-objective` setting). Steps 2–5 locked (coming soon).
 - Owner review of Feature 2 (Planning).
 - Later: Dashboard tab (owner will specify), Purchasing, Production, Billing, Finance,
   AI assistant panel.
