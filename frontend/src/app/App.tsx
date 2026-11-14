@@ -7,6 +7,8 @@ import { AuditLogPage } from "@/pages/AuditLogPage";
 import { ComingSoonPage } from "@/pages/ComingSoonPage";
 import { LoginPage } from "@/pages/LoginPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
+import { CustomerProfile } from "@/modules/customers/CustomerProfile";
+import { CustomersTab } from "@/modules/customers/CustomersTab";
 import { OrdersLayout } from "@/modules/orders/OrdersLayout";
 import { OrdersReceivedTab } from "@/modules/orders/OrdersReceivedTab";
 import { MODULES } from "./nav";
@@ -30,7 +32,8 @@ export function App() {
         {/* Modules not built yet show "Coming soon". Features replace these one by one. */}
         <Route path="/orders" element={<OrdersLayout />}>
           <Route index element={<OrdersReceivedTab />} />
-          <Route path="customers" element={<ComingSoonPage module={MODULES[0]!} />} />
+          <Route path="customers" element={<CustomersTab />} />
+          <Route path="customers/:id" element={<CustomerProfile />} />
         </Route>
         {MODULES.filter((m) => m.key !== "orders").map((m) => (
           <Route key={m.key} path={`${m.path}/*`} element={<ComingSoonPage module={m} />} />

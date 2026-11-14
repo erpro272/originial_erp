@@ -21,6 +21,8 @@ export default tseslint.config(
             "buttonVariants",
             "tagVariants",
             "toneText",
+            "usePeriod",
+            "last12Months",
             "useToast",
             "useAuth",
             "makeQueryClient",
