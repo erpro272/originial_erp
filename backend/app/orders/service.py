@@ -424,8 +424,12 @@ async def update_order(
               "progress_pct", "notes"):  # fmt: skip
         if k in data and (data[k] is not None or k == "notes"):
             setattr(o, k, data[k])
-    o.sales_paise = _paise_mul(o.quantity, o.unit_price_paise)
-    o.cost_paise = _paise_mul(o.quantity, unit_cost)
+    # Recalculate money only when its inputs change, so editing notes or status never
+    # rewrites agreed sales/cost figures.
+    if {"quantity", "unit_price_paise"} & data.keys():
+        o.sales_paise = _paise_mul(o.quantity, o.unit_price_paise)
+    if {"quantity", "unit_cost_paise"} & data.keys():
+        o.cost_paise = _paise_mul(o.quantity, unit_cost)
     if "marked_for_planning" in data and data["marked_for_planning"] is not None:
         if data["marked_for_planning"] and o.status != "accepted":
             raise DomainError("Only accepted orders can be sent to Planning. Accept it first.",

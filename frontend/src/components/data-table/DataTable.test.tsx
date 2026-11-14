@@ -55,7 +55,7 @@ function setup(saved: unknown = {}) {
 }
 
 const headers = () =>
-  screen.getAllByRole("columnheader").map((th) => th.textContent?.replace(/[▲▼]/g, "").trim());
+  screen.getAllByRole("columnheader").map((th) => th.textContent?.replace(/[↕↑↓]/g, "").trim());
 
 test("resolvePrefs merges saved order with new columns and keeps always-visible", () => {
   const cols = [

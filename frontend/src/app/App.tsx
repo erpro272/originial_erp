@@ -7,6 +7,8 @@ import { AuditLogPage } from "@/pages/AuditLogPage";
 import { ComingSoonPage } from "@/pages/ComingSoonPage";
 import { LoginPage } from "@/pages/LoginPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
+import { OrdersLayout } from "@/modules/orders/OrdersLayout";
+import { OrdersReceivedTab } from "@/modules/orders/OrdersReceivedTab";
 import { MODULES } from "./nav";
 
 const DesignPage = import.meta.env.DEV
@@ -26,7 +28,11 @@ export function App() {
       >
         <Route index element={<Navigate to="/orders" replace />} />
         {/* Modules not built yet show "Coming soon". Features replace these one by one. */}
-        {MODULES.map((m) => (
+        <Route path="/orders" element={<OrdersLayout />}>
+          <Route index element={<OrdersReceivedTab />} />
+          <Route path="customers" element={<ComingSoonPage module={MODULES[0]!} />} />
+        </Route>
+        {MODULES.filter((m) => m.key !== "orders").map((m) => (
           <Route key={m.key} path={`${m.path}/*`} element={<ComingSoonPage module={m} />} />
         ))}
         <Route

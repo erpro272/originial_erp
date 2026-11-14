@@ -33,7 +33,8 @@ export function percent(fraction: number, digits = 1): string {
 
 /** "Mon 16 Nov" (mockup style). */
 export function shortDate(d: string | Date): string {
-  const date = typeof d === "string" ? new Date(d) : d;
+  // Plain dates ("2026-11-16") are local calendar days, not UTC midnight.
+  const date = typeof d === "string" ? new Date(d.length === 10 ? `${d}T00:00:00` : d) : d;
   return date.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
 }
 
@@ -56,4 +57,34 @@ export function initials(name: string): string {
     .slice(0, 2)
     .map((p) => p[0]!.toUpperCase())
     .join("");
+}
+
+/** "1,250.50" -> 125050 paise. Returns null for blank / invalid input. */
+export function parseRupeesToPaise(input: string): number | null {
+  const s = input.replace(/[₹,\s]/g, "");
+  if (!s) return null;
+  if (!/^-?\d+(\.\d{1,2})?$/.test(s)) return null;
+  const [whole, frac = ""] = s.replace("-", "").split(".");
+  const paise = Number(whole) * 100 + Number(frac.padEnd(2, "0"));
+  return s.startsWith("-") ? -paise : paise;
+}
+
+/** 125050 -> "1250.50" (for editable inputs). */
+export function paiseToInput(paise: number | null | undefined): string {
+  if (paise === null || paise === undefined) return "";
+  const r = Math.abs(paise);
+  return `${paise < 0 ? "-" : ""}${Math.floor(r / 100)}.${String(r % 100).padStart(2, "0")}`;
+}
+
+/** Decimal string from the API ("120000.000") -> "1,20,000". */
+export function qty(value: string | number, digits = 3): string {
+  const n = typeof value === "string" ? Number(value) : value;
+  return n.toLocaleString("en-IN", { maximumFractionDigits: digits });
+}
+
+/** "13 Nov 2026" */
+export function longDate(d: string | Date | null | undefined): string {
+  if (!d) return "—";
+  const date = typeof d === "string" ? new Date(d.length === 10 ? `${d}T00:00:00` : d) : d;
+  return date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 }

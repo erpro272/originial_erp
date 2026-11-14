@@ -258,3 +258,21 @@ async def test_orders_are_isolated_between_companies(client_mod: AsyncClient, bo
     h2 = await headers_for(client_mod, other)
     assert (await client_mod.get("/orders", headers=h2, params={"scope": "all"})).json()["total"] == 0
     assert (await client_mod.get(f"/orders/{o['early']['id']}", headers=h2)).status_code == 404
+
+
+async def test_editing_other_fields_keeps_money_figures(client: AsyncClient, co: Company, data) -> None:  # type: ignore[no-untyped-def]
+    from sqlalchemy import update
+
+    from app.core.db import tenant_session
+    from app.orders.models import Order
+
+    h = await headers_for(client, co)
+    o = await _create(client, h, data, quantity="120000", unit_price_paise=15)
+    async with tenant_session(co.id) as s:  # an agreed total that isn't exactly qty x unit price
+        await s.execute(update(Order).where(Order.id == uuid.UUID(o["id"])).values(sales_paise=1_840_000))
+    r = await client.patch(
+        f"/orders/{o['id']}", headers=h, json={"notes": "Call before dispatch", "priority": "high"}
+    )
+    assert r.json()["sales_paise"] == 1_840_000
+    r = await client.patch(f"/orders/{o['id']}", headers=h, json={"quantity": "100000"})
+    assert r.json()["sales_paise"] == 1_500_000  # recalculated once an input changes

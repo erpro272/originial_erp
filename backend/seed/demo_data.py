@@ -292,8 +292,9 @@ async def seed_demo(s: AsyncSession, tenant_id: uuid.UUID, owner_id: uuid.UUID) 
         p = prods[prod]
         q = Decimal(qty)
         o = Order(number=f"ORD-{num}", customer_id=custs[cname].id, product_id=p.id, quantity=q, unit="pcs",
-                  unit_price_paise=paise(Decimal(sales * 100) / q), sales_paise=sales * 100,
-                  cost_paise=(sales - profit) * 100, processing_days=p.processing_days, ship_date=wd(ship_in),
+                  unit_price_paise=paise(Decimal(sales * 100) / q),
+                  sales_paise=paise(q * paise(Decimal(sales * 100) / q)),
+                  cost_paise=paise(q * paise(Decimal((sales - profit) * 100) / q)), processing_days=p.processing_days, ship_date=wd(ship_in),
                   priority=prio, status=status, progress_pct=prog,
                   marked_for_planning=status == "accepted" and num in (1036, 1041))  # fmt: skip
         s.add(o)
