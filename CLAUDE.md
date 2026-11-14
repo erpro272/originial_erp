@@ -94,7 +94,9 @@ isolation). One company per website: no company picker or switcher in the UI.
   (`planning-rules`: late penalty fixed or %, overhead %, packaging, minimum margin).
   Ticks == `Order.marked_for_planning` (synced both ways); `inputs.base` = owner's own picks the
   optimizer starts from; `selection.using` = option in use. No working plan + orders sent → new draft.
-- Seed: `seed/demo_data.py` (dates relative to today; mirrors the Orders mockup). Startup
+- Seed: `seed/demo_data.py` (dates relative to today; mirrors the Orders mockup). Planning demo:
+  `seed/planning_demo.py` (idempotent upsert; `python -m seed.planning_demo` fixes an old DB in place).
+  Bump `engine.ENGINE_VERSION` whenever engine logic changes (saved results then recalculate). Startup
   (`seed.run --if-empty`) only runs with `ERP_SEED_DEMO=true` (compose/dev), fills demo data into
   demo companies with no business data, never touches a company with data; `--reset` is refused
   when `ERP_ENV=prod`. The seed role is a superuser (RLS does not filter it): always filter by

@@ -395,6 +395,7 @@ class MachineIn(BaseModel):
     operators: int = Field(ge=0, le=50)
     cost_per_hour_paise: int = Field(ge=0)
     night_shift_cost_per_hour_paise: int = Field(ge=0)
+    inspection: bool = False  # QC station: not counted as idle production capacity
 
 
 class StepIn(BaseModel):

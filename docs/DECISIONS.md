@@ -107,3 +107,17 @@ Short records of choices and the reason for each. Newest at the bottom.
 36. **"Best score" is a company setting** (`planning-objective`: ordered criteria). Default = mockup rule
     (no late deliveries, then contribution per production day over one window shared by all options,
     then filling idle machines, then fewer bottlenecks). An AI method can plug into the same setting.
+37. **Planning demo is an idempotent upsert** (`python -m seed.planning_demo`): machines, routes, BOMs,
+    stock and the 7 candidates are updated in place by natural keys; nothing is dropped. Material prices
+    are derived from each order's value and conversion cost so margins land near the demo targets;
+    screens compute margins from costs.
+38. **Scheduler**: route steps strictly in order with a time-of-day hand-off (step k starts when k-1 ends,
+    on its own machine's queue); running orders take capacity first; Sundays/downtime have no capacity.
+    Window = earliest planned start to latest finish (calendar days); idle machine-days count production
+    machines only (QC is `inspection`), during the running orders' dates; utilisation = all scheduled
+    hours / all capacity in the window.
+39. **Options**: Your selection = ticked orders in the plan's order (default rule: highest value, as the
+    mockup). Partly = never drops yours, best sequence (deadline / slack / shortest + swaps), adds orders
+    only with no new late delivery or bottleneck. Fully = every subset of up to 10 accepted orders, each
+    with its best sequence; clean plans (no late, no bottleneck) first, then the Best-score rule.
+    "Best score" uses the same ranking. `ENGINE_VERSION` is part of the plan fingerprint.

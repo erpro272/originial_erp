@@ -80,22 +80,19 @@ test("Selected orders: sent from Orders, on the timeline, synced back, options s
   await expect(yours).toContainText(order.number);
   const use = page.getByRole("button", { name: "Use this selection" });
   if ((await use.count()) > 1) {
-    await use.last().click();
-    await expect(
-      page.getByRole("button", { name: "✓ Using this" }),
-    ).toHaveCount(1);
+    await use.last().click(); // Fully optimized
+    await expect(page.getByRole("columnheader", { name: /Fully optimized/ })).toContainText("Current");
+    await expect(page.getByRole("button", { name: "✓ Using this" })).toHaveCount(1);
     await page.getByRole("columnheader", { name: /Your selection/ }).click();
-    await page
-      .getByRole("button", { name: "Use this selection" })
-      .first()
-      .click();
-    await expect(
-      page.getByRole("columnheader", { name: /Your selection/ }),
-    ).toContainText("Current");
+    await page.getByRole("button", { name: "Use this selection" }).first().click(); // back to Your selection
+    await expect(page.getByRole("columnheader", { name: /Your selection/ })).toContainText("Current");
   }
 
   // Steps 2–5 are locked for now.
   await expect(page.getByRole("tab", { name: /Production schedule/ })).toHaveAttribute("aria-disabled", "true");
   await page.goto("/planning?step=3");
   await expect(page.getByText(/coming soon/i).first()).toBeVisible();
+
+  // Clean up: cancel the test order so reruns keep the planning pool small.
+  await request.post(`/api/orders/${order.id}/cancel`, { headers: await auth(request), data: { reason: "e2e test order" } });
 });

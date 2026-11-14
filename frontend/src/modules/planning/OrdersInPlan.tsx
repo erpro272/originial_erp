@@ -28,7 +28,7 @@ export function OrdersInPlan({
   onToggle: (id: string, on: boolean) => void;
 }) {
   const [sort, setSort] = useState<"deadline" | "value" | "margin">("deadline");
-  const on = new Set(ticked);
+  const on = useMemo(() => new Set(ticked), [ticked]);
   const opts = selection.options;
   const suggested = new Set([...(opts.part?.orders ?? []), ...(opts.full?.orders ?? [])]);
   const rows = useMemo(() => {
@@ -39,8 +39,12 @@ export function OrdersInPlan({
       value: (a: (typeof all)[number], b: (typeof all)[number]) => b.value - a.value,
       margin: (a: (typeof all)[number], b: (typeof all)[number]) => b.est_margin - a.est_margin,
     }[sort];
-    return all.sort((a, b) => by(a, b) || a.number.localeCompare(b.number));
-  }, [selection.orders, sort]);
+    // Ticked orders first; the rest at the bottom (muted, Suggested / Excluded), as in the mockup.
+    return all.sort(
+      (a, b) =>
+        Number(on.has(b.id)) - Number(on.has(a.id)) || by(a, b) || a.number.localeCompare(b.number),
+    );
+  }, [selection.orders, sort, on]);
   const picked = rows.filter((r) => on.has(r.id));
   const inUse = selection.using ? opts[selection.using] : null;
 

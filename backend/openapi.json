@@ -3203,6 +3203,11 @@
             ],
             "title": "Id"
           },
+          "inspection": {
+            "default": false,
+            "title": "Inspection",
+            "type": "boolean"
+          },
           "name": {
             "maxLength": 100,
             "minLength": 1,
@@ -3265,6 +3270,11 @@
               }
             ],
             "title": "Id"
+          },
+          "inspection": {
+            "default": false,
+            "title": "Inspection",
+            "type": "boolean"
           },
           "name": {
             "maxLength": 100,

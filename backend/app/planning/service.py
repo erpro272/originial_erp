@@ -95,7 +95,8 @@ async def load_factory(session: AsyncSession) -> eng.Factory:
     ).scalars():
         machines[str(m.id)] = eng.Machine(str(m.id), m.name, str(m.department_id),
                                         float(m.hours_per_shift) * m.shifts_per_day, float(m.hours_per_shift),
-                                        m.cost_per_hour_paise, m.night_shift_cost_per_hour_paise, m.operators)  # fmt: skip
+                                        m.cost_per_hour_paise, m.night_shift_cost_per_hour_paise, m.operators,
+                                        m.inspection)  # fmt: skip
     stock = {s.material_id: s for s in (await session.execute(select(MaterialStock))).scalars()}
     materials = {}
     for mat in (await session.execute(select(Material))).scalars():
@@ -165,7 +166,9 @@ async def _requested(session: AsyncSession, plan: Plan) -> set[str]:
 
 
 def _fp(*parts: Any) -> str:
-    return hashlib.sha256(json.dumps(parts, default=str, sort_keys=True).encode()).hexdigest()
+    return hashlib.sha256(
+        json.dumps([eng.ENGINE_VERSION, *parts], default=str, sort_keys=True).encode()
+    ).hexdigest()
 
 
 def _inputs(plan: Plan) -> eng.Inputs:
@@ -337,7 +340,8 @@ async def _new_plan(session: AsyncSession, actor: uuid.UUID | None) -> PlanOut:
     n = await counters.next_value(session, "plan", start=0)
     marked = await _marked(session)
     start = eng.next_working(clock.today(), await load_factory(session))
-    plan = Plan(number=f"PLAN-{n:03d}", status="draft", rule="deadline", start_date=start, selected=marked,
+    plan = Plan(number=f"PLAN-{n:03d}", status="draft", rule="value",  # mockup default: highest value first
+                start_date=start, selected=marked,
                 inputs={"base": marked})  # fmt: skip
     session.add(plan)
     await session.flush()
@@ -590,7 +594,8 @@ async def get_factory(session: AsyncSession) -> Factory:
         "machines": [{"id": m.id, "name": m.name, "department": dname[m.department_id],
                       "hours_per_shift": m.hours_per_shift, "shifts_per_day": m.shifts_per_day,
                       "operators": m.operators, "cost_per_hour_paise": m.cost_per_hour_paise,
-                      "night_shift_cost_per_hour_paise": m.night_shift_cost_per_hour_paise} for m in machines],
+                      "night_shift_cost_per_hour_paise": m.night_shift_cost_per_hour_paise,
+                      "inspection": m.inspection} for m in machines],
         "routes": [{"product_id": p.id, "product": p.name,
                     "steps": [{"machine": mname.get(s.machine_id, "?"), "setup_hours": s.setup_hours,
                                "minutes_per_unit": s.minutes_per_unit} for s in steps.get(p.id, [])]}
@@ -644,6 +649,7 @@ async def put_factory(session: AsyncSession, actor: uuid.UUID, body: Factory) ->
         mac.shifts_per_day, mac.operators, mac.sort, mac.active = mi.shifts_per_day, mi.operators, i, True
         mac.cost_per_hour_paise = mi.cost_per_hour_paise
         mac.night_shift_cost_per_hour_paise = mi.night_shift_cost_per_hour_paise
+        mac.inspection = mi.inspection
         mkeep[mi.name] = mac
     await session.flush()
     for r in body.routes:

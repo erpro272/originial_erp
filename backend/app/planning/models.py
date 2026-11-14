@@ -37,6 +37,8 @@ class Machine(Base, TenantScoped, TimestampMixin):
     night_shift_cost_per_hour_paise: Mapped[int] = mapped_column(BigInteger, default=0)
     sort: Mapped[int] = mapped_column(default=0)
     active: Mapped[bool] = mapped_column(Boolean, default=True)
+    # QC / inspection stations: not counted when looking for idle production capacity.
+    inspection: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
 
 
 class RouteStep(Base, TenantScoped):

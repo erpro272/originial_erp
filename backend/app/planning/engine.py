@@ -18,6 +18,10 @@ from datetime import date, timedelta
 from typing import Any
 
 EPS = 1e-6
+# Bump when the engine's logic changes, so saved plan results are recalculated (part of the fingerprint).
+ENGINE_VERSION = 3
+FULL_POOL = 10  # orders the fully optimized option searches exhaustively (2^N subsets)
+FULL_REFINE = 8  # best subsets whose sequence is then improved by pairwise swaps
 HORIZON_DAYS = 400
 
 
@@ -34,6 +38,7 @@ class Machine:
     cost_ph: int  # machine + power, paise per hour
     night_cost_ph: int  # extra cost per night-shift hour (crew premium etc.)
     operators: int = 1
+    inspection: bool = False  # QC stations: not counted as idle production capacity
 
 
 @dataclass(frozen=True)
@@ -196,11 +201,19 @@ def schedule(f: Factory, running: list[Job], jobs: list[Job], inp: Inputs, today
             cap[(m, d)] = base + (mach.night_hours if (m, d) in night and is_working(d, f) else 0.0)
         return cap[(m, d)]
 
-    def place(step: Step, earliest: date, finish_by: date | None) -> dict[date, float]:
+    def place(
+        step: Step, earliest: date, finish_by: date | None, after: float = 0.0
+    ) -> tuple[dict[date, float], float]:
+        """Hours per day for one operation, and the time of day (hours) it finishes on its last day.
+
+        `after` = time of day on `earliest` when the previous route step finishes: this step can't start
+        before it (route order is strict), and the machine works its queue in order through the day.
+        """
         need = step.setup + step.run
         alloc: dict[date, float] = {}
+        end = after
         if need <= EPS:
-            return {next_working(earliest, f): 0.0}
+            return {next_working(earliest, f): 0.0}, after
         if finish_by is not None:
             window = days_in(earliest, finish_by, f) or [next_working(finish_by, f)]
             for d in window:
@@ -216,25 +229,29 @@ def schedule(f: Factory, running: list[Job], jobs: list[Job], inp: Inputs, today
             d = earliest
             for _ in range(HORIZON_DAYS):
                 if is_working(d, f):
-                    take = min(max(capacity(step.machine, d) - used[(step.machine, d)], 0.0), need)
+                    begin = max(used[(step.machine, d)], after if d == earliest else 0.0)
+                    take = min(max(capacity(step.machine, d) - begin, 0.0), need)
                     if take > EPS:
                         alloc[d] = take
                         need -= take
+                        end = begin + take
                         if need <= EPS:
                             break
                 d += timedelta(1)
         for d, h in alloc.items():
             used[(step.machine, d)] += h
             capacity(step.machine, d)
-        return alloc
+        return alloc, end
 
     def run_job(job: Job, earliest: date, ready: date, finish_by: date | None) -> Placed:
         steps = []
         at = max(earliest, ready)
+        after = 0.0  # step k starts only when step k-1 has finished (same day, later hours, or a later day)
         for st in job.steps:
-            alloc = place(st, at, finish_by)
+            alloc, after = place(st, at, finish_by, after)
             steps.append(alloc)
-            at = max(alloc) if alloc else at
+            if alloc and max(alloc) != at:
+                at = max(alloc)
         if not steps:
             steps = [{next_working(at, f): 0.0}]
         return Placed(job, steps, ready)
@@ -422,14 +439,16 @@ def analyse(f: Factory, s: Sched, jobs: list[Job], plan_start: date) -> dict[str
         par.append({"orders": g, "shared": sorted(machines_shared)})
 
     if jobs:
-        start = min([plan_start] + [r["start"] for r in rows])
+        # Production window: earliest planned start to latest planned finish (calendar days).
+        start = min(r["start"] for r in rows)
         end = max(r["finish"] for r in rows)
-        plan_machines = {st.machine for j in jobs for st in j.steps}
+        # Utilisation: all scheduled machine hours (incl. running orders) / all available capacity hours
+        # across the window (Sundays, holidays and downtime have no capacity).
         span = days_in(start, end, f)
-        cap_sum = sum(s.cap.get((m, d), f.machines[m].hours_per_day) for m in plan_machines for d in span)
-        use_sum = sum(s.used.get((m, d), 0.0) for m in plan_machines for d in span)
+        cap_sum = sum(_cap(f, s, m, d) for m in f.machines for d in span)
+        use_sum = sum(s.used.get((m, d), 0.0) for m in f.machines for d in span)
         util = round(100 * use_sum / cap_sum) if cap_sum else 0
-        length = len(span)
+        length = (end - start).days + 1
     else:
         start = end = None
         util = length = 0
@@ -672,13 +691,28 @@ def suggest_fixes(f: Factory, rules: Rules, running: list[Job], jobs: list[Job],
     return sorted(keep, key=lambda x: x["label"])
 
 
+def _cap(f: Factory, s: Sched, m: str, d: date) -> float:
+    if (m, d) in s.cap:
+        return s.cap[(m, d)]
+    return max(0.0, f.machines[m].hours_per_day - f.downtime.get((m, d), 0.0)) if is_working(d, f) else 0.0
+
+
+def running_window(ev: Eval, running: list[Job]) -> tuple[date, date] | None:
+    """The dates the running (locked) orders are on the floor."""
+    if not running:
+        return None
+    ps = [ev.sched.placed[j.id] for j in running]
+    return min(p.start for p in ps), max(p.finish for p in ps)
+
+
 def _idle(f: Factory, ev: Eval, running: list[Job], today: date) -> list[tuple[str, date]]:
-    """Machine-days with no work at all while the running orders are still on the floor."""
-    run_end = max((ev.sched.placed[j.id].finish for j in running), default=None)
-    if not run_end or not ev.a["start"]:
+    """(machine, day) with zero scheduled hours on production machines (not QC) during the running window."""
+    win = running_window(ev, running)
+    if win is None:
         return []
-    return [(m.name, d) for d in days_in(max(ev.a["start"], next_working(today, f)), run_end, f)
-            for m in f.machines.values() if m.hours_per_day > 0 and ev.sched.used.get((m.id, d), 0.0) <= EPS]  # fmt: skip
+    return [(m.name, d) for d in days_in(win[0], win[1], f) for m in f.machines.values()
+            if not m.inspection and _cap(f, ev.sched, m.id, d) > EPS
+            and ev.sched.used.get((m.id, d), 0.0) <= EPS]  # fmt: skip
 
 
 def objective(rules: Rules, ev: Eval, idle_days: int) -> tuple[Any, ...]:
@@ -698,9 +732,11 @@ def objective(rules: Rules, ev: Eval, idle_days: int) -> tuple[Any, ...]:
 
 
 def _option_metrics(f: Factory, ev: Eval, running: list[Job], ids: list[str], today: date,
-                    by: dict[str, Job]) -> dict[str, Any]:  # fmt: skip
-    run_end = max((ev.sched.placed[j.id].finish for j in running), default=None)
-    alongside = sum(1 for i in ids if run_end and ev.a["rows"][i]["start"] <= run_end)
+                    by: dict[str, Job], idle_before: set[str] | None = None) -> dict[str, Any]:  # fmt: skip
+    """`idle_before` = machines idle during the running window in Your selection: an order that starts on
+    one of them is shown as filling an idle machine."""
+    win = running_window(ev, running)
+    alongside = sum(1 for i in ids if win and win[0] <= ev.a["rows"][i]["start"] <= win[1])
     idle = _idle(f, ev, running, today)
     return {"orders": ids, "value": ev.fin["value"], "start": ev.a["start"], "end": ev.a["end"],
             "days": ev.a["days"], "alongside": alongside, "idle_days": len(idle),
@@ -712,57 +748,120 @@ def _option_metrics(f: Factory, ev: Eval, running: list[Job], ids: list[str], to
             "rows": {i: {"start": ev.a["rows"][i]["start"], "finish": ev.a["rows"][i]["finish"],
                          "late_days": ev.a["rows"][i]["late_days"],
                          "route": [f.machines[st.machine].name for st in by[i].steps if st.machine in f.machines],
-                         "idle_fill": bool(by[i].steps) and by[i].steps[0].machine in {
-                             m.id for m in f.machines.values() if m.name in {n for n, _ in idle}}}
+                         "idle_fill": bool(by[i].steps) and f.machines[by[i].steps[0].machine].name in (
+                             idle_before if idle_before is not None else {n for n, _ in idle})}
                      for i in ids},
             "dropped": {}}  # fmt: skip
 
 
 def options(f: Factory, rules: Rules, running: list[Job], cands: list[Job], selected: list[str], inp: Inputs,
             today: date) -> dict[str, Any]:  # fmt: skip
-    """Your selection, partly optimized (keeps yours, may add), fully optimized (free choice)."""
-    by = {j.id: j for j in cands}
+    """The three selection options, on the same running-order baseline, calendar, stock and costing.
 
-    def ev_of(ids: list[str]) -> Eval:
-        js = [by[i] for i in ids]
-        seq = by_rule("deadline", js, f, rules, [])
-        return evaluate(f, rules, running, js, Inputs(inp.start, seq), today)
+    own  = only the ticked orders (earliest-deadline order).
+    part = never drops a ticked order; re-sequences them to remove avoidable late deliveries, then adds
+           accepted orders that fit (no new late delivery or bottleneck).
+    full = every subset of the accepted orders, each with its best sequence: zero late deliveries and zero
+           bottlenecks first (or the fewest, if nothing is clean), then the company's "Best score" rule.
+    """
+    by = {j.id: j for j in cands}
+    cache: dict[tuple[str, ...], Eval] = {}
+
+    def ev_seq(seq: tuple[str, ...]) -> Eval:
+        if seq not in cache:
+            cache[seq] = evaluate(
+                f, rules, running, [by[i] for i in seq], Inputs(inp.start, list(seq)), today
+            )
+        return cache[seq]
+
+    def seq_key(ev: Eval) -> tuple[Any, ...]:
+        late_days = sum(r["late_days"] for r in ev.a["rows"].values())
+        return (ev.late, late_days, ev.problems, -ev.fin["contribution"], ev.a["days"])
+
+    def best_sequence(ids: list[str], swaps: bool = True) -> tuple[tuple[str, ...], Eval]:
+        """Best order to run a set in: deadline / slack / shortest-first heuristics, then pairwise swaps."""
+        if not ids:
+            return (), ev_seq(())
+        hours = {i: sum(st.setup + st.run for st in by[i].steps) for i in ids}
+        starts = {
+            tuple(sorted(ids, key=lambda i: (by[i].deadline, by[i].number))),  # earliest due date
+            tuple(
+                sorted(
+                    ids,
+                    key=lambda i: (working_days(inp.start, by[i].deadline, f) - hours[i] / 16, by[i].number),
+                )
+            ),  # slack
+            tuple(sorted(ids, key=lambda i: (hours[i], by[i].number))),  # shortest first
+        }
+        best = min(starts, key=lambda q: seq_key(ev_seq(q)))
+        improved = swaps
+        while improved:  # swap any two orders while it helps
+            improved = False
+            for x in range(len(best)):
+                for y in range(x + 1, len(best)):
+                    q = list(best)
+                    q[x], q[y] = q[y], q[x]
+                    if seq_key(ev_seq(tuple(q))) < seq_key(ev_seq(best)):
+                        best, improved = tuple(q), True
+        return best, ev_seq(best)
 
     def score(ev: Eval) -> tuple[Any, ...]:
         return objective(rules, ev, len(_idle(f, ev, running, today)))
 
-    def search(start: list[str], may_drop: bool) -> list[str]:
-        cur = list(start)
-        cur_ev = ev_of(cur) if cur else None
-        for _ in range(40):
-            moves = [[*cur, c] for c in by if c not in cur]
-            if may_drop:
-                moves += [[x for x in cur if x != c] for c in cur if len(cur) > 1]
-            best, best_ev = None, cur_ev
-            for mv in moves:
-                e = ev_of(mv)
-                if best_ev is None or score(e) < score(best_ev):
-                    best, best_ev = mv, e
-            if best is None:
-                break
-            cur, cur_ev = best, best_ev
-        return cur
+    own = [i for i in selected if i in by]
+    # Your selection runs in the plan's own order (its sequencing rule, e.g. highest value first).
+    own_seq = tuple([i for i in inp.sequence if i in own] + [i for i in own if i not in inp.sequence])
+
+    # Partly optimized: keep every ticked order; best sequence; then add what fits.
+    part_seq, part_ev = best_sequence(own)
+    others = sorted((c for c in by if c not in own),
+                    key=lambda c: -(by[c].value - job_cost(f, rules, by[c])["total"]))  # most contribution first  # fmt: skip
+    for c in others:
+        trial_seq, trial_ev = best_sequence([*part_seq, c])
+        no_worse = trial_ev.late <= part_ev.late and trial_ev.problems <= part_ev.problems
+        if no_worse and trial_ev.fin["contribution"] > part_ev.fin["contribution"]:
+            part_seq, part_ev = trial_seq, trial_ev
+
+    # Fully optimized: every non-empty subset of the accepted orders (each with its best sequence).
+    # shortcut: exhaustive over at most FULL_POOL orders (2^10 subsets); beyond that the pool is your
+    # ticked orders plus the candidates earning the most per machine-hour. Revisit with a MIP solver if
+    # a company routinely plans more than ~10 accepted orders at once.
+    def per_hour(i: str) -> float:
+        hrs = sum(st.setup + st.run for st in by[i].steps) or 1.0
+        return (by[i].value - job_cost(f, rules, by[i])["total"]) / hrs
+
+    ranked = own + sorted((c for c in by if c not in own), key=lambda c: -per_hour(c))
+    pool = sorted(ranked[:FULL_POOL])
+
+    def full_key(ev: Eval) -> tuple[Any, ...]:
+        return (ev.late, ev.problems, *score(ev))  # clean plans first, then the Best-score rule
+
+    # Phase 1: every subset with the quick sequencing rules. Phase 2: pairwise swaps on the best few.
+    quick = []
+    for mask in range(1, 1 << len(pool)):
+        ids = [pool[k] for k in range(len(pool)) if mask >> k & 1]
+        q, ev = best_sequence(ids, swaps=False)
+        quick.append((full_key(ev), q))
+    quick.sort()
+    refined = [(full_key(ev), q) for q, ev in (best_sequence(list(q)) for _, q in quick[:FULL_REFINE])]
+    full_seq = min(refined)[1] if refined else ()
 
     out: dict[str, Any] = {}
-    own = [i for i in selected if i in by]
-    own_ev = ev_of(own) if own else None
-    scores = {}
-    for key, ids in (("own", own), ("part", search(own, False)), ("full", search(own, True))):
-        ids = sorted(ids, key=lambda i: own.index(i) if i in own else len(own))
-        if not ids:
-            out[key] = None
+    own_ev = ev_seq(own_seq) if own_seq else None
+    scores: dict[str, tuple[Any, ...]] = {}
+    for name, seq in (("own", own_seq), ("part", part_seq), ("full", full_seq)):
+        if not seq:
+            out[name] = None
             continue
-        ev = ev_of(ids)
-        m = _option_metrics(f, ev, running, ids, today, by)
+        ev = ev_seq(seq)
+        ids = sorted(seq, key=lambda i: (ev.a["rows"][i]["start"], ev.a["rows"][i]["finish"], by[i].number))
+        own_idle = {n for n, _ in _idle(f, own_ev, running, today)} if own_ev is not None else None
+        m = _option_metrics(f, ev, running, ids, today, by, own_idle)
+        m["sequence"] = list(seq)
         if own_ev is not None:
-            m["dropped"] = {i: _why_left_out(f, rules, by[i], own_ev) for i in own if i not in ids}
-        out[key] = m
-        scores[key] = score(ev)
+            m["dropped"] = {i: _why_left_out(f, rules, by[i], own_ev) for i in own if i not in seq}
+        out[name] = m
+        scores[name] = (ev.late, ev.problems, *score(ev))  # the same ranking the optimizer uses
     out["best"] = min(scores, key=lambda k: scores[k]) if scores else None
     out["criteria"] = list(rules.criteria)
     return out

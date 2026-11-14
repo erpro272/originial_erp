@@ -1817,6 +1817,11 @@ export interface components {
             hours_per_shift: number | string;
             /** Id */
             id?: string | null;
+            /**
+             * Inspection
+             * @default false
+             */
+            inspection: boolean;
             /** Name */
             name: string;
             /** Night Shift Cost Per Hour Paise */
@@ -1836,6 +1841,11 @@ export interface components {
             hours_per_shift: string;
             /** Id */
             id?: string | null;
+            /**
+             * Inspection
+             * @default false
+             */
+            inspection: boolean;
             /** Name */
             name: string;
             /** Night Shift Cost Per Hour Paise */
