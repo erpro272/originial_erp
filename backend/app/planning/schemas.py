@@ -311,7 +311,7 @@ class PlanPatch(BaseModel):
     lock: dict[str, bool] | None = None
     pin: dict[str, date | None] | None = None
     fixes: list[str] | None = None
-    apply_hint: bool = False
+    apply_hint: bool | None = None
 
 
 class ApproveIn(BaseModel):

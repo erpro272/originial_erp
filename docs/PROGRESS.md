@@ -37,8 +37,24 @@
   versioned extraction record, encrypted files and bank details.
 - Tests: 206 pytest, 30 Vitest, 12 Playwright.
 
+### Feature 2 — Planning (2026-11-14) · awaiting owner review
+- One connected plan, 5 steps (updated mockup): Selected orders (timeline, yours / partly /
+  fully optimized, generate), Proposed sequence (overview, feasibility, hint, rules, start date,
+  drag, lock, parallel runs), Production schedule (day-by-day chart, drag rows, drag bar edge to
+  set a finish date, warning popup / "cleared" toast, overloads, deadlines, machine load, undo),
+  Financial analysis (before / with fixes, cost breakdown, adjustments with fix choices, profit by
+  order), Final plan approval (summary, readiness checklist, raise PO now, approve with open items,
+  history).
+- Every change (here or in Orders / stock / factory set-up / rules) recalculates the plan: banner
+  "Plan updated · N tabs changed", dots on changed tabs, changed numbers highlight, history entry,
+  approved plans go to "needs re-approval".
+- Factory setup page; company rules via small comment icons (late penalty fixed or %, overheads,
+  packaging, minimum margin). Purchase requests recorded for the future Purchasing module.
+- Company switcher removed (one company per website).
+- Tests: 229 pytest, 32 Vitest, 13 Playwright.
+
 ## Next
-- Feature 2 — Planning (6 tabs + plan comparison), after the owner's review of Feature 1.
+- Owner review of Feature 2 (Planning).
 - Later: Dashboard tab (owner will specify), Purchasing, Production, Billing, Finance,
   AI assistant panel.
 
@@ -52,4 +68,7 @@
 - Customer list metrics are computed per request in Python (fine for hundreds to a few
   thousand customers; move to SQL/materialised views if a tenant grows past that).
 - User management UI (invite users, change roles) is not built yet; users come from the seed.
+- Planning: setup time is shown in the tooltip, not as a separate striped bar; the schedule has
+  no week paging (scrolls); the optimizer is a greedy search (fine for tens of orders).
+- Planning: per-order late-penalty override not built (company rule only, as agreed).
 - Key rotation for tenant data keys is designed for (versioned `tenant_keys`) but not built.

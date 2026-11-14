@@ -2216,11 +2216,8 @@ export interface components {
          * @description One edit. Every field is optional; the server recalculates everything after any change.
          */
         PlanPatch: {
-            /**
-             * Apply Hint
-             * @default false
-             */
-            apply_hint: boolean;
+            /** Apply Hint */
+            apply_hint?: boolean | null;
             /** Fixes */
             fixes?: string[] | null;
             /** Lock */

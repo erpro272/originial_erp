@@ -51,6 +51,21 @@
   --color-bl-line: #b9cefa;
 
   /* assistant (✦) */
+  /* Planning: machine colours on the schedule (mockup) and the busy-day load cells. */
+  --color-in-bg: #eef0ff;
+  --color-in-line: #c7cbfb;
+  --color-in: #4338ca;
+  --color-te-bg: #e6f6f3;
+  --color-te-line: #a7ddd3;
+  --color-te: #0f766e;
+  /* Chart series (categorical, fixed order; validated with the dataviz palette script). */
+  --color-s1: #2a78d6;
+  --color-s2: #eb6834;
+  --color-s3: #1baf7a;
+  --color-s4: #eda100;
+  --color-s5: #e87ba4;
+  --color-load: #c9dafc;
+  --color-load-ink: #1e3a8a;
   --color-ai-bg: #f3eeff;
   --color-ai: #6d28d9;
   --color-ai-wash: #faf7ff;
@@ -70,6 +85,17 @@
   --shadow-lift: 0 2px 6px rgba(15, 23, 42, 0.12);
 
   --animate-fade-in: fade-in 120ms ease-out;
+  /* Planning: a value that just changed after a recalculation briefly lights up. */
+  --animate-flash: flash 1.6s ease-out;
+  @keyframes flash {
+    0%,
+    30% {
+      background-color: var(--color-md-bg);
+    }
+    100% {
+      background-color: transparent;
+    }
+  }
   @keyframes fade-in {
     from {
       opacity: 0;

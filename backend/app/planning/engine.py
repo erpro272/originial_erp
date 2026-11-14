@@ -842,7 +842,9 @@ def compute(f: Factory, rules: Rules, running: list[Job], cands: list[Job], sele
     checks: list[dict[str, Any]] = [
         {"ok": not cur.late, "title": f"All {len(jobs)} orders ship on time" if not cur.late
          else f"{cur.late} order{'s ship' if cur.late != 1 else ' ships'} late",
-         "text": f"Smallest buffer: {num[min_buf['id']]}, {max(min_buf['buffer'], 0)} days" if min_buf else ""},
+         "text": ("Late: " + ", ".join(f"{num[r['id']]} by {r['late_days']} day{'s' * (r['late_days'] != 1)}"
+                                        for r in seq if r["late_days"])) if cur.late
+         else (f"Smallest buffer: {num[min_buf['id']]}, {min_buf['buffer']} days" if min_buf else "")},
         {"ok": not machine_b, "title": "Machine capacity within limits" if not machine_b
          else "Machines over capacity", "text": "; ".join(f"{b['resource']} {b['text']}" for b in machine_b)},
         {"ok": not open_po, "title": "Material POs raised" if not open_po

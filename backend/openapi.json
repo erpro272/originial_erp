@@ -4400,9 +4400,15 @@
         "description": "One edit. Every field is optional; the server recalculates everything after any change.",
         "properties": {
           "apply_hint": {
-            "default": false,
-            "title": "Apply Hint",
-            "type": "boolean"
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Apply Hint"
           },
           "fixes": {
             "anyOf": [

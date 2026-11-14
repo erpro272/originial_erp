@@ -83,6 +83,15 @@ isolation). One company per website: no company picker or switcher in the UI.
   (`put_encrypted`); served only via `/api/files/<signed token>` (5 min).
   Sample invoices: `samples/invoices/*` + matching mock fixtures; regenerate both with
   `uv run python -m scripts.make_sample_invoices`.
+- `planning/` one working plan (`Plan.inputs` = owner's choices, `Plan.result` = engine output).
+  `engine.py` is pure (scheduler, bottlenecks, hint, fixes, selection options, financials,
+  checklist); `service.py` loads DB data, fingerprints every input and recalculates on each read
+  or edit, saves versions + `plan_events` with the tabs that changed (approved -> needs
+  re-approval). `PATCH /planning/plans/{id}?preview=true` simulates without saving (reorder
+  warning). Approval -> `orders.service.set_planned` (promised dates) + `purchase_requests`
+  (recorded for the future Purchasing module) + `plan.approved` event. Factory setup
+  (departments, machines, routes, material costs, downtime) and company rules
+  (`planning-rules`: late penalty fixed or %, overhead %, packaging, minimum margin).
 - Seed: `seed/demo_data.py` (dates relative to today; mirrors the Orders mockup). Startup
   (`seed.run --if-empty`) only runs with `ERP_SEED_DEMO=true` (compose/dev), fills demo data into
   demo companies with no business data, never touches a company with data; `--reset` is refused
@@ -106,6 +115,10 @@ isolation). One company per website: no company picker or switcher in the UI.
   `/orders/customers/imports`, `/orders/customers/imports/:uploadId` (review).
 - Reporting period lives in the URL (`?period=fytd|this_month|...&from&to`).
 - Charts: hand-rolled SVG, one validated hue, hover tooltip + sr-only table (see dataviz rules).
+  Categorical series colours `s1..s5` (validated); machine colours `in/bl/te/ai/lo` by machine order.
+- Planning routes: `/planning?step=1..5`, `/planning/factory`. Every planning number comes from the
+  plan result; after any edit the response says which tabs changed (dots + banner + `Flash`).
+  Company-discretion numbers get a small comment icon (`RuleButton`) that opens a dialog.
 
 ## Gotchas
 - Official MinIO images are gone from Docker Hub; compose uses the community build

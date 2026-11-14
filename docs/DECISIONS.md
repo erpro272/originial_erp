@@ -74,3 +74,20 @@ Short records of choices and the reason for each. Newest at the bottom.
     are removed. Row-level security and per-company keys stay as a safety layer. A user who still
     belongs to two companies (old local database) gets "Choose a company to sign in to." — run
     `seed.run --reset` locally.
+24. **Planning has 5 steps** (updated mockup `docs/mockups/planning.html`): plan comparison is gone;
+    the 3 selection options in step 1 compare choices instead. *Owner's mockup.*
+25. **One plan, recalculated from the database on every read and edit.** A fingerprint of every input
+    decides whether something changed; no tab can show stale numbers, and no background sync is
+    needed. Changes are versioned with the tabs they moved.
+26. **Finite-capacity scheduling.** Machines are never overloaded by the scheduler itself; orders wait
+    instead (and may be late). Overloads appear only when the owner forces a finish date (bar edge)
+    or a lock, and then show as bottlenecks with a night-shift fix.
+27. **Optimizer objective:** no late deliveries where possible, then the most contribution, then fewer
+    bottlenecks, then a shorter plan. "Per production day" is shown for comparison.
+28. **Company-discretion numbers** (late penalty fixed or % per day, overheads %, packaging per piece,
+    minimum margin) are company rules edited from a small comment icon next to where they are used.
+    *Owner request.* Factory data (machines, routes, labour, material and express costs, downtime) is
+    edited on the Factory setup page. *Owner chose option B.*
+29. **Purchase requests** are recorded now (material, quantity, needed-by, express, plan, orders,
+    who/when, status) for the Purchasing module to turn into POs later. *Owner request.*
+30. **One working plan at a time**; approved plans are kept as history. *Owner chose option A.*
