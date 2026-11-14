@@ -58,6 +58,8 @@
 - Tests: 233 pytest, 32 Vitest, 14 Playwright.
 
 ## Next
+- Planning v1 archived in `archive/planning-v1/` (owner request); `/planning` shows Coming soon
+  until the rebuild from scratch. Backend planning module still live.
 - Owner review of Feature 2 (Planning).
 - Later: Dashboard tab (owner will specify), Purchasing, Production, Billing, Finance,
   AI assistant panel.

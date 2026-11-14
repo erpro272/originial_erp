@@ -13,10 +13,8 @@ test("sign in, visit every module, sign out", async ({ page }) => {
   await expect(nav.getByRole("link")).toHaveText(modules);
   for (const name of modules) {
     await nav.getByRole("link", { name }).click();
-    const title = name === "Planning" ? "Order manufacturing plan" : name;
-    await expect(page.getByRole("heading", { level: 1, name: title })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name })).toBeVisible();
     if (name === "Orders") await expect(page.getByText("All orders received")).toBeVisible();
-    else if (name === "Planning") await expect(page.getByRole("link", { name: "Factory setup" })).toBeVisible();
     else await expect(page.getByRole("heading", { name: "Coming soon" })).toBeVisible();
   }
 

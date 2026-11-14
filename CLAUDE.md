@@ -118,7 +118,8 @@ isolation). One company per website: no company picker or switcher in the UI.
 - Reporting period lives in the URL (`?period=fytd|this_month|...&from&to`).
 - Charts: hand-rolled SVG, one validated hue, hover tooltip + sr-only table (see dataviz rules).
   Categorical series colours `s1..s5` (validated); machine colours `in/bl/te/ai/lo` by machine order.
-- Planning routes: `/planning?step=1..5`, `/planning/factory`. Every planning number comes from the
+- Planning UI v1 is archived in `archive/planning-v1/` (`/planning` = Coming soon until the rebuild).
+  Old notes: routes `/planning?step=1..5`, `/planning/factory`. Every planning number comes from the
   plan result; after any edit the response says which tabs changed (dots + banner + `Flash`).
   Company-discretion numbers get a small comment icon (`RuleButton`) that opens a dialog.
 
