@@ -1,15 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/auth/AuthContext";
-import {
-  Menu,
-  MenuContent,
-  MenuItem,
-  MenuLabel,
-  MenuSeparator,
-  MenuTrigger,
-} from "@/components/ui/Menu";
+import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "@/components/ui/Menu";
 import { Tag } from "@/components/ui/Tag";
-import { useToast } from "@/components/ui/Toast";
 import { initials } from "@/lib/format";
 
 const roleLabel: Record<string, string> = {
@@ -20,11 +12,9 @@ const roleLabel: Record<string, string> = {
 };
 
 export function UserMenu() {
-  const { me, logout, switchCompany, can } = useAuth();
+  const { me, logout, can } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
   if (!me) return null;
-  const others = me.companies.filter((c) => c.id !== me.company.id);
 
   return (
     <Menu>
@@ -50,24 +40,6 @@ export function UserMenu() {
             </Tag>
           </span>
         </div>
-        {others.length > 0 && (
-          <>
-            <MenuSeparator />
-            <MenuLabel>Switch company</MenuLabel>
-            {others.map((c) => (
-              <MenuItem
-                key={c.id}
-                onSelect={async () => {
-                  await switchCompany(c.id);
-                  navigate("/orders");
-                  toast({ title: `Switched to ${c.name}`, tone: "success" });
-                }}
-              >
-                {c.name}
-              </MenuItem>
-            ))}
-          </>
-        )}
         <MenuSeparator />
         {can("audit.read") && (
           <MenuItem onSelect={() => navigate("/settings/audit-log")}>Audit log</MenuItem>

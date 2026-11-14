@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { signIn } from "./helpers";
 
 test("health chips filter the table; profile shows history and logs a reminder", async ({ page }) => {
-  await signIn(page, "owner@demo.example", /Demo Manufacturing/);
+  await signIn(page, "owner@demo.example");
   await page.goto("/orders/customers");
   const table = page.getByTestId("table-customers");
   await expect(table).toContainText("Maruti Suzuki");

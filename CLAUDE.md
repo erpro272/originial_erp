@@ -39,8 +39,9 @@ make lint typecheck format
 make gen-api       # after ANY API change: regenerates backend/openapi.json + TS types
 make seed          # wipe + reseed dev DB      make reset-db  # drop the DB volume
 ```
-Seed logins (password `Demo@12345`): `owner@demo.example` (owner of BOTH demo companies →
-company picker), `planner@`, `purchaser@`, `accountant@demo.example`, `owner@second.example`.
+Seed logins (password `Demo@12345`): `owner@demo.example`, `planner@`, `purchaser@`,
+`accountant@demo.example` (demo company); `owner@second.example` (second company, used to prove
+isolation). One company per website: no company picker or switcher in the UI.
 
 ## Backend conventions
 - Modular monolith: `app/<module>/{models,schemas,service,router}.py`. Business logic in

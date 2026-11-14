@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { signIn } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
-  await signIn(page, "owner@demo.example", /Demo Manufacturing/);
+  await signIn(page, "owner@demo.example");
   await page.goto("/orders");
   await expect(page.getByText("All orders received")).toBeVisible();
 });

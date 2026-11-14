@@ -34,15 +34,12 @@ async def test_bad_credentials_same_message(client: AsyncClient, email: str, pas
     assert r.json()["error"]["message"] == "Email or password is incorrect."
 
 
-async def test_multi_company_user_must_choose(client: AsyncClient, tenants) -> None:
-    r = await client.post("/auth/login", json={"email": "owner@demo.example", "password": PASSWORD})
-    assert r.status_code == 403
-    names = {c["name"] for c in r.json()["error"]["details"]["companies"]}
-    assert names == {"Demo Manufacturing Co.", "Second Fasteners Pvt Ltd"}
-    h = await login(client, "owner@demo.example", tenants["second"])
-    me = (await client.get("/auth/me", headers=h)).json()
+async def test_each_demo_user_belongs_to_one_company(client: AsyncClient, tenants) -> None:
+    """One company per website: no user is asked to pick a company."""
+    for email in ("owner@demo.example", "owner@second.example"):
+        me = (await client.get("/auth/me", headers=await login(client, email))).json()
+        assert len(me["companies"]) == 1
     assert me["company"]["id"] == str(tenants["second"])
-    assert len(me["companies"]) == 2
 
 
 async def test_cannot_sign_in_to_foreign_company(client: AsyncClient, tenants) -> None:
@@ -54,18 +51,6 @@ async def test_cannot_sign_in_to_foreign_company(client: AsyncClient, tenants) -
             "tenant_id": str(tenants["second"]),
         },
     )
-    assert r.status_code == 403
-
-
-async def test_switch_company(client: AsyncClient, owner, tenants) -> None:
-    r = await client.post("/auth/switch-company", headers=owner, json={"tenant_id": str(tenants["second"])})
-    assert r.status_code == 200
-    h = {"Authorization": f"Bearer {r.json()['access_token']}"}
-    assert (await client.get("/auth/me", headers=h)).json()["company"]["id"] == str(tenants["second"])
-
-
-async def test_switch_to_foreign_company_refused(client: AsyncClient, planner, tenants) -> None:
-    r = await client.post("/auth/switch-company", headers=planner, json={"tenant_id": str(tenants["second"])})
     assert r.status_code == 403
 
 

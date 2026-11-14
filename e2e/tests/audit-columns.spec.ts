@@ -5,7 +5,7 @@ const headers = (page: Page) =>
   page.getByTestId("table-audit-log").locator("thead th");
 
 test("audit log columns: hide, reorder and keep the choice after reload", async ({ page }) => {
-  await signIn(page, "owner@demo.example", /Demo Manufacturing/);
+  await signIn(page, "owner@demo.example");
   await page.goto("/settings/audit-log");
   const columnsBtn = page.getByRole("button", { name: /Columns \(\d+\)/ });
 

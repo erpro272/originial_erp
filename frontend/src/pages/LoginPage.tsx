@@ -3,12 +3,11 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { z } from "zod";
-import { ApiError, type Company } from "@/api/client";
+import { ApiError } from "@/api/client";
 import { BRAND_NAME } from "@/app/brand";
 import { useAuth } from "@/auth/AuthContext";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/Field";
-import { Tag } from "@/components/ui/Tag";
 
 const schema = z.object({
   email: z.email("Enter a valid email address"),
@@ -21,27 +20,20 @@ export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: string } | null)?.from ?? "/orders";
-  const [companies, setCompanies] = useState<Company[] | null>(null);
-  const [chosen, setChosen] = useState<string>("");
   const [formError, setFormError] = useState<string | null>(null);
   const {
     register,
     handleSubmit,
-    getValues,
     formState: { errors, isSubmitting },
   } = useForm<Form>({ resolver: zodResolver(schema) });
 
   if (status === "signed-in") return <Navigate to={from} replace />;
 
-  const submit = async (values: Form, tenantId?: string) => {
+  const submit = async (values: Form) => {
     setFormError(null);
     try {
-      const res = await login(values.email, values.password, tenantId);
-      if (res.ok) navigate(from, { replace: true });
-      else {
-        setCompanies(res.companies);
-        setChosen(res.companies[0]?.id ?? "");
-      }
+      await login(values.email, values.password);
+      navigate(from, { replace: true });
     } catch (e) {
       setFormError(e instanceof ApiError ? e.message : "Could not reach the server. Try again.");
     }
@@ -56,14 +48,8 @@ export function LoginPage() {
         </div>
         <section className="flex flex-col gap-5 rounded-card border border-line bg-white p-7">
           <div className="flex flex-col gap-1.5">
-            <h1 className="m-0 text-2xl font-bold tracking-[-0.02em]">
-              {companies ? "Choose a company" : "Sign in"}
-            </h1>
-            <p className="m-0 text-sm text-muted">
-              {companies
-                ? "Your account belongs to more than one company."
-                : "Use your work email and password."}
-            </p>
+            <h1 className="m-0 text-2xl font-bold tracking-[-0.02em]">Sign in</h1>
+            <p className="m-0 text-sm text-muted">Use your work email and password.</p>
           </div>
 
           {formError && (
@@ -75,76 +61,30 @@ export function LoginPage() {
             </div>
           )}
 
-          {companies ? (
-            <form
-              className="flex flex-col gap-4"
-              onSubmit={async (e) => {
-                e.preventDefault();
-                await submit(getValues(), chosen);
-              }}
-            >
-              <fieldset className="m-0 flex flex-col gap-2 border-0 p-0">
-                <legend className="sr-only">Company</legend>
-                {companies.map((c) => (
-                  <label
-                    key={c.id}
-                    className={`flex cursor-pointer items-center gap-3 rounded-xl border px-3.5 py-3 text-sm ${
-                      chosen === c.id
-                        ? "border-primary bg-surface-blue shadow-[0_0_0_1px_var(--color-primary)]"
-                        : "border-line"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="company"
-                      value={c.id}
-                      checked={chosen === c.id}
-                      onChange={() => setChosen(c.id)}
-                    />
-                    <span className="flex-1 font-medium">{c.name}</span>
-                    <Tag tone="lo" size="sm">
-                      {c.role}
-                    </Tag>
-                  </label>
-                ))}
-              </fieldset>
-              <Button type="submit" disabled={!chosen}>
-                Continue
-              </Button>
-              <button
-                type="button"
-                className="cursor-pointer border-0 bg-transparent text-sm text-link"
-                onClick={() => setCompanies(null)}
-              >
-                Use a different account
-              </button>
-            </form>
-          ) : (
-            <form
-              className="flex flex-col gap-4"
-              noValidate
-              onSubmit={handleSubmit((v) => submit(v))}
-            >
-              <TextField
-                label="Email"
-                type="email"
-                autoComplete="username"
-                autoFocus
-                error={errors.email?.message}
-                {...register("email")}
-              />
-              <TextField
-                label="Password"
-                type="password"
-                autoComplete="current-password"
-                error={errors.password?.message}
-                {...register("password")}
-              />
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Signing in…" : "Sign in"}
-              </Button>
-            </form>
-          )}
+          <form
+            className="flex flex-col gap-4"
+            noValidate
+            onSubmit={handleSubmit((v) => submit(v))}
+          >
+            <TextField
+              label="Email"
+              type="email"
+              autoComplete="username"
+              autoFocus
+              error={errors.email?.message}
+              {...register("email")}
+            />
+            <TextField
+              label="Password"
+              type="password"
+              autoComplete="current-password"
+              error={errors.password?.message}
+              {...register("password")}
+            />
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Signing in…" : "Sign in"}
+            </Button>
+          </form>
         </section>
       </div>
     </div>

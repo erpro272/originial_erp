@@ -3365,20 +3365,6 @@
         "title": "Signal",
         "type": "object"
       },
-      "SwitchCompanyRequest": {
-        "properties": {
-          "tenant_id": {
-            "format": "uuid",
-            "title": "Tenant Id",
-            "type": "string"
-          }
-        },
-        "required": [
-          "tenant_id"
-        ],
-        "title": "SwitchCompanyRequest",
-        "type": "object"
-      },
       "TokenResponse": {
         "properties": {
           "access_token": {
@@ -4032,52 +4018,6 @@
           }
         },
         "summary": "Refresh",
-        "tags": [
-          "auth"
-        ]
-      }
-    },
-    "/api/auth/switch-company": {
-      "post": {
-        "operationId": "switch_company_api_auth_switch_company_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SwitchCompanyRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TokenResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Switch Company",
         "tags": [
           "auth"
         ]

@@ -69,3 +69,8 @@ Short records of choices and the reason for each. Newest at the bottom.
     data is never touched; demo seeding is opt-in (`ERP_SEED_DEMO`), so a real deployment never
     gets fake data; wiping (`--reset`) is refused in production. `.gitattributes` keeps `*.sh` on
     Unix line endings for Windows checkouts.
+23. **One company per website; no company switcher.** Each company gets its own website later
+    (owner's direction). The login picker, the "Switch company" menu and the switch-company API
+    are removed. Row-level security and per-company keys stay as a safety layer. A user who still
+    belongs to two companies (old local database) gets "Choose a company to sign in to." — run
+    `seed.run --reset` locally.

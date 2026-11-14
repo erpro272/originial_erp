@@ -5,7 +5,7 @@ import { signIn } from "./helpers";
 const SAMPLES = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../../samples/invoices");
 
 test("upload → verify (QR cross-check, highlight, warning) → match → save", async ({ page }) => {
-  await signIn(page, "owner@demo.example", /Demo Manufacturing/);
+  await signIn(page, "owner@demo.example");
   await page.goto("/orders/customers");
   await page.getByRole("button", { name: /Upload invoice/ }).click();
   await page.getByLabel("Choose invoice files").setInputFiles(path.join(SAMPLES, "einvoice_qr.pdf"));
@@ -40,7 +40,7 @@ test("upload → verify (QR cross-check, highlight, warning) → match → save"
 });
 
 test("a file that isn't an invoice type is refused at upload", async ({ page }) => {
-  await signIn(page, "owner@demo.example", /Demo Manufacturing/);
+  await signIn(page, "owner@demo.example");
   await page.goto("/orders/customers/imports");
   await page.getByRole("button", { name: /Upload invoice/ }).click();
   await page.getByLabel("Choose invoice files").setInputFiles({ name: "notes.pdf", mimeType: "application/pdf", buffer: Buffer.from("not really a pdf") });

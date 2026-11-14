@@ -7,7 +7,7 @@
     python -m seed.run --reset     # wipe all data, then seed (refused when ERP_ENV=prod)
 
 Logins (password from ERP_SEED_PASSWORD, default ``Demo@12345``):
-    owner@demo.example       owner of BOTH demo companies (shows the company picker)
+    owner@demo.example       owner of the demo company
     planner@demo.example     planner        purchaser@demo.example   purchaser
     accountant@demo.example  accountant     owner@second.example     owner of company 2 only
 """
@@ -37,7 +37,7 @@ TENANTS = [
 ]
 USERS = [
     # email, name, [(tenant slug, role)]
-    ("owner@demo.example", "Asha Rao", [("demo", Role.OWNER), ("second", Role.OWNER)]),
+    ("owner@demo.example", "Asha Rao", [("demo", Role.OWNER)]),
     ("planner@demo.example", "Vikram Shah", [("demo", Role.PLANNER)]),
     ("purchaser@demo.example", "Neha Kulkarni", [("demo", Role.PURCHASER)]),
     ("accountant@demo.example", "Rahul Mehta", [("demo", Role.ACCOUNTANT)]),

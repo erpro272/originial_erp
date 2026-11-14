@@ -39,25 +39,15 @@ test("top nav lists the six modules and Dashboard last", async () => {
   ]);
 });
 
-test("login validates, then asks for a company when the user has several", async () => {
-  const companies = [
-    { id: "t1", name: "Demo Manufacturing Co.", role: "owner" },
-    { id: "t2", name: "Second Fasteners Pvt Ltd", role: "owner" },
-  ];
-  const api = mockApi(
+test("login validates, then signs in", async () => {
+  mockApi(
     route("POST", "/api/auth/refresh", () =>
       json({ error: { code: "unauthorized", message: "x" } }, 401),
     ),
-    route("POST", "/api/auth/login", async (r) => {
-      const body = await r.json();
-      if (!body.tenant_id)
-        return json(
-          { error: { code: "forbidden", message: "Choose", details: { companies } } },
-          403,
-        );
-      return json({ access_token: "tok", token_type: "bearer", expires_in: 900 });
-    }),
-    route("GET", "/api/auth/me", () => json({ ...ME, companies })),
+    route("POST", "/api/auth/login", () =>
+      json({ access_token: "tok", token_type: "bearer", expires_in: 900 }),
+    ),
+    route("GET", "/api/auth/me", () => json(ME)),
   );
   renderApp(<App />, { path: "/login" });
   const user = userEvent.setup();
@@ -66,13 +56,10 @@ test("login validates, then asks for a company when the user has several", async
   await user.type(screen.getByLabelText("Email"), "owner@demo.example");
   await user.type(screen.getByLabelText("Password"), "Demo@12345");
   await user.click(screen.getByRole("button", { name: "Sign in" }));
-  await user.click(await screen.findByRole("radio", { name: /Second Fasteners/ }));
-  await user.click(screen.getByRole("button", { name: "Continue" }));
   await waitFor(() =>
     expect(screen.getByRole("heading", { level: 1, name: "Orders" })).toBeInTheDocument(),
   );
-  const logins = api.calls.filter((c) => c.url.endsWith("/api/auth/login"));
-  expect((await logins[1]!.json()).tenant_id).toBe("t2");
+  expect(screen.queryByText("Choose a company")).toBeNull();
 });
 
 test("wrong password shows the server message", async () => {

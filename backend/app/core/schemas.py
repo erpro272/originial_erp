@@ -17,10 +17,6 @@ class LoginRequest(BaseModel):
     )
 
 
-class SwitchCompanyRequest(BaseModel):
-    tenant_id: uuid.UUID
-
-
 class CompanyOut(BaseModel):
     id: uuid.UUID
     name: str

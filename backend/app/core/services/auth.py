@@ -1,4 +1,4 @@
-"""Login, token refresh, company switching and the /me view."""
+"""Login, token refresh and the /me view."""
 
 import uuid
 from dataclasses import dataclass
@@ -102,10 +102,6 @@ async def refresh(refresh_token: str) -> IssuedTokens:
     except InvalidTokenError as exc:
         raise Unauthorized("Session expired. Please sign in again.") from exc
     return await _reissue(claims.user_id, claims.tenant_id, token_version=claims.ver)
-
-
-async def switch_company(user_id: uuid.UUID, tenant_id: uuid.UUID) -> IssuedTokens:
-    return await _reissue(user_id, tenant_id, token_version=None)
 
 
 async def _reissue(user_id: uuid.UUID, tenant_id: uuid.UUID, token_version: int | None) -> IssuedTokens:

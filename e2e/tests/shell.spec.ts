@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test";
 import { signIn, signOut } from "./helpers";
 
-test("sign in with company picker, visit every module, sign out", async ({ page }) => {
+test("sign in, visit every module, sign out", async ({ page }) => {
   await page.goto("/planning");
   await expect(page).toHaveURL(/\/login$/);
-  await signIn(page, "owner@demo.example", /Demo Manufacturing/);
+  await signIn(page, "owner@demo.example");
   // Lands back on the page they asked for.
   await expect(page).toHaveURL(/\/planning$/);
 
@@ -44,12 +44,12 @@ test("planner cannot open the audit log", async ({ page }) => {
   await expect(page.getByText("You don't have access to this page")).toBeVisible();
 });
 
-test("switching company changes the tenant, and data stays separate", async ({ page }) => {
-  await signIn(page, "owner@demo.example", /Demo Manufacturing/);
-  await page.getByRole("button", { name: /Account menu/ }).click();
-  await page.getByRole("menuitem", { name: "Second Fasteners Pvt Ltd" }).click();
-  await expect(page.getByText("Switched to Second Fasteners Pvt Ltd", { exact: true })).toBeVisible();
+test("each company sees only its own data", async ({ page }) => {
+  await signIn(page, "owner@second.example");
   await expect(page.getByRole("button", { name: /Account menu/ })).toContainText("Second Fasteners");
+  await page.getByRole("button", { name: /Account menu/ }).click();
+  await expect(page.getByText("Switch company")).toHaveCount(0);
+  await page.keyboard.press("Escape");
 
   await page.goto("/settings/audit-log");
   const table = page.getByTestId("table-audit-log");

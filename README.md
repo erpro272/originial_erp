@@ -22,11 +22,11 @@ On first start the database is migrated and seeded. Sign in with any of these
 
 | Email | Role |
 |---|---|
-| `owner@demo.example` | Owner of both demo companies (shows the company picker) |
+| `owner@demo.example` | Owner |
 | `planner@demo.example` | Planner |
 | `purchaser@demo.example` | Purchaser |
 | `accountant@demo.example` | Accountant |
-| `owner@second.example` | Owner of the second company only |
+| `owner@second.example` | Owner of a second company (shows that companies never see each other's data) |
 
 ### After `git pull`: empty pages?
 Postgres data lives in a Docker volume that survives `git pull`. On startup the API now adds demo

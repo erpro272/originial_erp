@@ -265,6 +265,47 @@ tr.off td .tag{opacity:.55}
 .oc.add{background:#E7F6EC;border-color:#B7E2C4;color:#15803D}
 .oc.drop{text-decoration:line-through;color:#94A3B8;background:#fff}
 .best-sw{display:inline-block;width:10px;height:10px;border-radius:3px;background:#E7F6EC;border:1px solid #B7E2C4;vertical-align:-1px;margin-right:4px}
+
+/* ---------- order timeline (tab 1) ---------- */
+.ot{position:relative;overflow-x:auto;border-top:1px solid #EEF1F5}
+.ot-r,.ot-bg{display:grid;grid-template-columns:200px repeat(15,minmax(42px,1fr));min-width:860px}
+.ot-bg{position:absolute;inset:0;pointer-events:none}
+.ot-c{grid-row:1;border-left:1px solid #F1F4F8}
+.ot-c.sun{background:#F8FAFC}
+.ot-c.run{background:repeating-linear-gradient(135deg,rgba(100,116,139,.07) 0 4px,transparent 4px 9px)}
+.ot-r{align-items:center;min-height:28px;position:relative}
+.ot-r>*{grid-row:1}
+.ot-h{min-height:44px;background:#F8FAFC;font-size:12px;color:#334155;text-align:center}
+.ot-h span{display:flex;flex-direction:column;font-weight:600}
+.ot-h small{font-size:10.5px;color:#94A3B8;font-weight:400}
+.ot-h .sun{color:#94A3B8}
+.ot-l{grid-column:1;padding:0 12px 0 32px;font-size:11.5px;color:#475569;background:#fff;position:sticky;left:0;z-index:2;height:100%;display:flex;align-items:center;border-right:1px solid #E5E9F0}
+.ot-h .ot-l{background:#F8FAFC}
+.ot-g{position:relative;border-top:1px solid #E5E9F0;padding-bottom:6px;transition:opacity .15s}
+.ot-g .ot-gh{display:flex;align-items:center;gap:10px;padding:10px 20px 4px;min-width:860px;position:relative;z-index:2}
+.ot-gh span{display:flex;gap:8px;align-items:baseline}
+.ot-gh b{font-size:14px;font-weight:600}.ot-gh small{font-size:12px;color:#64748B}
+.ot-gh .tag{font-size:11px;padding:3px 8px}
+.ot-g.on{background:rgba(29,99,237,.035);box-shadow:inset 3px 0 0 #1D63ED}
+.ot-g.on .ot-l{background:#F9FBFF}
+.ot-b{height:18px;margin:0 2px;border-radius:5px;font-size:10.5px;font-weight:500;display:flex;align-items:center;padding:0 7px;white-space:nowrap;overflow:hidden;z-index:1;border:1px solid}
+.ot-b.og{background:#E2E8F0;border-color:#CBD5E1;color:#475569}
+.ot-b.k{background:#C9DAFC;border-color:#93B4F7;color:#1E3A8A}
+.ot-b.add{background:#CDEFD8;border-color:#86CFA0;color:#14532D}
+.ot-b.late{background:#FDECEC;border-color:#F3B4AE;color:#B42318}
+.ot-drop{grid-column:2/-1;font-size:11.5px;color:#94A3B8;font-style:italic;padding-left:8px;z-index:1}
+.oc.add{background:#E7F6EC;border-color:#B7E2C4;color:#15803D}
+.oc.drop{text-decoration:line-through;color:#94A3B8;background:#fff}
+#sel-opts .ph{cursor:pointer}
+#sel-opts .ph:hover{background:#F8FAFC}
+#sel-opts .ph.main{background:#F5F8FF}
+
+.ot-dd>summary{list-style:none;cursor:pointer;user-select:none}
+.ot-dd>summary::-webkit-details-marker{display:none}
+.ot-dd>summary:hover{background:#F8FAFC}
+.dd-car{display:inline-block;width:18px;color:#64748B;transition:transform .15s}
+.ot-dd[open] .dd-car{transform:rotate(90deg)}
+.ot-dd:not([open])>summary .legend{display:none}
 </style>
 </head>
 <body>
@@ -273,7 +314,7 @@ tr.off td .tag{opacity:.55}
 ================================================================
 BUILD NOTE: EVERYTHING IS CONNECTED (not displayed; for the real build)
 ================================================================
-The 6 tabs, the Plan comparison view and other modules all read ONE plan
+The 6 tabs and the other modules all read ONE plan
 object. Any change at any step must re-run the plan and update every
 affected tab. No tab may show stale numbers.
 
@@ -283,24 +324,18 @@ Orders module (new/edited/cancelled order)
                                    → Tab 1 list; if the order is selected, all of 2–6
 Tab 1 Selected orders (add/remove/tick)
                                    → 2 overview + sequence, 3 Gantt + machine load,
-                                     4 capacity/material/labour + ways out,
                                      5 all financials, 6 summary + checklist,
-                                     Plan comparison
+                                     Tab 1 order timeline + selection options
 Tab 2 Sequence (drag, rule, lock, apply hint, start date)
                                    → 3 Gantt order + dates, 4 bottleneck sizes/dates,
                                      5 penalties + contribution, 6 summary
 Tab 3 Gantt (row reorder, bar resize)
-                                   → 2 sequence + overview + feasibility, 4, 5, 6
-Tab 4 Ways out (fix selected/applied)
-                                   → 2 overview + feasibility, 3 chart (overload removed,
-                                     new shift/arrival shown), 5 Plan adjustments + cost
-                                     breakdown + profit by order, 6 checklist + fixes chips
-Tab 4 "Save as Plan B"             → Plan comparison gets a new plan (max 3–4)
-Tab 5 financials                   → 6 summary; key figure (margin) → Plan comparison
+                                   → 2 sequence + overview + feasibility, 5, 6
+Tab 5 financials                   → 6 summary; Tab 1 selection options (contribution, margin)
 Purchasing (PO raised, arrival date changes, supplier price)
-                                   → 4 materials + ways-out costs, 5 cost, 6 checklist
+                                   → 3 material wait flags, 5 cost, 6 checklist
 Production (machine down, maintenance, shift change, progress on ongoing orders)
-                                   → 3 locked rows + load, 4 capacity/labour, then 2, 5, 6
+                                   → 3 locked rows + load, then 2, 5, 6
 Tab 6 Approve                      → plan locked; POs to Purchasing, schedule to
                                      Production, promised dates to each order in Orders
 
@@ -330,10 +365,6 @@ Behaviour on change:
       <h1 style="margin:0;font-size:34px;font-weight:700;letter-spacing:-0.02em">Order manufacturing plan</h1>
       <p style="margin:0;font-size:16px;color:#64748B">Pick the accepted orders, set their priority, and check the plan is feasible before it goes to production.</p>
     </div>
-    <div class="seg" role="tablist" aria-label="Plan view">
-      <button class="on" data-mode="plan">Original plan</button>
-      <button data-mode="compare">Plan comparison</button>
-    </div>
   </div>
 
   <!-- ============ ORIGINAL PLAN VIEW ============ -->
@@ -343,9 +374,8 @@ Behaviour on change:
       <a href="#" class="on" data-tab="1"><span class="n">1</span>Selected orders</a>
       <a href="#" class="lock" data-tab="2"><span class="n">2</span>Proposed manufacturing sequence</a>
       <a href="#" class="lock" data-tab="3"><span class="n">3</span>Production schedule</a>
-      <a href="#" class="lock" data-tab="4"><span class="n">4</span>Resource feasibility</a>
-      <a href="#" class="lock" data-tab="5"><span class="n">5</span>Financial analysis</a>
-      <a href="#" class="lock" data-tab="6"><span class="n">6</span>Final plan approval</a>
+      <a href="#" class="lock" data-tab="5"><span class="n">4</span>Financial analysis</a>
+      <a href="#" class="lock" data-tab="6"><span class="n">5</span>Final plan approval</a>
     </nav>
 
     <!-- ---------- TAB 1: SELECTED ORDERS ---------- -->
@@ -356,20 +386,46 @@ Behaviour on change:
           <h2 style="margin:0;font-size:22px;font-weight:600;letter-spacing:-0.01em">Selected orders</h2>
           <p style="margin:0;font-size:15px;color:#64748B">Pulled from <a href="#">Orders received</a>. Add or remove orders to change the combination that gets planned.</p>
         </div>
-        <div style="display:flex;border:1px solid #E5E9F0;border-radius:16px;background:#F8FAFC">
-          <div style="padding:14px 24px;display:flex;flex-direction:column;gap:2px"><span style="font-size:26px;font-weight:700">4</span><span style="font-size:13px;color:#64748B">Orders selected</span></div>
-          <div style="padding:14px 24px;display:flex;flex-direction:column;gap:2px;border-left:1px solid #E5E9F0"><span style="font-size:26px;font-weight:700">₹31.0 L</span><span style="font-size:13px;color:#64748B">Total value</span></div>
-          <div style="padding:14px 24px;display:flex;flex-direction:column;gap:2px;border-left:1px solid #E5E9F0"><span style="font-size:26px;font-weight:700;color:#15803D">22.1%</span><span style="font-size:13px;color:#64748B">Weighted est. margin</span></div>
-          <div style="padding:14px 24px;display:flex;flex-direction:column;gap:2px;border-left:1px solid #E5E9F0"><span style="font-size:26px;font-weight:700;color:#9A5205">16 Nov</span><span style="font-size:13px;color:#64748B">Earliest deadline</span></div>
-        </div>
+
       </div>
+
+
+<!--
+BUILD NOTE: SELECTION OPTIONS + ORDER TIMELINE (Tab 1, not displayed)
+- The optimizer builds 2 options from ALL accepted orders in Orders received:
+  Partly optimized = must keep every order the owner ticked, may add orders.
+  Fully optimized  = free choice from all accepted orders, may drop owner's orders.
+- Objective: highest contribution per production day; hard rules = no late deliveries
+  where possible; prefer orders that use machines left idle by running orders, so
+  new work overlaps the running orders' days as much as possible.
+- Order timeline rows: Running now (locked) + the 3 options. They update whenever the
+  owner ticks/unticks an order, Orders received changes, or running orders' progress changes.
+- "Use this selection" replaces the ticked orders in the table with that option's orders
+  and marks tabs 2–6 for recalculation (see EVERYTHING IS CONNECTED note).
+-->
+      <!-- order timeline -->
+      <details class="card ot-dd">
+        <summary class="card-h">
+          <h3><span class="dd-car">▸</span>Order timeline <small>Running orders vs. the 3 selection options</small></h3>
+          <div class="legend"><span><i class="sw" style="background:#E2E8F0;border-color:#CBD5E1"></i>Running</span><span><i class="sw" style="background:#C9DAFC;border-color:#93B4F7"></i>Your order</span><span><i class="sw" style="background:#CDEFD8;border-color:#86CFA0"></i>Added by optimizer</span><span><i class="sw" style="background:#FDECEC;border-color:#F3B4AE"></i>Late</span><span><i class="sw" style="background:#F1F5F9;border-color:#CBD5E1;background-image:repeating-linear-gradient(135deg,rgba(100,116,139,.18) 0 3px,transparent 3px 6px)"></i>Running orders' days</span></div>
+        </summary>
+        <div class="ot">
+          <div class="ot-bg"><i class="ot-c run" style="grid-column:2"></i><i class="ot-c run" style="grid-column:3"></i><i class="ot-c sun" style="grid-column:4"></i><i class="ot-c" style="grid-column:5"></i><i class="ot-c" style="grid-column:6"></i><i class="ot-c" style="grid-column:7"></i><i class="ot-c" style="grid-column:8"></i><i class="ot-c" style="grid-column:9"></i><i class="ot-c" style="grid-column:10"></i><i class="ot-c sun" style="grid-column:11"></i><i class="ot-c" style="grid-column:12"></i><i class="ot-c" style="grid-column:13"></i><i class="ot-c" style="grid-column:14"></i><i class="ot-c" style="grid-column:15"></i><i class="ot-c" style="grid-column:16"></i></div>
+          <div class="ot-r ot-h"><span class="ot-l"></span><span class=""><small>Fri</small>13</span><span class=""><small>Sat</small>14</span><span class="sun"><small>Sun</small>15</span><span class=""><small>Mon</small>16</span><span class=""><small>Tue</small>17</span><span class=""><small>Wed</small>18</span><span class=""><small>Thu</small>19</span><span class=""><small>Fri</small>20</span><span class=""><small>Sat</small>21</span><span class="sun"><small>Sun</small>22</span><span class=""><small>Mon</small>23</span><span class=""><small>Tue</small>24</span><span class=""><small>Wed</small>25</span><span class=""><small>Thu</small>26</span><span class=""><small>Fri</small>27</span></div>
+          <div class="ot-g" data-opt="run"><div class="ot-gh"><span><b>Running now</b><small>in production</small></span><span class="tag lo">Locked</span></div><div class="ot-r"><span class="ot-l mono">O-201</span><b class="ot-b og" style="grid-column:2/4">CNC 01 · Bajaj Auto</b></div><div class="ot-r"><span class="ot-l mono">O-202</span><b class="ot-b og" style="grid-column:2/4">QC · Hero MotoCorp</b></div></div><div class="ot-g on" data-opt="own"><div class="ot-gh"><span><b>Your selection</b><small>4 orders · 13–24 Nov</small></span><span class="tag bl">Current</span></div><div class="ot-r"><span class="ot-l mono">ORD-1044</span><b class="ot-b k" style="grid-column:2/5">Assembly 2</b></div><div class="ot-r"><span class="ot-l mono">ORD-1041</span><b class="ot-b k" style="grid-column:2/7">Press 01 → CNC 01</b></div><div class="ot-r"><span class="ot-l mono">ORD-1043</span><b class="ot-b k" style="grid-column:7/13">CNC 01 → Press 01</b></div><div class="ot-r"><span class="ot-l mono">ORD-1042</span><b class="ot-b late" style="grid-column:8/11">CNC 01 · 1 day late</b></div></div><div class="ot-g" data-opt="part"><div class="ot-gh"><span><b>Partly optimized</b><small>keeps your 4 + 1 · 13–24 Nov</small></span><span class="tag md">Keeps your orders</span></div><div class="ot-r"><span class="ot-l mono">ORD-1044</span><b class="ot-b k" style="grid-column:2/5">Assembly 2</b></div><div class="ot-r"><span class="ot-l mono">ORD-1041</span><b class="ot-b k" style="grid-column:2/7">Press 01 → CNC 01</b></div><div class="ot-r"><span class="ot-l mono">ORD-1045</span><b class="ot-b add" style="grid-column:2/7">CNC 02 · idle machine</b></div><div class="ot-r"><span class="ot-l mono">ORD-1042</span><b class="ot-b k" style="grid-column:7/10">CNC 01</b></div><div class="ot-r"><span class="ot-l mono">ORD-1043</span><b class="ot-b k" style="grid-column:8/14">CNC 01 → Press 01</b></div></div><div class="ot-g" data-opt="full"><div class="ot-gh"><span><b>Fully optimized</b><small>5 orders · 13–21 Nov</small></span><span class="tag ok">Best score</span></div><div class="ot-r"><span class="ot-l mono">ORD-1044</span><b class="ot-b k" style="grid-column:2/5">Assembly 2</b></div><div class="ot-r"><span class="ot-l mono">ORD-1041</span><b class="ot-b k" style="grid-column:2/7">Press 01 → CNC 01</b></div><div class="ot-r"><span class="ot-l mono">ORD-1045</span><b class="ot-b add" style="grid-column:2/7">CNC 02 · idle machine</b></div><div class="ot-r"><span class="ot-l mono">ORD-1042</span><b class="ot-b k" style="grid-column:7/10">CNC 01</b></div><div class="ot-r"><span class="ot-l mono">ORD-1046</span><b class="ot-b add" style="grid-column:7/11">Press 01</b></div><div class="ot-r"><span class="ot-l mono" style="text-decoration:line-through;color:#94A3B8">ORD-1043</span><span class="ot-drop">Left out · low margin, short of steel, overloads CNC 01</span></div></div>
+        </div>
+        <div style="padding:12px 20px;border-top:1px solid #EEF1F5;background:#F8FAFC;font-size:13px;color:#64748B;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <span>Optimized options start more orders alongside the running ones, so no machine sits idle on 13–14 Nov.</span>
+          <span>Click an option in the table below to highlight it here.</span>
+        </div>
+      </details>
 
       <!-- selected orders table -->
       <section style="border:1px solid #E5E9F0;border-radius:16px">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:18px 20px">
           <div style="display:flex;align-items:center;gap:10px">
             <h3 style="margin:0;font-size:17px;font-weight:600">In this plan</h3>
-            <span class="tag lo">4 of 5</span>
+            <span class="tag lo">4 of 7</span>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="pill">Sort: Deadline ▾</button>
@@ -416,12 +472,69 @@ Behaviour on change:
                 <td class="r">4,500 pcs</td><td class="r">₹14.2 L</td><td>Fri 27 Nov</td><td class="r">13%</td>
                 <td><span style="font-size:12px;color:#94A3B8">Excluded</span></td>
               </tr>
-            </tbody>
+                          <tr class="off">
+                <td><input type="checkbox" class="chk" aria-label="Include ORD-1045"></td>
+                <td class="mono">ORD-1045</td><td>Kirloskar</td><td>M6 hex nuts</td><td><span class="tag md">Medium</span></td>
+                <td class="r">3,500 pcs</td><td class="r">₹4.5 L</td><td>Thu 19 Nov</td><td class="r">26%</td>
+                <td><span class="tag ok" style="font-size:11px">Suggested</span></td>
+              </tr>
+              <tr class="off">
+                <td><input type="checkbox" class="chk" aria-label="Include ORD-1046"></td>
+                <td class="mono">ORD-1046</td><td>Mahindra</td><td>Spring washers</td><td><span class="tag lo">Low</span></td>
+                <td class="r">6,000 pcs</td><td class="r">₹3.2 L</td><td>Mon 23 Nov</td><td class="r">24%</td>
+                <td><span class="tag ok" style="font-size:11px">Suggested</span></td>
+              </tr>
+</tbody>
           </table>
         </div>
         <div style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:14px 20px;border-top:1px solid #EEF1F5;background:#F8FAFC;border-radius:0 0 16px 16px;font-size:14px;color:#334155">
           <span>Total for 4 orders</span>
           <span style="display:flex;gap:28px"><span>Qty <b>18,000 pcs</b></span><span>Value <b>₹31.0 L</b></span><span>Est. contribution <b style="color:#15803D">₹6.9 L</b></span></span>
+        </div>
+      </section>
+
+
+      <!-- selection options -->
+      <section class="card" id="sel-opts">
+        <div class="card-h">
+          <h3>Order selection options <small>Your selection vs. what the optimizer suggests</small></h3>
+          <span class="ai">✦ Planning assistant</span>
+        </div>
+        <div style="overflow-x:auto">
+        <table class="cmp-t">
+          <thead><tr>
+            <th></th>
+            <th class="ph main" data-opt="own"><div class="ph-t"><b>Your selection</b><span class="tag bl">Current</span></div><small>Only the orders you picked</small></th>
+            <th class="ph" data-opt="part"><div class="ph-t"><b>Partly optimized</b></div><small>Keeps all your orders, adds what fits</small></th>
+            <th class="ph" data-opt="full"><div class="ph-t"><b>Fully optimized</b><span class="tag ok">Best score</span></div><small>Best mix from all accepted orders</small></th>
+          </tr></thead>
+          <tbody>
+            <tr><th scope="row">Orders</th>
+              <td class="cv"><div class="ocs"><span class="oc ">1044</span><span class="oc ">1041</span><span class="oc ">1042</span><span class="oc ">1043</span></div></td>
+              <td class="cv"><div class="ocs"><span class="oc ">1044</span><span class="oc ">1041</span><span class="oc ">1042</span><span class="oc ">1043</span><span class="oc add">+1045</span></div></td>
+              <td class="cv"><div class="ocs"><span class="oc ">1044</span><span class="oc ">1041</span><span class="oc ">1042</span><span class="oc drop">1043</span><span class="oc add">+1045</span><span class="oc add">+1046</span></div></td></tr>
+            <tr><th scope="row">Sales value</th><td class="cv"><span>₹31.0 L</span></td><td class="cv best"><span>₹35.5 L</span></td><td class="cv"><span>₹26.7 L</span></td></tr>
+            <tr><th scope="row">Production window</th><td class="cv"><span>13–24 Nov · 12 days</span></td><td class="cv"><span>13–24 Nov · 12 days</span></td><td class="cv best"><span>13–21 Nov · 9 days</span></td></tr>
+            <tr><th scope="row">Orders starting alongside running orders</th><td class="cv"><span>2</span></td><td class="cv best"><span>3</span></td><td class="cv best"><span>3</span></td></tr>
+            <tr><th scope="row">Idle machine-days, 13–14 Nov</th><td class="cv"><span style="color:#9A5205;font-weight:600">2 · CNC 02</span></td><td class="cv best"><span>0</span></td><td class="cv best"><span>0</span></td></tr>
+            <tr><th scope="row">Machine utilisation</th><td class="cv"><span>94%</span></td><td class="cv"><span style="color:#9A5205;font-weight:600">97%</span></td><td class="cv best"><span>91%</span></td></tr>
+            <tr><th scope="row">Bottlenecks</th><td class="cv"><span style="color:#B42318;font-weight:600">2</span></td><td class="cv"><span style="color:#9A5205;font-weight:600">1 · steel</span></td><td class="cv best"><span>0</span></td></tr>
+            <tr><th scope="row">Late deliveries</th><td class="cv"><span style="color:#B42318;font-weight:600">1 · ORD-1042</span></td><td class="cv best"><span>0</span></td><td class="cv best"><span>0</span></td></tr>
+            <tr><th scope="row">Contribution</th><td class="cv"><span>₹6.65 L</span></td><td class="cv best"><span>₹8.02 L</span></td><td class="cv"><span>₹6.63 L</span></td></tr>
+            <tr><th scope="row">Contribution margin</th><td class="cv"><span>21.5%</span></td><td class="cv"><span>22.6%</span></td><td class="cv best"><span>24.8%</span></td></tr>
+            <tr class="key"><th scope="row">Contribution per production day</th><td class="cv"><span>₹0.55 L</span></td><td class="cv"><span>₹0.67 L</span></td><td class="cv best"><span>₹0.74 L</span></td></tr>
+            <tr class="act"><th scope="row"></th>
+              <td class="cv"><button class="pill" disabled style="width:100%;opacity:.7">✓ Using this</button></td>
+              <td class="cv"><button class="dark" style="width:100%;min-height:36px;font-size:13px">Use this selection</button></td>
+              <td class="cv"><button class="dark" style="width:100%;min-height:36px;font-size:13px">Use this selection</button></td></tr>
+          </tbody>
+        </table>
+        </div>
+        <div style="padding:14px 20px;border-top:1px solid #EEF1F5;background:#FAF7FF;font-size:14px;color:#334155;line-height:1.55">
+          <b>Fully optimized</b> earns the most per production day and has no bottlenecks, but leaves out your ORD-1043 (₹12 L). <b>Partly optimized</b> keeps all your orders, earns ₹1.37 L more than your selection, and only needs the steel fix.
+        </div>
+        <div style="padding:10px 20px;border-top:1px solid #EEF1F5;background:#F8FAFC;font-size:12px;color:#64748B;display:flex;gap:16px;flex-wrap:wrap">
+          <span><span class="best-sw"></span> Best in row</span><span>Optimizer score = contribution per production day, with no late deliveries and the most overlap with running orders</span>
         </div>
       </section>
 
@@ -476,18 +589,18 @@ Behaviour on change:
           <div style="display:flex;flex-direction:column">
             <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-top:1px solid #EEF1F5">
               <span style="display:flex;gap:10px;align-items:center;font-size:14px"><span style="width:8px;height:8px;border-radius:50%;background:#B42318;flex:none"></span>CNC 01 over capacity by 15 hrs, 19–20 Nov</span>
-              <a href="#" data-goto="4" style="font-size:13px;white-space:nowrap;text-decoration:none">Resolve →</a>
+              
             </div>
             <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-top:1px solid #EEF1F5">
               <span style="display:flex;gap:10px;align-items:center;font-size:14px"><span style="width:8px;height:8px;border-radius:50%;background:#B42318;flex:none"></span>Steel short by 500 kg · affects ORD-1043</span>
-              <a href="#" data-goto="4" style="font-size:13px;white-space:nowrap;text-decoration:none">Resolve →</a>
+              
             </div>
             <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-top:1px solid #EEF1F5">
               <span style="display:flex;gap:10px;align-items:center;font-size:14px"><span style="width:8px;height:8px;border-radius:50%;background:#E59E2E;flex:none"></span>ORD-1042 ships 1 day late</span>
               <a href="#hint" style="font-size:13px;white-space:nowrap;text-decoration:none">See hint ↓</a>
             </div>
           </div>
-          <span style="font-size:12px;color:#94A3B8">Resource fixes are in Resource feasibility. Ordering fixes are shown below.</span>
+          <span style="font-size:12px;color:#94A3B8">Ordering fixes are shown below.</span>
         </section>
       </div>
 
@@ -598,10 +711,10 @@ Behaviour on change:
         </div>
       </div>
 
-      <!-- bottleneck summary (details + fixes live in Resource feasibility) -->
+      <!-- bottleneck summary -->
       <div style="display:flex;gap:12px;flex-wrap:wrap">
-        <div class="bn"><span class="bn-dot"></span><b>CNC 01 overloaded</b><span>19–20 Nov · +15 hrs · ORD-1043 &amp; ORD-1042 overlap</span><a href="#" data-goto="4">Resolve →</a></div>
-        <div class="bn"><span class="bn-dot" style="background:#E59E2E"></span><b>Steel short 500 kg</b><span>needed 18 Nov for ORD-1043</span><a href="#" data-goto="4">Resolve →</a></div>
+        <div class="bn"><span class="bn-dot"></span><b>CNC 01 overloaded</b><span>19–20 Nov · +15 hrs · ORD-1043 &amp; ORD-1042 overlap</span></div>
+        <div class="bn"><span class="bn-dot" style="background:#E59E2E"></span><b>Steel short 500 kg</b><span>needed 18 Nov for ORD-1043</span></div>
       </div>
 
       <section style="border:1px solid #E5E9F0;border-radius:16px;overflow:hidden">
@@ -627,7 +740,7 @@ Behaviour on change:
 
       <div style="display:flex;justify-content:space-between;gap:12px">
         <button class="pill" data-goto="2">← Proposed sequence</button>
-        <button class="dark" data-goto="4">Next: Resource feasibility →</button>
+        <button class="dark" data-goto="5">Next: Financial analysis →</button>
       </div>
 
       <!-- design-only note (not part of the website) -->
@@ -653,7 +766,7 @@ BUILD NOTE: REORDER WARNING POPUP (for the real website build)
      - Cancel → revert the row to its old position.
      - Continue anyway → apply; draw the bottlenecks on the Gantt
        (red hatched cells on the bars + red day in the machine-load strip)
-       and update Tabs 2, 4, 5 and the plan comparison.
+       and update Tabs 2, 5 and 6.
 4. If it only removes or reduces bottlenecks → apply with no popup and show a small
    "Reordered · 1 bottleneck cleared" toast.
 5. Hard blocks (no "continue" option): moving above a locked/ongoing order,
@@ -665,140 +778,12 @@ BUILD NOTE: REORDER WARNING POPUP (for the real website build)
 -->
 
 
-    <!-- ---------- TAB 4: RESOURCE FEASIBILITY ---------- -->
-    <section class="panel" id="tab-4" style="flex-direction:column;gap:24px">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap">
-        <div style="display:flex;flex-direction:column;gap:6px">
-          <h2 style="margin:0;font-size:22px;font-weight:600;letter-spacing:-0.01em">Resource feasibility</h2>
-          <p style="margin:0;font-size:15px;color:#64748B">How big each bottleneck is (left) and the ways out of it (right). Changeover, maintenance, shifts and lead times are already counted.</p>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <span class="tag hi" style="font-size:13px;padding:6px 12px">2 bottlenecks</span>
-          <span class="tag md" style="font-size:13px;padding:6px 12px">1 tight</span>
-          <span class="tag ok" style="font-size:13px;padding:6px 12px">8 resources OK</span>
-        </div>
-      </div>
-
-      <div class="rf-grid">
-        <!-- LEFT: how big is it -->
-        <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
-
-          <!-- machines -->
-          <section class="card">
-            <div class="card-h"><h3>Machine capacity <small>13 – 30 Nov</small></h3><span class="tag hi">CNC 01 overloaded</span></div>
-            <table class="rt">
-              <thead><tr><th>Machine</th><th class="r">Available hrs</th><th class="r">Required hrs</th><th style="width:150px">Load</th><th class="r">Gap</th></tr></thead>
-              <tbody>
-                <tr><td>Press 01</td><td class="r">128<small>144 − 6 changeover − 10 maint.</small></td><td class="r">96</td><td><span class="lb"><i style="width:75%"></i></span>75%</td><td class="r ok-t">32 free</td></tr>
-                <tr class="bad"><td><b>CNC 01</b></td><td class="r">132<small>144 − 8 changeover − 4 maint.</small></td><td class="r"><b>147</b></td><td><span class="lb"><i style="width:100%;background:#B42318"></i></span><b style="color:#B42318">111%</b></td><td class="r" style="color:#B42318;font-weight:600">+15 over</td></tr>
-                <tr><td>CNC 02</td><td class="r">112<small>144 − 32 maint. (18–19 Nov)</small></td><td class="r">0</td><td><span class="lb"><i style="width:0"></i></span>0%</td><td class="r ok-t">112 free</td></tr>
-                <tr><td>Assembly 2</td><td class="r">140<small>144 − 4 changeover</small></td><td class="r">48</td><td><span class="lb"><i style="width:34%"></i></span>34%</td><td class="r ok-t">92 free</td></tr>
-                <tr><td>QC</td><td class="r">144</td><td class="r">30</td><td><span class="lb"><i style="width:21%"></i></span>21%</td><td class="r ok-t">114 free</td></tr>
-              </tbody>
-            </table>
-            <div class="mg-wrap">
-              <div class="mg-cap"><b>Where it happens</b><span>CNC 01 runs 16 hrs/day. On 19 Nov it needs 24 hrs (+8), on 20 Nov 23 hrs (+7).</span></div>
-              <div class="mg"><div class="mg-row mg-head"><span></span><span class="">13</span><span class="">14</span><span class="sun">15</span><span class="">16</span><span class="">17</span><span class="">18</span><span class="">19</span><span class="">20</span><span class="">21</span><span class="sun">22</span><span class="">23</span></div><div class="mg-row"><span class="mg-l">CNC 01 · lane 1<small></small></span><i class="mg-c" style="grid-column:2"></i><i class="mg-c" style="grid-column:3"></i><i class="mg-c sun" style="grid-column:4"></i><i class="mg-c" style="grid-column:5"></i><i class="mg-c" style="grid-column:6"></i><i class="mg-c" style="grid-column:7"></i><i class="mg-c" style="grid-column:8"></i><i class="mg-c" style="grid-column:9"></i><i class="mg-c" style="grid-column:10"></i><i class="mg-c sun" style="grid-column:11"></i><i class="mg-c" style="grid-column:12"></i><b class="mg-b g" style="grid-column:2/4">O-201</b><b class="mg-b n" style="grid-column:5/7">ORD-1041</b><b class="mg-b n" style="grid-column:7/11">ORD-1043</b></div><div class="mg-row"><span class="mg-l">CNC 01 · lane 2<small></small></span><i class="mg-c" style="grid-column:2"></i><i class="mg-c" style="grid-column:3"></i><i class="mg-c sun" style="grid-column:4"></i><i class="mg-c" style="grid-column:5"></i><i class="mg-c" style="grid-column:6"></i><i class="mg-c" style="grid-column:7"></i><i class="mg-c" style="grid-column:8"></i><i class="mg-c" style="grid-column:9"></i><i class="mg-c" style="grid-column:10"></i><i class="mg-c sun" style="grid-column:11"></i><i class="mg-c" style="grid-column:12"></i><b class="mg-b r" style="grid-column:8/10">ORD-1042 · over capacity</b></div><div class="mg-row"><span class="mg-l">CNC 02<small></small></span><i class="mg-c" style="grid-column:2"></i><i class="mg-c" style="grid-column:3"></i><i class="mg-c sun" style="grid-column:4"></i><i class="mg-c" style="grid-column:5"></i><i class="mg-c" style="grid-column:6"></i><i class="mg-c" style="grid-column:7"></i><i class="mg-c" style="grid-column:8"></i><i class="mg-c" style="grid-column:9"></i><i class="mg-c" style="grid-column:10"></i><i class="mg-c sun" style="grid-column:11"></i><i class="mg-c" style="grid-column:12"></i><b class="mg-b m" style="grid-column:7/9">Maintenance</b></div></div>
-            </div>
-          </section>
-
-          <!-- materials -->
-          <section class="card">
-            <div class="card-h"><h3>Raw materials</h3><span class="tag hi">Steel short 500 kg</span></div>
-            <table class="rt">
-              <thead><tr><th>Material</th><th class="r">Required</th><th class="r">In stock</th><th class="r">On order</th><th>Lead time</th><th>Needed by</th><th class="r">Gap</th></tr></thead>
-              <tbody>
-                <tr class="bad"><td><b>Steel (EN8 rod)</b></td><td class="r">2,000 kg</td><td class="r">1,500 kg</td><td class="r">0</td><td>7 days</td><td>Wed 18 Nov</td><td class="r" style="color:#B42318;font-weight:600">−500 kg</td></tr>
-                <tr><td>Aluminium</td><td class="r">800 kg</td><td class="r">1,000 kg</td><td class="r">0</td><td>5 days</td><td>Fri 13 Nov</td><td class="r ok-t">200 spare</td></tr>
-                <tr><td>Nylon inserts</td><td class="r">5,000 pcs</td><td class="r">3,500 pcs</td><td class="r">2,000 · 16 Nov</td><td>4 days</td><td>Tue 17 Nov</td><td class="r ok-t">500 spare</td></tr>
-                <tr><td>Zinc plating</td><td class="r">180 L</td><td class="r">220 L</td><td class="r">0</td><td>3 days</td><td>Sat 21 Nov</td><td class="r ok-t">40 spare</td></tr>
-              </tbody>
-            </table>
-            <div class="mg-wrap">
-              <div class="mg-cap"><b>Where it happens</b><span>A regular order placed today arrives 20 Nov, 2 days after ORD-1043 needs it.</span></div>
-              <div class="mg"><div class="mg-row mg-head"><span></span><span class="">13</span><span class="">14</span><span class="sun">15</span><span class="">16</span><span class="">17</span><span class="">18</span><span class="">19</span><span class="">20</span><span class="">21</span><span class="sun">22</span><span class="">23</span></div><div class="mg-row"><span class="mg-l">Steel needed<small></small></span><i class="mg-c" style="grid-column:2"></i><i class="mg-c" style="grid-column:3"></i><i class="mg-c sun" style="grid-column:4"></i><i class="mg-c" style="grid-column:5"></i><i class="mg-c" style="grid-column:6"></i><i class="mg-c" style="grid-column:7"></i><i class="mg-c" style="grid-column:8"></i><i class="mg-c" style="grid-column:9"></i><i class="mg-c" style="grid-column:10"></i><i class="mg-c sun" style="grid-column:11"></i><i class="mg-c" style="grid-column:12"></i><b class="mg-b n" style="grid-column:7/9">ORD-1043 starts</b></div><div class="mg-row"><span class="mg-l">Regular PO<small></small></span><i class="mg-c" style="grid-column:2"></i><i class="mg-c" style="grid-column:3"></i><i class="mg-c sun" style="grid-column:4"></i><i class="mg-c" style="grid-column:5"></i><i class="mg-c" style="grid-column:6"></i><i class="mg-c" style="grid-column:7"></i><i class="mg-c" style="grid-column:8"></i><i class="mg-c" style="grid-column:9"></i><i class="mg-c" style="grid-column:10"></i><i class="mg-c sun" style="grid-column:11"></i><i class="mg-c" style="grid-column:12"></i><b class="mg-b g" style="grid-column:2/9">7-day lead time</b><b class="mg-b r" style="grid-column:9/10">Arrives</b></div><div class="mg-row"><span class="mg-l">Express buy<small></small></span><i class="mg-c" style="grid-column:2"></i><i class="mg-c" style="grid-column:3"></i><i class="mg-c sun" style="grid-column:4"></i><i class="mg-c" style="grid-column:5"></i><i class="mg-c" style="grid-column:6"></i><i class="mg-c" style="grid-column:7"></i><i class="mg-c" style="grid-column:8"></i><i class="mg-c" style="grid-column:9"></i><i class="mg-c" style="grid-column:10"></i><i class="mg-c sun" style="grid-column:11"></i><i class="mg-c" style="grid-column:12"></i><b class="mg-b g" style="grid-column:2/4">2 days</b><b class="mg-b ok" style="grid-column:4/5">Arrives</b></div></div>
-            </div>
-          </section>
-
-          <!-- labour -->
-          <section class="card">
-            <div class="card-h"><h3>Labour &amp; shifts</h3><span class="tag md">Assembly tight</span></div>
-            <table class="rt">
-              <thead><tr><th>Department</th><th>Shifts</th><th class="r">Available hrs</th><th class="r">Required hrs</th><th style="width:150px">Load</th><th class="r">Gap</th></tr></thead>
-              <tbody>
-                <tr><td>Machining</td><td>2 · Sun 1</td><td class="r">180</td><td class="r">160</td><td><span class="lb"><i style="width:89%;background:#E59E2E"></i></span>89%</td><td class="r ok-t">20 free</td></tr>
-                <tr><td>Pressing</td><td>1</td><td class="r">100</td><td class="r">80</td><td><span class="lb"><i style="width:80%"></i></span>80%</td><td class="r ok-t">20 free</td></tr>
-                <tr><td>Assembly</td><td>1</td><td class="r">80</td><td class="r">72</td><td><span class="lb"><i style="width:90%;background:#E59E2E"></i></span><b style="color:#9A5205">90%</b></td><td class="r" style="color:#9A5205">8 free</td></tr>
-                <tr><td>QC</td><td>1</td><td class="r">60</td><td class="r">30</td><td><span class="lb"><i style="width:50%"></i></span>50%</td><td class="r ok-t">30 free</td></tr>
-              </tbody>
-            </table>
-            <div class="mg-wrap">
-              <div class="mg-cap"><b>Where it's tight</b><span>Assembly is near its limit 13–15 Nov. No action needed unless the plan changes.</span></div>
-              <div class="mg"><div class="mg-row mg-head"><span></span><span class="">13</span><span class="">14</span><span class="sun">15</span><span class="">16</span><span class="">17</span><span class="">18</span><span class="">19</span><span class="">20</span><span class="">21</span><span class="sun">22</span><span class="">23</span></div><div class="mg-row"><span class="mg-l">Assembly<small></small></span><i class="mg-c" style="grid-column:2"></i><i class="mg-c" style="grid-column:3"></i><i class="mg-c sun" style="grid-column:4"></i><i class="mg-c" style="grid-column:5"></i><i class="mg-c" style="grid-column:6"></i><i class="mg-c" style="grid-column:7"></i><i class="mg-c" style="grid-column:8"></i><i class="mg-c" style="grid-column:9"></i><i class="mg-c" style="grid-column:10"></i><i class="mg-c sun" style="grid-column:11"></i><i class="mg-c" style="grid-column:12"></i><b class="mg-b n" style="grid-column:2/5">ORD-1044 · 24 of 26 hrs/day</b></div><div class="mg-row"><span class="mg-l">Machining<small></small></span><i class="mg-c" style="grid-column:2"></i><i class="mg-c" style="grid-column:3"></i><i class="mg-c sun" style="grid-column:4"></i><i class="mg-c" style="grid-column:5"></i><i class="mg-c" style="grid-column:6"></i><i class="mg-c" style="grid-column:7"></i><i class="mg-c" style="grid-column:8"></i><i class="mg-c" style="grid-column:9"></i><i class="mg-c" style="grid-column:10"></i><i class="mg-c sun" style="grid-column:11"></i><i class="mg-c" style="grid-column:12"></i><b class="mg-b n" style="grid-column:5/7">ORD-1041</b><b class="mg-b n" style="grid-column:7/11">ORD-1043 + ORD-1042</b></div></div>
-            </div>
-          </section>
-        </div>
-
-        <!-- RIGHT: ways out -->
-        <aside class="wo-panel">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <h3 style="margin:0;font-size:13px;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.06em">Ways out</h3>
-            <span class="ai">✦ Planning assistant</span>
-          </div>
-
-          <div class="wo-grp">
-            <div class="wo-h"><span class="bn-dot"></span><b>CNC 01 · +15 hrs</b><small>19–20 Nov</small></div>
-            <label class="wo sel"><input type="radio" name="cnc" checked>
-      <span class="wo-b"><span class="wo-t"><b>Night shift on CNC 01, 19–20 Nov</b><span class="tag bl">Top pick</span></span>
-      <span class="wo-m"><span class="mono">+₹18,400 overtime</span> · <span style="color:#15803D">all 4 ship on time</span></span></span></label>
-            <label class="wo"><input type="radio" name="cnc" >
-      <span class="wo-b"><span class="wo-t"><b>Subcontract threading of 1,000 pcs (ORD-1042)</b></span>
-      <span class="wo-m"><span class="mono">+₹32,000</span> · <span style="color:#15803D">all on time · extra QC on return</span></span></span></label>
-            <label class="wo"><input type="radio" name="cnc" >
-      <span class="wo-b"><span class="wo-t"><b>Move ORD-1042 to CNC 02 after maintenance</b></span>
-      <span class="wo-m"><span class="mono">₹0 · +3 hrs changeover</span> · <span style="color:#9A5205">ORD-1042 ships 2 days late · ₹40,000 penalty</span></span></span></label>
-          </div>
-
-          <div class="wo-grp">
-            <div class="wo-h"><span class="bn-dot"></span><b>Steel · −500 kg</b><small>needed 18 Nov</small></div>
-            <label class="wo sel"><input type="radio" name="st" checked>
-      <span class="wo-b"><span class="wo-t"><b>Express buy from Shree Steels</b><span class="tag bl">Top pick</span></span>
-      <span class="wo-m"><span class="mono">+₹6,200 freight</span> · <span style="color:#15803D">arrives 15 Nov · all on time</span></span></span></label>
-            <label class="wo"><input type="radio" name="st" >
-      <span class="wo-b"><span class="wo-t"><b>Use 500 kg reserved for ORD-1035</b></span>
-      <span class="wo-m"><span class="mono">₹0</span> · <span style="color:#15803D">ORD-1035 is not in this plan · rebuy later</span></span></span></label>
-            <label class="wo"><input type="radio" name="st" >
-      <span class="wo-b"><span class="wo-t"><b>Regular PO, 7-day lead time</b></span>
-      <span class="wo-m"><span class="mono">₹0</span> · <span style="color:#9A5205">ORD-1043 starts 20 Nov · 0 days buffer</span></span></span></label>
-          </div>
-
-          <div class="wo-sum">
-            <div class="tr2"><span>Extra cost</span><b>₹24,600</b></div>
-            <div class="tr2"><span>Bottlenecks after fixes</span><b style="color:#15803D">0</b></div>
-            <div class="tr2"><span>Ship on time</span><b style="color:#15803D">4 of 4</b></div>
-            <div class="tr2"><span>Contribution change</span><b>−₹24,600 · 22.1% → 21.3%</b></div>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:8px">
-            <button class="primary" style="width:100%">Apply 2 fixes to this plan</button>
-            <button class="pill" style="width:100%;padding:10px 14px;font-weight:600">Save as Plan B for comparison</button>
-          </div>
-          <span style="font-size:12px;color:#94A3B8">Costs from Purchasing (supplier rates) and Production (overtime rates). Options are suggested by the planning assistant; nothing changes until you apply.</span>
-        </aside>
-      </div>
-
-      <div style="display:flex;justify-content:space-between;gap:12px">
-        <button class="pill" data-goto="3">← Production schedule</button>
-        <button class="dark" data-goto="5">Next: Financial analysis →</button>
-      </div>
-    </section>
-
-
     <!-- ---------- TAB 5: FINANCIAL ANALYSIS ---------- -->
     <section class="panel" id="tab-5" style="flex-direction:column;gap:24px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap">
         <div style="display:flex;flex-direction:column;gap:6px">
           <h2 style="margin:0;font-size:22px;font-weight:600;letter-spacing:-0.01em">Financial analysis</h2>
-          <p style="margin:0;font-size:15px;color:#64748B">What this plan earns, what it costs, and what the fixes from Resource feasibility change.</p>
+          <p style="margin:0;font-size:15px;color:#64748B">What this plan earns, what it costs, and what the planned fixes change.</p>
         </div>
         <div class="seg" id="fin-seg">
           <button class="on" data-v="a">Before fixes</button>
@@ -811,7 +796,7 @@ BUILD NOTE: REORDER WARNING POPUP (for the real website build)
         <div class="fk"><span>Total sales value</span><b>₹31.0 L</b><small>4 selected orders</small></div>
         <div class="fk"><span>Manufacturing cost</span><b><span data-a="₹24.15 L" data-b="₹24.40 L">₹24.15 L</span></b><small><span data-a="Estimated cost" data-b="Incl. ₹24,600 in fixes">Estimated cost</span></small></div>
         <div class="fk"><span>Expected contribution</span><b style="color:#15803D"><span data-a="₹6.65 L" data-b="₹6.60 L">₹6.65 L</span></b><small><span data-a="After ₹20,000 penalty at risk" data-b="No penalties · all on time">After ₹20,000 penalty at risk</span></small></div>
-        <div class="fk"><span>Contribution margin <em class="cmp">In Plan comparison</em></span><b><span data-a="21.5%" data-b="21.3%">21.5%</span></b><small>Before fixed corporate costs and tax</small></div>
+        <div class="fk"><span>Contribution margin</span><b><span data-a="21.5%" data-b="21.3%">21.5%</span></b><small>Before fixed corporate costs and tax</small></div>
       </div>
 
       <div style="display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:20px;align-items:start">
@@ -823,9 +808,9 @@ BUILD NOTE: REORDER WARNING POPUP (for the real website build)
         </section>
 
         <!-- adjustments
-             BUILD NOTE: this card is driven by Tab 4 (selected/applied fixes) and by
+             BUILD NOTE: this card is driven by the fixes chosen for the plan and by
              Tabs 2/3 (late deliveries -> penalties). Any change there must update these
-             lines, the totals, the KPI row, Profit by order, Tab 6 and Plan comparison.
+             lines, the totals, the KPI row, Profit by order and Tab 6.
              The insight line (fix cost vs penalty avoided) is recalculated each time. -->
         <section class="card" style="padding:20px;display:flex;flex-direction:column;gap:14px">
           <h3 style="margin:0;font-size:17px;font-weight:600">Plan adjustments</h3>
@@ -866,7 +851,7 @@ BUILD NOTE: REORDER WARNING POPUP (for the real website build)
       </section>
 
       <div style="display:flex;justify-content:space-between;gap:12px">
-        <button class="pill" data-goto="4">← Resource feasibility</button>
+        <button class="pill" data-goto="3">← Production schedule</button>
         <button class="dark" data-goto="6">Next: Final plan approval →</button>
       </div>
     </section>
@@ -961,85 +946,7 @@ BUILD NOTE: REORDER WARNING POPUP (for the real website build)
     </section>
   </div>
 
-  <!-- ============ PLAN COMPARISON VIEW ============ -->
-  <section id="mode-compare" style="display:none;flex-direction:column;gap:24px">
-<!--
-BUILD NOTE: PLAN COMPARISON + BACK-TO-BACK PLANS (not displayed)
-- Up to 4 plans can be compared at once ("Generate more than one plan"); slots beyond 4 are disabled.
-- Variants are generated automatically from the main plan (drop lowest margin, add an excluded
-  order, fastest delivery, highest margin). Each variant is a full plan with its own 6 tabs.
-- "Make main plan" swaps it in as the Original plan, re-runs all tabs and opens Tab 6.
-  Other variants stay as drafts. Any change to the main plan refreshes every column here.
-- Follow-on plans (Plan 2) cover a later date window. They are NOT alternatives, so they sit
-  on the Plan timeline, not as columns. On overlapping days, capacity, labour and material are
-  checked across BOTH plans together; clashes appear as bottlenecks in both plans
-  (Tabs 3 and 4) and in "Overlap check". Changing either plan re-runs the overlap check.
-- The key financial figure (contribution margin from Tab 5) is always the last row here.
--->
-    <!-- plan timeline + overlap -->
-    <section class="card">
-      <div class="card-h"><h3>Plan timeline <small>Plans running back to back</small></h3><button class="pill">+ Add follow-on plan</button></div>
-      <div style="padding:0 20px 18px;display:flex;flex-direction:column;gap:14px">
-        <div class="tl"><div class="tl-row tl-h"><span class="tl-l"></span><span class="">13</span><span class="">14</span><span class="sun">15</span><span class="">16</span><span class="">17</span><span class="">18</span><span class="">19</span><span class="">20</span><span class="">21</span><span class="sun">22</span><span class="">23</span><span class="">24</span><span class="">25</span><span class="">26</span><span class="">27</span><span class="">28</span><span class="sun">29</span><span class="">30</span><span class="">1</span><span class="">2</span></div>
-<div class="tl-row"><span class="tl-l"><b>Plan A</b><small>Main · 4 orders</small></span><i class="tl-c" style="grid-column:2"></i><i class="tl-c" style="grid-column:3"></i><i class="tl-c sun" style="grid-column:4"></i><i class="tl-c" style="grid-column:5"></i><i class="tl-c" style="grid-column:6"></i><i class="tl-c" style="grid-column:7"></i><i class="tl-c" style="grid-column:8"></i><i class="tl-c" style="grid-column:9"></i><i class="tl-c" style="grid-column:10"></i><i class="tl-c sun ov" style="grid-column:11"></i><i class="tl-c ov" style="grid-column:12"></i><i class="tl-c ov" style="grid-column:13"></i><i class="tl-c" style="grid-column:14"></i><i class="tl-c" style="grid-column:15"></i><i class="tl-c" style="grid-column:16"></i><i class="tl-c" style="grid-column:17"></i><i class="tl-c sun" style="grid-column:18"></i><i class="tl-c" style="grid-column:19"></i><i class="tl-c" style="grid-column:20"></i><i class="tl-c" style="grid-column:21"></i><b class="tl-b a" style="grid-column:2/14">13 – 24 Nov</b></div>
-<div class="tl-row"><span class="tl-l"><b>Plan 2</b><small>Follow-on · draft · 3 orders</small></span><i class="tl-c" style="grid-column:2"></i><i class="tl-c" style="grid-column:3"></i><i class="tl-c sun" style="grid-column:4"></i><i class="tl-c" style="grid-column:5"></i><i class="tl-c" style="grid-column:6"></i><i class="tl-c" style="grid-column:7"></i><i class="tl-c" style="grid-column:8"></i><i class="tl-c" style="grid-column:9"></i><i class="tl-c" style="grid-column:10"></i><i class="tl-c sun ov" style="grid-column:11"></i><i class="tl-c ov" style="grid-column:12"></i><i class="tl-c ov" style="grid-column:13"></i><i class="tl-c" style="grid-column:14"></i><i class="tl-c" style="grid-column:15"></i><i class="tl-c" style="grid-column:16"></i><i class="tl-c" style="grid-column:17"></i><i class="tl-c sun" style="grid-column:18"></i><i class="tl-c" style="grid-column:19"></i><i class="tl-c" style="grid-column:20"></i><i class="tl-c" style="grid-column:21"></i><b class="tl-b f" style="grid-column:11/22">22 Nov – 2 Dec</b></div>
-</div>
-        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
-          <span style="font-size:13px;font-weight:600;color:#334155">Overlap check · 22–24 Nov</span>
-          <span class="bn" style="padding:6px 14px;font-size:13px"><span class="bn-dot"></span><b>CNC 01 +6 hrs</b><span>23 Nov · ORD-1043 (Plan A) &amp; ORD-1047 (Plan 2)</span></span>
-          <span class="tag ok">Press 01 OK</span><span class="tag ok">Labour OK</span><span class="tag ok">Steel OK after express PO</span>
-        </div>
-      </div>
-    </section>
 
-    <!-- assistant summary -->
-    <section style="border:1px solid #E9DDFE;background:#FAF7FF;border-radius:16px;padding:18px 22px;display:flex;gap:14px;align-items:flex-start">
-      <span class="ai" style="flex:none">✦ Summary</span>
-      <span style="font-size:14px;color:#334155;line-height:1.55"><b>Plan C</b> earns ₹1.44 L more than Plan A, but needs 2 more fixes, ships ORD-1035 a day late and drops below your 18% margin minimum. <b>Plan B</b> has the best margin and frees CNC 01 from 21 Nov, but leaves ₹12 L of sales out. <b>Plan A</b> is the balanced choice.</span>
-    </section>
-
-    <!-- side-by-side -->
-    <section class="card">
-      <div class="card-h">
-        <h3>Compare plans <small>3 of 4 slots used</small></h3>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-          <span style="font-size:13px;color:#64748B">Suggested:</span>
-          <button class="pill">Fastest delivery</button>
-          <button class="pill">All deadlines + max value</button>
-          <button class="primary" style="min-height:36px;padding:8px 16px;font-size:13px">+ Generate variant</button>
-        </div>
-      </div>
-      <div style="overflow-x:auto">
-      <table class="cmp-t">
-        <thead><tr>
-          <th></th>
-          <th class="ph main"><div class="ph-t"><b>Plan A</b><span class="tag bl">Main plan</span></div><small>All 4 orders · 2 fixes</small><span class="tag ok">Feasible</span></th>
-          <th class="ph"><div class="ph-t"><b>Plan B</b><span class="tag lo">Variant</span></div><small>Drop lowest margin (ORD-1043)</small><span class="tag ok">Feasible</span></th>
-          <th class="ph"><div class="ph-t"><b>Plan C</b><span class="tag lo">Variant</span></div><small>Add ORD-1035, Ashok Leyland</small><span class="tag md">Capacity stretched</span></th>
-          <th class="ph slot"><button class="slot-b">+<small>Generate another plan</small></button></th>
-        </tr></thead>
-        <tbody>
-          <tr><th scope="row">Orders in plan</th>
-            <td class="cv"><div class="ocs"><span class="oc">1044</span><span class="oc">1041</span><span class="oc">1042</span><span class="oc">1043</span></div></td>
-            <td class="cv"><div class="ocs"><span class="oc">1044</span><span class="oc">1041</span><span class="oc">1042</span><span class="oc drop">1043</span></div></td>
-            <td class="cv"><div class="ocs"><span class="oc">1044</span><span class="oc">1041</span><span class="oc">1042</span><span class="oc">1043</span><span class="oc add">1035</span></div></td>
-            <td class="cv empty"></td></tr>
-          <tr><th scope="row">Orders</th><td class="cv"><span>4</span></td><td class="cv"><span>3</span></td><td class="cv"><span>5</span></td><td class="cv empty"></td></tr><tr><th scope="row">Production days</th><td class="cv"><span>12</span></td><td class="cv best"><span>8</span></td><td class="cv"><span>15</span></td><td class="cv empty"></td></tr><tr><th scope="row">Machine utilisation</th><td class="cv"><span>94%</span></td><td class="cv best"><span>71%</span></td><td class="cv"><span style="color:#B42318;font-weight:600">102%</span></td><td class="cv empty"></td></tr><tr><th scope="row">Bottlenecks</th><td class="cv best"><span>0</span></td><td class="cv best"><span>0</span></td><td class="cv"><span style="color:#B42318;font-weight:600">2</span></td><td class="cv empty"></td></tr><tr><th scope="row">Material shortage</th><td class="cv best"><span>0</span></td><td class="cv best"><span>0</span></td><td class="cv"><span style="color:#B42318;font-weight:600">Steel −1,100 kg</span></td><td class="cv empty"></td></tr><tr><th scope="row">Labour shortage</th><td class="cv best"><span>0</span></td><td class="cv best"><span>0</span></td><td class="cv"><span style="color:#B42318;font-weight:600">Assembly −10 hrs</span></td><td class="cv empty"></td></tr><tr><th scope="row">Late deliveries</th><td class="cv best"><span>0</span></td><td class="cv best"><span>0</span></td><td class="cv"><span style="color:#B42318;font-weight:600">1 · ORD-1035</span></td><td class="cv empty"></td></tr><tr><th scope="row">Extra cost of fixes</th><td class="cv"><span>₹24,600</span></td><td class="cv best"><span>₹0</span></td><td class="cv"><span style="color:#9A5205;font-weight:600">₹65,600</span></td><td class="cv empty"></td></tr><tr><th scope="row">Sales value</th><td class="cv"><span>₹31.0 L</span></td><td class="cv"><span>₹19.0 L</span></td><td class="cv best"><span>₹45.2 L</span></td><td class="cv empty"></td></tr>
-          <tr class="sep"><th scope="row" colspan="5">Financials · from Financial analysis</th></tr>
-          <tr class="key"><th scope="row">Contribution</th><td class="cv"><span>₹6.60 L</span></td><td class="cv"><span>₹4.69 L</span></td><td class="cv best"><span>₹8.04 L</span></td><td class="cv empty"></td></tr><tr class="key"><th scope="row">Contribution margin</th><td class="cv"><span>21.3%</span></td><td class="cv best"><span>24.7%</span></td><td class="cv"><span style="color:#9A5205;font-weight:600">17.8%</span></td><td class="cv empty"></td></tr>
-          <tr class="act"><th scope="row"></th>
-            <td class="cv"><button class="pill" data-goto-plan="1" style="width:100%">Open in tabs</button></td>
-            <td class="cv"><div style="display:flex;flex-direction:column;gap:6px"><button class="dark" style="width:100%;min-height:36px;font-size:13px" data-make-main>Make main plan</button><button class="pill" style="width:100%">Open in tabs</button></div></td>
-            <td class="cv"><div style="display:flex;flex-direction:column;gap:6px"><button class="dark" style="width:100%;min-height:36px;font-size:13px" data-make-main>Make main plan</button><button class="pill" style="width:100%">Open in tabs</button></div></td>
-            <td class="cv empty"></td></tr>
-        </tbody>
-      </table>
-      </div>
-      <div style="padding:12px 20px;border-top:1px solid #EEF1F5;background:#F8FAFC;font-size:12px;color:#64748B;display:flex;gap:16px;flex-wrap:wrap">
-        <span><span class="best-sw"></span> Best in row</span><span>Plans recalculate when the main plan or any order changes</span>
-      </div>
-    </section>
-  </section>
 
 </main>
 
@@ -1052,7 +959,7 @@ BUILD NOTE: PLAN COMPARISON + BACK-TO-BACK PLANS (not displayed)
       <span style="width:40px;height:40px;border-radius:50%;background:#FDECEC;color:#B42318;display:grid;place-items:center;font-weight:700;flex:none">!</span>
       <div style="display:flex;flex-direction:column;gap:4px">
         <h3 id="warn-t" style="margin:0;font-size:18px;font-weight:600">Moving <span class="mono" id="warn-id">ORD-1042</span> creates bottlenecks</h3>
-        <p style="margin:0;font-size:14px;color:#64748B">Here's what changes if you continue. You can still fix these later in Resource feasibility.</p>
+        <p style="margin:0;font-size:14px;color:#64748B">Here's what changes if you continue.</p>
       </div>
     </div>
     <div>
@@ -1087,13 +994,13 @@ BUILD NOTE: PLAN COMPARISON + BACK-TO-BACK PLANS (not displayed)
 <script>
 // visual-only switching
 const tabs=[...document.querySelectorAll('.steps a')];
-const names={2:'Proposed manufacturing sequence',3:'Production schedule',4:'Resource feasibility',5:'Financial analysis',6:'Final plan approval'};
+const names={2:'Proposed manufacturing sequence',3:'Production schedule',5:'Financial analysis',6:'Final plan approval'};
 let generated=false;
 function show(n){
   n=+n;
   tabs.forEach(t=>t.classList.toggle('on',t.dataset.tab==n));
-  const built=[1].concat(generated?[2,3,4,5,6]:[]);   // tabs that are designed so far
-  [1,2,3,4,5,6].forEach(i=>document.getElementById('tab-'+i).classList.toggle('on',n===i&&built.includes(i)));
+  const built=[1].concat(generated?[2,3,5,6]:[]);   // tabs that are designed so far
+  [1,2,3,5,6].forEach(i=>document.getElementById('tab-'+i).classList.toggle('on',n===i&&built.includes(i)));
   const locked=!built.includes(n);
   document.getElementById('tab-locked').classList.toggle('on',locked);
   if(locked)document.getElementById('locked-title').textContent=names[n]+(generated?' · coming next':' · no plan generated yet');
@@ -1112,11 +1019,8 @@ document.querySelectorAll('[data-goto]').forEach(b=>b.onclick=e=>{e.preventDefau
 document.querySelectorAll('.primary').forEach(b=>{if(/Generate plan|Recalculate plan/.test(b.textContent))b.addEventListener('click',generate)});
 if(location.hash==='#tab2')generate();
 if(location.hash==='#tab3'){generate();show(3);}
-if(location.hash==='#tab4'){generate();show(4);}
 if(location.hash==='#tab5'){generate();show(5);}
 if(location.hash==='#tab6'){generate();show(6);}
-if(location.hash==='#compare'){generate();setTimeout(()=>document.querySelector('.seg button[data-mode=compare]').click(),0);}
-document.querySelectorAll('[data-make-main],[data-goto-plan]').forEach(b=>b.addEventListener('click',()=>{document.querySelector('.seg button[data-mode=plan]').click();if(!generated)generate();show(b.hasAttribute('data-make-main')?6:2);}));
 document.querySelectorAll('#tab-2 .seg button').forEach(b=>b.onclick=()=>b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)));
 document.querySelectorAll('#fin-seg button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('#fin-seg button').forEach(x=>x.classList.toggle('on',x===b));
@@ -1124,7 +1028,7 @@ document.querySelectorAll('#fin-seg button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('#tab-5 [data-a]').forEach(e=>e.textContent=e.dataset[v]);
   document.querySelectorAll('#tab-5 [data-wa]').forEach(e=>e.style.width=e.dataset['w'+v]);
 });
-document.querySelectorAll('.wo input').forEach(r=>r.addEventListener('change',()=>document.querySelectorAll(`.wo input[name=${r.name}]`).forEach(x=>x.closest('.wo').classList.toggle('sel',x.checked))));
+
 
 // tooltip on bars
 const tip=document.getElementById('tip');
@@ -1156,11 +1060,13 @@ document.querySelectorAll('.pl-row .g-grip').forEach(g=>{
 });
 function openWarn(id){if(id)document.getElementById('warn-id').textContent=id;document.getElementById('warn-modal').style.display='flex';}
 function closeWarn(){document.getElementById('warn-modal').style.display='none';}
-document.querySelectorAll('.seg[aria-label="Plan view"] button').forEach(b=>b.onclick=()=>{
-  document.querySelectorAll('.seg[aria-label="Plan view"] button').forEach(x=>x.classList.toggle('on',x===b));
-  const c=b.dataset.mode==='compare';
-  document.getElementById('mode-plan').style.display=c?'none':'flex';
-  document.getElementById('mode-compare').style.display=c?'flex':'none';
+
+
+// tab 1: click an option to highlight it on the timeline
+document.querySelectorAll('#sel-opts th[data-opt]').forEach(h=>h.onclick=()=>{
+  document.querySelectorAll('#sel-opts th[data-opt]').forEach(x=>x.classList.toggle('main',x===h));
+  document.querySelector('.ot-dd').open=true;
+  document.querySelectorAll('.ot-g[data-opt]').forEach(g=>g.classList.toggle('on',g.dataset.opt===h.dataset.opt||g.dataset.opt==='run'&&false));
 });
 </script>
 </body>

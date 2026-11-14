@@ -7,7 +7,7 @@ from fastapi import APIRouter, Cookie, Request, Response
 from app.core.auth import CurrentPrincipal, TenantDB
 from app.core.config import get_settings
 from app.core.errors import Unauthorized
-from app.core.schemas import LoginRequest, MeResponse, SwitchCompanyRequest, TokenResponse
+from app.core.schemas import LoginRequest, MeResponse, TokenResponse
 from app.core.services import auth as svc
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -42,13 +42,6 @@ async def refresh(response: Response, erp_refresh: Annotated[str | None, Cookie(
     if not erp_refresh:
         raise Unauthorized("Not signed in.")
     return _respond(response, await svc.refresh(erp_refresh))
-
-
-@router.post("/switch-company")
-async def switch_company(
-    body: SwitchCompanyRequest, principal: CurrentPrincipal, response: Response
-) -> TokenResponse:
-    return _respond(response, await svc.switch_company(principal.user_id, body.tenant_id))
 
 
 @router.post("/logout", status_code=204)

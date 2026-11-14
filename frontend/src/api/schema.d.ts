@@ -106,23 +106,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/auth/switch-company": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Switch Company */
-        post: operations["switch_company_api_auth_switch_company_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/catalog/products": {
         parameters: {
             query?: never;
@@ -1731,14 +1714,6 @@ export interface components {
              */
             tone: "hi" | "md" | "lo" | "ok" | "bl";
         };
-        /** SwitchCompanyRequest */
-        SwitchCompanyRequest: {
-            /**
-             * Tenant Id
-             * Format: uuid
-             */
-            tenant_id: string;
-        };
         /** TokenResponse */
         TokenResponse: {
             /** Access Token */
@@ -2002,39 +1977,6 @@ export interface operations {
             };
         };
         requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TokenResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    switch_company_api_auth_switch_company_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SwitchCompanyRequest"];
-            };
-        };
         responses: {
             /** @description Successful Response */
             200: {
