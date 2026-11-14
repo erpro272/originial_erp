@@ -74,3 +74,28 @@ async def test_old_demo_database_gets_the_current_planning_demo_once(tenants) ->
         assert not await planning_demo.upgrade_if_old(s, tenants["second"])
         await s.rollback()
     await eng.dispose()
+
+
+async def test_old_two_company_demo_login_is_fixed(tenants) -> None:  # type: ignore[no-untyped-def]
+    """Old DBs: owner@demo.example was in both companies -> stuck on "Choose a company" without a picker."""
+    from app.core.models import Membership, User
+
+    eng = create_async_engine(get_settings().database_owner_url)
+    async with async_sessionmaker(eng)() as s:
+        owner = (
+            await s.execute(text("SELECT id FROM users WHERE email = 'owner@demo.example'"))
+        ).scalar_one()
+        s.add(Membership(tenant_id=tenants["second"], user_id=owner, role="owner"))
+        real = User(email="real@second.example", full_name="Real", password_hash="x")
+        s.add(real)
+        await s.flush()
+        s.add(Membership(tenant_id=tenants["demo"], user_id=real.id, role="owner"))
+        s.add(Membership(tenant_id=tenants["second"], user_id=real.id, role="owner"))
+        await s.flush()
+        assert await seed_run.drop_stale_demo_memberships(s) == 1
+        q = "SELECT count(*) FROM memberships WHERE user_id = :u"
+        assert (await s.execute(text(q), {"u": owner})).scalar_one() == 1
+        assert (await s.execute(text(q), {"u": real.id})).scalar_one() == 2  # a real user is never touched
+        assert await seed_run.drop_stale_demo_memberships(s) == 0
+        await s.rollback()
+    await eng.dispose()

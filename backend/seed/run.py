@@ -19,7 +19,7 @@ import asyncio
 import os
 import uuid
 
-from sqlalchemy import select, text
+from sqlalchemy import delete, select, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.core import audit
@@ -135,6 +135,26 @@ async def has_business_data(session: AsyncSession, tenant_id: uuid.UUID) -> bool
     return False
 
 
+async def drop_stale_demo_memberships(session: AsyncSession) -> int:
+    """Old demo DBs gave owner@demo.example BOTH companies (company picker era). One company per
+    website now has no picker, so that login got stuck on "Choose a company". Remove memberships of
+    the seed users in seed companies that USERS no longer lists. Real users are never touched."""
+    tenants = {t.slug: t.id for t in (await session.execute(select(Tenant))).scalars()}
+    users = {u.email: u.id for u in (await session.execute(select(User))).scalars()}
+    removed = 0
+    for email, _, roles in USERS:
+        if email not in users:
+            continue
+        keep = [tenants[slug] for slug, _ in roles if slug in tenants]
+        stale = [tid for slug, tid in tenants.items() if slug in dict(TENANTS) and tid not in keep]
+        if stale:
+            res = await session.execute(
+                delete(Membership).where(Membership.user_id == users[email], Membership.tenant_id.in_(stale))
+            )
+            removed += res.rowcount or 0  # type: ignore[attr-defined]
+    return removed
+
+
 async def seed_missing(session: AsyncSession) -> list[str]:
     """Add demo business data to the demo companies that have NONE. Returns the slugs filled.
 
@@ -184,6 +204,8 @@ async def main() -> None:
         elif (await session.execute(select(Tenant.id).limit(1))).first() is not None:
             if not args.if_empty:
                 raise SystemExit("Already seeded. Use --reset to start over.")
+            if dropped := await drop_stale_demo_memberships(session):
+                print(f"seed: removed {dropped} old demo company membership(s) (one company per website)")
             filled = await seed_missing(session)
             print(f"seed: demo data added to {filled}" if filled else "seed: nothing to add")
             await engine.dispose()
