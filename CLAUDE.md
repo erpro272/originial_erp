@@ -98,7 +98,9 @@ isolation). One company per website: no company picker or switcher in the UI.
   `seed/planning_demo.py` (idempotent upsert; `python -m seed.planning_demo` fixes an old DB in place).
   Bump `engine.ENGINE_VERSION` whenever engine logic changes (saved results then recalculate). Startup
   (`seed.run --if-empty`) only runs with `ERP_SEED_DEMO=true` (compose/dev), fills demo data into
-  demo companies with no business data, never touches a company with data; `--reset` is refused
+  demo companies with no business data, never touches a company with data (exception: a demo company
+  seeded with an older planning demo gets the current one ONCE — bump `planning_demo.DEMO_VERSION` when the
+  scenario changes); `--reset` is refused
   when `ERP_ENV=prod`. The seed role is a superuser (RLS does not filter it): always filter by
   `tenant_id` explicitly in seed code and seed tests.
 

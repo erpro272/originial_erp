@@ -3,7 +3,9 @@
     python -m seed.run             # seed (fails if already seeded)
     python -m seed.run --if-empty  # dev startup (compose): needs ERP_SEED_DEMO=true, else does nothing.
                                    # Seeds a fresh database, and fills demo data into demo companies
-                                   # that have none. Never touches a company that has any data.
+                                   # that have none. A demo company seeded with an older planning
+                                   # demo gets the current one once (planning_demo.DEMO_VERSION);
+                                   # any other company with data is never touched.
     python -m seed.run --reset     # wipe all data, then seed (refused when ERP_ENV=prod)
 
 Logins (password from ERP_SEED_PASSWORD, default ``Demo@12345``):
@@ -27,6 +29,7 @@ from app.core.keys import create_tenant_key
 from app.core.models import Membership, Tenant, User
 from app.core.permissions import Role
 from app.core.security import hash_password
+from seed import planning_demo
 from seed.demo_data import seed_demo, seed_second
 
 PASSWORD = os.environ.get("ERP_SEED_PASSWORD", "Demo@12345")
@@ -153,7 +156,10 @@ async def seed_missing(session: AsyncSession) -> list[str]:
         if slug not in ids:
             continue
         if await has_business_data(session, ids[slug]):
-            print(f"seed: company '{slug}' already has data, left untouched")
+            if slug == "demo" and await planning_demo.upgrade_if_old(session, ids[slug]):
+                print("seed: demo company updated to the current planning demo (one time)")
+            else:
+                print(f"seed: company '{slug}' already has data, left untouched")
             continue
         await (seed_demo(session, ids[slug], owner) if slug == "demo" else seed_second(session, ids[slug]))
         filled.append(slug)

@@ -30,6 +30,7 @@ from app.catalog.models import Material, MaterialStock, Product, ProductMaterial
 from app.core import clock
 from app.core.config import get_settings
 from app.core.db import set_tenant
+from app.core.models import TenantSetting
 from app.orders.models import Order
 from app.planning.models import Department, Machine, RouteStep
 
@@ -100,6 +101,10 @@ RUNNING = {
     "ORD-1042": ("in_production", 85),
     "ORD-1039": ("planned", 0),
 }
+# Bump when the scenario above changes: dev startup then re-applies it ONCE to old demo databases.
+DEMO_VERSION = 3
+VERSION_KEY = "seed.planning-demo"
+
 # Company rule defaults (planning-rules), used only to derive the demo material prices.
 OVERHEAD_PCT = 7.0
 PACKAGING_PAISE = 5
@@ -221,8 +226,61 @@ async def upsert(s: AsyncSession, tenant_id: uuid.UUID) -> dict[str, Any]:
         bom_code, _, _, bom_qty = BOMS[pname]
         units = float(o.quantity) * float(bom_qty)
         materials[bom_code].price_per_unit_paise = max(0, round(mat_cost / units))
+    await _set_version(s, tenant_id, DEMO_VERSION)
     await s.flush()
     return {"machines": len(machines), "candidates": len(CANDIDATES), "running": len(RUNNING)}
+
+
+async def _version(s: AsyncSession, tenant_id: uuid.UUID) -> int:
+    row = (
+        await s.execute(
+            select(TenantSetting).where(
+                TenantSetting.tenant_id == tenant_id, TenantSetting.key == VERSION_KEY
+            )
+        )
+    ).scalar_one_or_none()
+    return int(row.value.get("version", 0)) if row else 0
+
+
+async def _set_version(s: AsyncSession, tenant_id: uuid.UUID, version: int) -> None:
+    row = (
+        await s.execute(
+            select(TenantSetting).where(
+                TenantSetting.tenant_id == tenant_id, TenantSetting.key == VERSION_KEY
+            )
+        )
+    ).scalar_one_or_none()
+    if row is None:
+        s.add(TenantSetting(key=VERSION_KEY, value={"version": version}))
+    else:
+        row.value = {"version": version}
+
+
+async def is_demo_company(s: AsyncSession, tenant_id: uuid.UUID) -> bool:
+    """The company still has every demo order and product the scenario is built on."""
+    nums = [*CANDIDATES, *RUNNING]
+    found = (
+        await s.execute(select(Order.number).where(Order.tenant_id == tenant_id, Order.number.in_(nums)))
+    ).scalars()
+    names = (
+        await s.execute(
+            select(Product.name).where(Product.tenant_id == tenant_id, Product.name.in_(list(ROUTES)))
+        )
+    ).scalars()
+    return set(found) == set(nums) and set(names) == set(ROUTES)
+
+
+async def upgrade_if_old(s: AsyncSession, tenant_id: uuid.UUID) -> bool:
+    """Apply the scenario once to a demo database seeded before DEMO_VERSION (dev startup only).
+
+    Skipped when the company is already on this version (so the owner's later ticks and edits are kept)
+    or when it does not hold the demo orders/products (a real company is never touched).
+    """
+    await set_tenant(s, tenant_id)
+    if await _version(s, tenant_id) >= DEMO_VERSION or not await is_demo_company(s, tenant_id):
+        return False
+    await upsert(s, tenant_id)
+    return True
 
 
 async def main() -> None:
