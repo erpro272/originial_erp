@@ -88,6 +88,11 @@ services:
     environment:
       VITE_API_PROXY: http://api:8000
     ports: ["5173:5173"]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:5173/"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
     volumes: ["./frontend/src:/app/src", "./frontend/public:/app/public", "./frontend/vite.config.ts:/app/vite.config.ts:ro"]
     depends_on:
       api: { condition: service_healthy }
