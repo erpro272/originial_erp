@@ -413,6 +413,7 @@ export function CustomersTab() {
             <SearchBox
               label="Search customers"
               placeholder="Search name, GSTIN, phone"
+              width={190}
               value={search}
               onChange={(v) => (setSearch(v), setOffset(0))}
             />

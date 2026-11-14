@@ -58,7 +58,9 @@ export function PeriodButton({ range }: { range?: { date_from: string; date_to: 
   const p = usePeriod();
   const label = range
     ? `${longDate(range.date_from)} – ${longDate(range.date_to)}`
-    : "Reporting period";
+    : p.preset === "custom" && p.date_from && p.date_to
+      ? `${longDate(p.date_from)} – ${longDate(p.date_to)}`
+      : (PRESETS.find((x) => x.value === p.preset)?.label ?? "Reporting period");
   return (
     <Popover>
       <PopoverTrigger asChild>

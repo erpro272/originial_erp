@@ -49,11 +49,13 @@ export function SearchBox({
   onChange,
   placeholder = "Search",
   label,
+  width = 140,
 }: {
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
   label: string;
+  width?: number;
 }) {
   return (
     <label className="flex items-center gap-2 rounded-full border border-line-input px-3.5 text-[13px] text-muted">
@@ -74,7 +76,8 @@ export function SearchBox({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-[140px] border-0 bg-transparent py-2 font-sans text-[13px] text-ink outline-none"
+        style={{ width }}
+        className="border-0 bg-transparent py-2 font-sans text-[13px] text-ink outline-none"
       />
     </label>
   );
