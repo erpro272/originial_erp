@@ -13,6 +13,7 @@ import { ImportsPage } from "@/modules/invoices/ImportsPage";
 import { ReviewPage } from "@/modules/invoices/ReviewPage";
 import { OrdersLayout } from "@/modules/orders/OrdersLayout";
 import { OrdersReceivedTab } from "@/modules/orders/OrdersReceivedTab";
+import { PlanningPage } from "@/modules/planning/PlanningPage";
 import { MODULES } from "./nav";
 
 const DesignPage = import.meta.env.DEV
@@ -53,7 +54,8 @@ export function App() {
           />
           <Route path="customers/:id" element={<CustomerProfile />} />
         </Route>
-        {MODULES.filter((m) => m.key !== "orders").map((m) => (
+        <Route path="/planning" element={<PlanningPage />} />
+        {MODULES.filter((m) => m.key !== "orders" && m.key !== "planning").map((m) => (
           <Route key={m.key} path={`${m.path}/*`} element={<ComingSoonPage module={m} />} />
         ))}
         <Route
