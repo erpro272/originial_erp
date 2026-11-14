@@ -82,7 +82,11 @@ company picker), `planner@`, `purchaser@`, `accountant@demo.example`, `owner@sec
   (`put_encrypted`); served only via `/api/files/<signed token>` (5 min).
   Sample invoices: `samples/invoices/*` + matching mock fixtures; regenerate both with
   `uv run python -m scripts.make_sample_invoices`.
-- Seed: `seed/demo_data.py` (dates relative to today; mirrors the Orders mockup).
+- Seed: `seed/demo_data.py` (dates relative to today; mirrors the Orders mockup). Startup
+  (`seed.run --if-empty`) only runs with `ERP_SEED_DEMO=true` (compose/dev), fills demo data into
+  demo companies with no business data, never touches a company with data; `--reset` is refused
+  when `ERP_ENV=prod`. The seed role is a superuser (RLS does not filter it): always filter by
+  `tenant_id` explicitly in seed code and seed tests.
 
 ## Frontend conventions
 - Design system = the two mockups. Use tokens only (`bg-primary`, `text-ink`, `border-line`,

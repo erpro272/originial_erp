@@ -28,6 +28,16 @@ On first start the database is migrated and seeded. Sign in with any of these
 | `accountant@demo.example` | Accountant |
 | `owner@second.example` | Owner of the second company only |
 
+### After `git pull`: empty pages?
+Postgres data lives in a Docker volume that survives `git pull`. On startup the API now adds demo
+data to the demo companies that have none (dev only, `ERP_SEED_DEMO=true` in compose), and never
+touches a company that already has data. To start over with fresh demo data (**wipes the local
+database**):
+
+```bash
+docker compose exec api python -m seed.run --reset
+```
+
 To use the real AI for invoice extraction, put `ANTHROPIC_API_KEY=...` in a `.env` file
 next to `docker-compose.yml`. Without it the AI runs in mock mode.
 

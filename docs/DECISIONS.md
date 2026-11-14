@@ -64,3 +64,8 @@ Short records of choices and the reason for each. Newest at the bottom.
     template exists (`invoices/templates.py`, Maruti Suzuki PO); it applies only when its
     signature words are on the page, so every other upload goes to the AI as before. A
     purchase order read this way is shown for review but blocked from saving as an invoice.
+22. **Startup seeding is data-safe**: it checks each demo company for business data (not "any company
+    exists"), so an old database volume gets its demo data after `git pull`; a company with any
+    data is never touched; demo seeding is opt-in (`ERP_SEED_DEMO`), so a real deployment never
+    gets fake data; wiping (`--reset`) is refused in production. `.gitattributes` keeps `*.sh` on
+    Unix line endings for Windows checkouts.

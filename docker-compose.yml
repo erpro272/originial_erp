@@ -6,6 +6,7 @@ name: erp
 
 x-backend-env: &backend-env
   ERP_ENV: dev
+  ERP_SEED_DEMO: "true"  # dev only: fill demo data on startup (never set in production)
   ERP_DATABASE_URL: postgresql+asyncpg://erp_app:erp_app@postgres:5432/erp
   ERP_DATABASE_OWNER_URL: postgresql+asyncpg://erp_owner:erp_owner@postgres:5432/erp
   ERP_REDIS_URL: redis://redis:6379/0

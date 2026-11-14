@@ -17,7 +17,7 @@ logs: ## Follow logs of api, worker and web
 infra: ## Start only postgres, redis and minio (for running api/web on the host)
 	docker compose up -d --wait postgres redis minio
 api: ## Run the API on the host with reload
-	cd backend && uv run alembic upgrade head && uv run python -m seed.run --if-empty && uv run uvicorn app.main:app --reload --port 8000
+	cd backend && uv run alembic upgrade head && ERP_SEED_DEMO=true uv run python -m seed.run --if-empty && uv run uvicorn app.main:app --reload --port 8000
 worker: ## Run the background worker on the host
 	cd backend && uv run arq app.worker.WorkerSettings
 web: ## Run the web app on the host

@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="ERP_", env_file=".env", extra="ignore")
 
     env: str = "dev"  # dev | test | prod
+    # Dev convenience: `seed.run --if-empty` fills in demo data only when this is true.
+    seed_demo: bool = False
     app_name: str = "Brand"  # neutral placeholder until the product is named
 
     # Database. The API connects as a NON-owner role so row-level security applies.
