@@ -14,7 +14,8 @@ test("sign in with company picker, visit every module, sign out", async ({ page 
   for (const name of modules) {
     await nav.getByRole("link", { name }).click();
     await expect(page.getByRole("heading", { level: 1, name })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Coming soon" })).toBeVisible();
+    if (name === "Orders") await expect(page.getByText("All orders received")).toBeVisible();
+    else await expect(page.getByRole("heading", { name: "Coming soon" })).toBeVisible();
   }
 
   // Session survives a reload (refresh cookie).
