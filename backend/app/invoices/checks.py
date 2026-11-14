@@ -57,6 +57,10 @@ def run_checks(doc: dict[str, Any], today: date) -> list[Check]:
     def add(code: str, sev: Severity, path: str, msg: str) -> None:
         out.append(Check(code, sev, path, msg))
 
+    if doc.get("document_kind") == "purchase_order":
+        add("not_invoice", "error", "fields.invoice_number",
+            "This is a purchase order, not an invoice, so it can't be saved as a sale.")  # fmt: skip
+
     # --- needed to save into the ERP -----------------------------------------------------
     for key, label in (("invoice_number", "Invoice number"), ("invoice_date", "Invoice date"),
                        ("buyer_name", "Customer name"), ("grand_total", "Grand total")):  # fmt: skip

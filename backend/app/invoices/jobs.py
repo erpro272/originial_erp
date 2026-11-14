@@ -1,5 +1,7 @@
 """Background job: read an uploaded invoice (pages, QR, AI extraction)."""
 
+import asyncio
+import json
 import logging
 import re
 import uuid
@@ -8,11 +10,11 @@ from typing import Any
 
 from sqlalchemy import select
 
-from app.ai.service import AIError, InputFile, get_ai_client
+from app.ai.service import AIError, AIResult, InputFile, get_ai_client
 from app.core import keys
 from app.core.db import tenant_session
 from app.core.storage import get_decrypted, put_encrypted, tenant_key
-from app.invoices import files
+from app.invoices import files, templates
 from app.invoices.fields import SYSTEM_PROMPT, ai_schema, instructions
 from app.invoices.models import ExtractionRun, InvoiceUpload
 from app.invoices.normalize import build_document, overall_confidence
@@ -46,14 +48,25 @@ async def extract_invoice(_ctx: dict[str, Any], tenant_id: str, upload_id: str) 
             await put_encrypted(cipher, pk, files.png_bytes(img))
             page_keys.append(pk)
         qr = files.decode_qr(pages)
-        ai_file = (
-            InputFile(data, "application/pdf")
-            if fmt == "pdf"
-            else InputFile(files.ai_image(data), "image/jpeg")
-        )
-        client = get_ai_client()
-        result = await client.extract_json(task="invoice", system=SYSTEM_PROMPT, instructions=instructions(),
-                                           schema=ai_schema(), files=[ai_file], fixture_hint=fixture_hint(name))  # fmt: skip
+        matched = await asyncio.to_thread(templates.extract, pages)
+        if matched is not None:  # a known layout: read with OCR, no AI
+            tpl, out = matched
+            result = AIResult(
+                data=out,
+                raw_text=json.dumps(out),
+                model=f"template:{tpl.id}",
+                mode="template",
+                stop_reason=None,
+            )
+        else:
+            ai_file = (
+                InputFile(data, "application/pdf")
+                if fmt == "pdf"
+                else InputFile(files.ai_image(data), "image/jpeg")
+            )
+            client = get_ai_client()
+            result = await client.extract_json(task="invoice", system=SYSTEM_PROMPT, instructions=instructions(),
+                                               schema=ai_schema(), files=[ai_file], fixture_hint=fixture_hint(name))  # fmt: skip
         if result.data is None:
             raise AIError("The AI declined to read this document.")
         doc = build_document(result.data, qr)
@@ -73,7 +86,7 @@ async def extract_invoice(_ctx: dict[str, Any], tenant_id: str, upload_id: str) 
         cipher = await keys.get_cipher(s, tid)
         version = (await s.execute(select(ExtractionRun.version).where(ExtractionRun.upload_id == uid)
                                    .order_by(ExtractionRun.version.desc()).limit(1))).scalar_one_or_none() or 0  # fmt: skip
-        s.add(ExtractionRun(upload_id=uid, version=version + 1, source="model", model=result.model,
+        s.add(ExtractionRun(upload_id=uid, version=version + 1, source="template" if matched else "model", model=result.model,
                             raw_output="enc:" + cipher.encrypt(result.raw_text, "extraction.raw").hex(),
                             data=seal(doc, cipher)))  # fmt: skip
         conf = overall_confidence(doc)

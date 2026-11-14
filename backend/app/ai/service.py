@@ -33,7 +33,7 @@ class AIResult:
     data: dict[str, Any] | None  # parsed JSON, or None if the model refused
     raw_text: str
     model: str
-    mode: Literal["live", "mock"]
+    mode: Literal["live", "mock", "template"]
     stop_reason: str | None
     usage: dict[str, int] = field(default_factory=dict)
 
@@ -47,7 +47,7 @@ class AIError(Exception):
 
 
 class AIClient(Protocol):
-    mode: Literal["live", "mock"]
+    mode: Literal["live", "mock", "template"]
 
     async def extract_json(
         self,
@@ -72,7 +72,7 @@ def _content_block(f: InputFile) -> dict[str, Any]:
 
 
 class AnthropicAIClient:
-    mode: Literal["live", "mock"] = "live"
+    mode: Literal["live", "mock", "template"] = "live"
 
     def __init__(self, api_key: str, model: str) -> None:
         self._client = anthropic.AsyncAnthropic(api_key=api_key, max_retries=3)
@@ -130,7 +130,7 @@ class AnthropicAIClient:
 class MockAIClient:
     """Returns ``fixtures/<task>/<fixture_hint>.json`` (or ``default.json``)."""
 
-    mode: Literal["live", "mock"] = "mock"
+    mode: Literal["live", "mock", "template"] = "mock"
 
     def __init__(self, fixtures_dir: Path = FIXTURES) -> None:
         self.fixtures_dir = fixtures_dir

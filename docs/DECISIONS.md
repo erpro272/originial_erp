@@ -59,3 +59,8 @@ Short records of choices and the reason for each. Newest at the bottom.
     merged, not deleted.
 20. **Read-only joins across modules for display** (orders list shows customer and product
     names via SQL joins). Writes never cross modules: merges call each module's service.
+21. **Layout templates (trial)**: a known layout can be read with OCR (Tesseract) from fixed
+    boxes, lined up to the scan by two anchor words, before any AI call. Only one trial
+    template exists (`invoices/templates.py`, Maruti Suzuki PO); it applies only when its
+    signature words are on the page, so every other upload goes to the AI as before. A
+    purchase order read this way is shown for review but blocked from saving as an invoice.

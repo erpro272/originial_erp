@@ -37,6 +37,7 @@ jobs:
         working-directory: .
         env: { PGHOST: localhost, PGPASSWORD: erp_owner, POSTGRES_USER: erp_owner, POSTGRES_DB: erp }
         run: sh infra/postgres/01-roles.sh
+      - run: sudo apt-get install -y --no-install-recommends tesseract-ocr
       - run: uv sync --frozen --python 3.12
       - run: uv run ruff check .
       - run: uv run ruff format --check .

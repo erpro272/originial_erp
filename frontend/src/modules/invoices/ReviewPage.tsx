@@ -276,6 +276,12 @@ function Review({ detail, spec }: { detail: UploadDetail; spec: FieldSpec }) {
         )}
       </div>
       {u.ai_mode === "mock" && <MockNotice />}
+      {u.ai_mode === "template" && (
+        <div className="rounded-xl border border-line bg-surface px-4 py-3 text-[13px] text-ink-2">
+          <b className="text-ink">Read with a layout template (OCR, no AI).</b> The fields were read
+          from fixed places on this layout. Check them against the original.
+        </div>
+      )}
       {u.status === "failed" && <p className="m-0 text-sm text-hi">{u.error}</p>}
 
       <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">

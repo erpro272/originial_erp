@@ -42,6 +42,9 @@
 - Later: Dashboard tab (owner will specify), Purchasing, Production, Billing, Finance,
   AI assistant panel.
 
+## Trial
+- Layout template (OCR, no AI) for the Maruti Suzuki PO sample: `samples/templates/`. Not a default.
+
 ## Known follow-ups
 - Frontend bundle: split per module with lazy routes (now worth doing).
 - E-invoice QR: payload is decoded and cross-checked; verifying the IRP signature needs

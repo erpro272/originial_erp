@@ -107,6 +107,7 @@ def build_document(ai: dict[str, Any], qr: dict[str, Any] | None) -> dict[str, A
     lines_in = ai.get("lines") or []
     return {
         "is_invoice": bool(ai.get("is_invoice", True)),
+        "document_kind": ai.get("document_kind", "invoice"),
         "fields": {f.key: _cell(f.type, fields_in.get(f.key)) for f in FIELDS},
         "lines": [{f.key: _cell(f.type, (ln or {}).get(f.key)) for f in LINE_FIELDS} for ln in lines_in],
         "qr": qr,

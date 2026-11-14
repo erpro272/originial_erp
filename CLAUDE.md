@@ -106,3 +106,5 @@ company picker), `planner@`, `purchaser@`, `accountant@demo.example`, `owner@sec
 - Official MinIO images are gone from Docker Hub; compose uses the community build
   `pgsty/minio` pinned by digest. The API creates the bucket on startup.
 - In this cloud sandbox, Docker builds need the proxy CA (not needed on a normal machine).
+- Tesseract is needed by the worker for layout templates (installed in the backend Dockerfile).
+  In this sandbox Debian mirrors are blocked, so the worker runs on the host (`make worker`).
