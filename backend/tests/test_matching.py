@@ -20,6 +20,7 @@ async def co() -> Company:
     await f.customer(c.id, "Bajaj Auto", phone="+91 98100 22222")
     await f.customer(c.id, "Hero MotoCorp")
     await f.customer(c.id, "Hero Cycles")
+    await f.customer(c.id, "Hosur Auto Components")
     return c
 
 
@@ -45,6 +46,7 @@ def test_clean_name() -> None:
         ),
         ({"buyer_name": "Hero"}, "ambiguous", None),  # two similar customers
         ({"buyer_name": "Kaveri Auto Components"}, "new", None),
+        ({"buyer_name": "Kaveri Auto Components Pvt Ltd"}, "new", None),  # shares only generic words
     ],
 )
 async def test_match(co: Company, fields: dict, kind: str, who: str | None) -> None:  # type: ignore[type-arg]

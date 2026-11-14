@@ -66,6 +66,13 @@ async function authFetch(input: Request): Promise<Response> {
   return res;
 }
 
+/** For requests openapi-fetch can't express (multipart uploads). Same auth + refresh. */
+export function apiFetch(path: string, init?: RequestInit): Promise<Response> {
+  return authFetch(
+    new Request(`${location.origin}${path}`, { credentials: "same-origin", ...init }),
+  );
+}
+
 export const api = createClient<paths>({
   baseUrl: typeof location === "undefined" ? "http://localhost" : location.origin,
   fetch: authFetch,

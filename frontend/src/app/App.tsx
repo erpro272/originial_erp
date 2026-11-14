@@ -9,6 +9,8 @@ import { LoginPage } from "@/pages/LoginPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 import { CustomerProfile } from "@/modules/customers/CustomerProfile";
 import { CustomersTab } from "@/modules/customers/CustomersTab";
+import { ImportsPage } from "@/modules/invoices/ImportsPage";
+import { ReviewPage } from "@/modules/invoices/ReviewPage";
 import { OrdersLayout } from "@/modules/orders/OrdersLayout";
 import { OrdersReceivedTab } from "@/modules/orders/OrdersReceivedTab";
 import { MODULES } from "./nav";
@@ -33,6 +35,22 @@ export function App() {
         <Route path="/orders" element={<OrdersLayout />}>
           <Route index element={<OrdersReceivedTab />} />
           <Route path="customers" element={<CustomersTab />} />
+          <Route
+            path="customers/imports"
+            element={
+              <RequirePermission permission="invoices.write">
+                <ImportsPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path="customers/imports/:uploadId"
+            element={
+              <RequirePermission permission="invoices.write">
+                <ReviewPage />
+              </RequirePermission>
+            }
+          />
           <Route path="customers/:id" element={<CustomerProfile />} />
         </Route>
         {MODULES.filter((m) => m.key !== "orders").map((m) => (

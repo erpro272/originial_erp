@@ -14,8 +14,20 @@ from app.invoices.normalize import v
 
 _NOISE = {"pvt", "private", "ltd", "limited", "llp", "co", "company", "corp", "corporation", "inc", "the", "india",
           "and", "m/s", "ms"}  # fmt: skip
+# Common words in Indian industrial names: shared by many unrelated companies, so they are
+# ignored when comparing names ("Kaveri Auto Components" is not "Hosur Auto Components").
+_GENERIC = {"auto", "automotive", "automobiles", "components", "component", "engineering", "engineers", "engg",
+            "works", "industries", "industry", "industrial", "parts", "systems", "enterprises", "traders",
+            "trading", "products", "solutions", "manufacturing", "mfg", "precision", "spares", "supplies"}  # fmt: skip
 STRONG = 95
 POSSIBLE = 80
+
+
+def distinctive(name: str) -> str:
+    """Cleaned name without generic industry words (falls back to the cleaned name)."""
+    cleaned = clean_name(name)
+    core = " ".join(w for w in cleaned.split() if w not in _GENERIC)
+    return core or cleaned
 
 
 def clean_name(name: str) -> str:
@@ -92,12 +104,12 @@ async def match_customer(session: AsyncSession, doc: dict[str, Any]) -> MatchRes
         return MatchResult("existing", c.id, [Candidate(c.id, c.name, c.gstin, 100, ["Same GSTIN"])],
                            f"Matched to {c.name} by GSTIN.", pre)  # fmt: skip
 
-    target = clean_name(name)
+    target = distinctive(name)
     cands: list[Candidate] = []
     for c in await customers.active_customers(session):
         reasons, score = [], 0
         if target:
-            score = int(fuzz.token_set_ratio(target, clean_name(c.name)))
+            score = int(fuzz.token_set_ratio(target, distinctive(c.name)))
             if score >= POSSIBLE:
                 reasons.append(f"Similar name ({score}%)")
         if phone and c.phone and digits(phone) == digits(c.phone):
