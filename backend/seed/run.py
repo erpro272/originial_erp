@@ -47,6 +47,13 @@ USERS = [
 DEMO_TABLES = ("products", "materials", "customers", "orders", "invoices")
 
 TABLES_IN_DELETE_ORDER = [
+    "purchase_requests",
+    "plan_events",
+    "plans",
+    "downtime",
+    "route_steps",
+    "machines",
+    "departments",
     "invoice_transport",
     "invoice_payments",
     "invoice_lines",

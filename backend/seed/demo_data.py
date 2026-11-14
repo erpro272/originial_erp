@@ -19,6 +19,7 @@ from app.core.gst import STATE_CODES, financial_year, gstin_checksum
 from app.customers.models import Customer, CustomerAddress, CustomerContact, CustomerFollowup
 from app.invoices.models import Invoice, InvoiceLine, InvoiceParty
 from app.orders.models import Order
+from app.planning.models import Department, Machine, RouteStep
 
 SELLER_STATE = "27"
 SELLER_GSTIN = "27AAFCD5512K1Z" + gstin_checksum("27AAFCD5512K1Z")
@@ -39,12 +40,12 @@ PRODUCTS = [
     ("M8-NYL", "M8 nylock nuts", 4, 1_533, 1_358, [("WR8", "0.000025")]),
     ("M12-FLG", "M12 flange bolts", 3, 9_200, 8_100, [("EN8", "0.00008")]),
     ("WSTUD", "Wheel studs", 5, 5_500, 4_900, [("EN8", "0.00012")]),
-    ("M6-SKT", "M6 socket screws", 3, 1_633, 1_433, [("EN8", "0.00002")]),
+    ("M6-SKT", "M6 socket screws", 3, 1_633, 1_433, [("AS10", "0.00002")]),
     ("UBOLT", "U-bolts", 4, 17_750, 15_375, [("EN8", "0.0006")]),
     ("M16-HN", "M16 hex nuts", 3, 1_200, 1_020, [("MSB", "0.00006")]),
     ("SPWASH", "Spring washers", 2, 150, 118, [("SPS", "0.000004")]),
     ("TROD", "Tie rod ends", 6, 21_000, 18_500, [("EN8", "0.0009")]),
-    ("ANCB", "Anchor bolts M20", 4, 6_500, 5_600, [("BSW", "0.00025")]),
+    ("ANCB", "Anchor bolts M20", 4, 6_500, 5_600, [("EN8", "0.00025")]),
 ]
 # code, name, on hand (t), next arrival in N days
 MATERIALS = [
@@ -53,6 +54,7 @@ MATERIALS = [
     ("BSW", "Boron steel wire", "12.0", None),
     ("MSB", "MS bright bar", "8.0", None),
     ("SPS", "Spring steel strip", "2.0", None),
+    ("AS10", "Alloy steel wire 10.9", "4.0", None),
 ]
 
 # name, state, PAN, tier, profile, city
@@ -125,6 +127,8 @@ async def seed_demo(s: AsyncSession, tenant_id: uuid.UUID, owner_id: uuid.UUID) 
         prods[name] = p
         for code, q in bom:
             s.add(ProductMaterial(product_id=p.id, material_id=mats[code].id, qty_per_unit=Decimal(q)))
+
+    await seed_factory(s, prods, mats)
 
     # ---- customers ------------------------------------------------------------------------
     custs: dict[str, Cust] = {}
@@ -285,8 +289,8 @@ async def seed_demo(s: AsyncSession, tenant_id: uuid.UUID, owner_id: uuid.UUID) 
         (1040, "Eicher Motors", "M10 hex bolts", 12_000, 12_00_000, 1_44_000, 13, "high", "accepted", None),
         (1041, "Tata Motors", "M8 nylock nuts", 1_20_000, 18_40_000, 2_10_000, 5, "high", "accepted", None),
         (1042, "Maruti Suzuki", "M10 hex bolts", 50_000, 50_00_000, 5_00_000, 3, "high", "in_production", 25),
-        (1043, "JCB India", "Spring washers", 3_00_000, 4_50_000, 96_000, 12, "medium", "new", None),
-        (1044, "Escorts Kubota", "M16 hex nuts", 75_000, 9_00_000, 1_17_000, 10, "high", "new", None),
+        (1043, "JCB India", "Spring washers", 3_00_000, 4_50_000, 96_000, 12, "medium", "accepted", None),
+        (1044, "Escorts Kubota", "M16 hex nuts", 75_000, 9_00_000, 1_17_000, 10, "high", "accepted", None),
     ]  # fmt: skip
     for num, cname, prod, qty, sales, profit, ship_in, prio, status, prog in book:
         p = prods[prod]
@@ -307,6 +311,83 @@ async def seed_demo(s: AsyncSession, tenant_id: uuid.UUID, owner_id: uuid.UUID) 
                            due_date=today, assigned_to=owner_id, created_by=owner_id))  # fmt: skip
     s.add(CustomerFollowup(customer_id=custs["Ashok Leyland"].id, kind="call", note="Volumes down: they are trialling a second supplier.",
                            done_at=datetime.now(UTC) - timedelta(days=6), created_by=owner_id))  # fmt: skip
+
+
+# Factory for Planning. name -> (department, hours/shift, shifts, operators, ₹/h machine+power, ₹/h night premium)
+DEPARTMENTS = [("Machining", "72", 180), ("Quality", "16", 200)]  # name, labour hrs/day, ₹/h
+MACHINES = [
+    ("Press 01", "Machining", 8, 2, 2, 650, 1_150),
+    ("CNC 01", "Machining", 8, 2, 1, 900, 1_150),
+    ("CNC 02", "Machining", 8, 1, 1, 800, 1_100),
+    ("Rolling 01", "Machining", 8, 2, 1, 500, 900),
+    ("QC", "Quality", 8, 1, 2, 300, 600),
+]
+# product -> [(machine, setup hours, minutes per piece)]
+ROUTES = {
+    "M10 hex bolts": [("Press 01", 2, "0.030"), ("Rolling 01", 1, "0.020"), ("QC", 0, "0.004")],
+    "M8 nylock nuts": [("Press 01", 2, "0.012"), ("CNC 01", 1, "0.010"), ("QC", 0, "0.002")],
+    "M12 flange bolts": [("CNC 01", 2, "0.060"), ("Press 01", 1, "0.020"), ("QC", 0, "0.004")],
+    "Wheel studs": [("CNC 01", 2, "0.050"), ("Rolling 01", 1, "0.020"), ("QC", 0, "0.004")],
+    "M6 socket screws": [("Press 01", 1, "0.020"), ("CNC 02", 1, "0.030"), ("QC", 0, "0.002")],
+    "U-bolts": [("Press 01", 2, "0.080"), ("Rolling 01", 1, "0.050"), ("QC", 0, "0.010")],
+    "M16 hex nuts": [("Press 01", 2, "0.020"), ("CNC 02", 1, "0.020"), ("QC", 0, "0.002")],
+    "Spring washers": [("Press 01", 1, "0.004"), ("QC", 0, "0.001")],
+    "Tie rod ends": [("CNC 01", 3, "0.400"), ("QC", 0, "0.020")],
+    "Anchor bolts M20": [("CNC 01", 2, "0.050"), ("Rolling 01", 1, "0.030"), ("QC", 0, "0.004")],
+}
+# material -> (₹ per t, express ₹, express days earlier, express supplier)
+MATERIAL_COSTS = {
+    "WR8": (3_80_000, 6_200, 3, "Shree Steels"),
+    "EN8": (1_70_000, 8_000, 3, "Shree Steels"),
+    "BSW": (13_80_000, 7_500, 2, "Mukand Wires"),
+    "MSB": (1_20_000, 6_000, 2, "Shree Steels"),
+    "SPS": (2_25_000, 5_000, 2, "Jindal Strips"),
+    "AS10": (4_90_000, 7_000, 2, "Mukand Wires"),
+}
+
+
+async def seed_factory(s: AsyncSession, prods: dict[str, Product], mats: dict[str, Material]) -> None:
+    for code, (rs, exp, days, supplier) in MATERIAL_COSTS.items():
+        m = mats[code]
+        m.price_per_unit_paise, m.express_cost_paise, m.express_days, m.express_supplier = (
+            rs * 100,
+            exp * 100,
+            days,
+            supplier,
+        )
+    depts = {}
+    for name, hrs, rate in DEPARTMENTS:
+        d = Department(name=name, hours_per_day=Decimal(hrs), cost_per_hour_paise=rate * 100)
+        s.add(d)
+        await s.flush()
+        depts[name] = d
+    machines = {}
+    for i, (name, dept, hrs, shifts, ops, rate, night) in enumerate(MACHINES):
+        m = Machine(
+            name=name,
+            department_id=depts[dept].id,
+            hours_per_shift=Decimal(hrs),
+            shifts_per_day=shifts,
+            operators=ops,
+            cost_per_hour_paise=rate * 100,
+            night_shift_cost_per_hour_paise=night * 100,
+            sort=i,
+        )
+        s.add(m)
+        await s.flush()
+        machines[name] = m
+    for prod, steps in ROUTES.items():
+        for seq, (mname, setup, mins) in enumerate(steps, start=1):
+            s.add(
+                RouteStep(
+                    product_id=prods[prod].id,
+                    seq=seq,
+                    machine_id=machines[mname].id,
+                    setup_hours=Decimal(setup),
+                    minutes_per_unit=Decimal(mins),
+                )
+            )
+    await s.flush()
 
 
 async def seed_second(s: AsyncSession, tenant_id: uuid.UUID) -> None:

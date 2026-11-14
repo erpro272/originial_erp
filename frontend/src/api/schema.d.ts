@@ -611,6 +611,184 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/planning/factory": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Factory */
+        get: operations["get_factory_api_planning_factory_get"];
+        /** Put Factory */
+        put: operations["put_factory_api_planning_factory_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/planning/plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Current Plan
+         * @description The working plan (recalculated if anything it depends on changed), or the last approved one.
+         */
+        get: operations["current_plan_api_planning_plan_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/planning/plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Plan */
+        post: operations["create_plan_api_planning_plans_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/planning/plans/{plan_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Plan
+         * @description Any edit. With `preview=true` nothing is saved: returns the recalculated plan and what got worse/better.
+         */
+        patch: operations["update_plan_api_planning_plans__plan_id__patch"];
+        trace?: never;
+    };
+    "/api/planning/plans/{plan_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve */
+        post: operations["approve_api_planning_plans__plan_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/planning/plans/{plan_id}/generate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Generate */
+        post: operations["generate_api_planning_plans__plan_id__generate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/planning/plans/{plan_id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** History */
+        get: operations["history_api_planning_plans__plan_id__history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/planning/plans/{plan_id}/purchase-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Raise Po */
+        post: operations["raise_po_api_planning_plans__plan_id__purchase_requests_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/planning/purchase-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Purchase Requests */
+        get: operations["purchase_requests_api_planning_purchase_requests_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/planning/rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Rules */
+        get: operations["get_rules_api_planning_rules_get"];
+        /** Put Rules */
+        put: operations["put_rules_api_planning_rules_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/settings/{key}": {
         parameters: {
             query?: never;
@@ -681,6 +859,25 @@ export interface components {
             /** State Code */
             state_code?: string | null;
         };
+        /** Approval */
+        Approval: {
+            /** Checks */
+            checks: components["schemas"]["Check"][];
+            /** Ready */
+            ready: number;
+            /** Total */
+            total: number;
+        };
+        /** ApproveIn */
+        ApproveIn: {
+            /** Note */
+            note?: string | null;
+            /**
+             * Raise Open Pos
+             * @default false
+             */
+            raise_open_pos: boolean;
+        };
         /** AuditEntryOut */
         AuditEntryOut: {
             /** Action */
@@ -732,6 +929,66 @@ export interface components {
              * @description JPG, PNG, HEIC or PDF; up to 20 MB each, 25 files
              */
             files: string[];
+        };
+        /** Bottleneck */
+        Bottleneck: {
+            /**
+             * From
+             * Format: date
+             */
+            from: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "machine" | "labour" | "material" | "material_wait" | "late";
+            /** Machine */
+            machine?: string | null;
+            /** Material */
+            material?: string | null;
+            /** Orders */
+            orders: string[];
+            /** Resource */
+            resource: string;
+            /** Size */
+            size: number;
+            /** Text */
+            text: string;
+            /** Title */
+            title: string;
+            /**
+             * To
+             * Format: date
+             */
+            to: string;
+            /** Was */
+            was?: string | null;
+        };
+        /** Breakdown */
+        Breakdown: {
+            /** Labour */
+            labour: number;
+            /** Machine */
+            machine: number;
+            /** Materials */
+            materials: number;
+            /** Overheads */
+            overheads: number;
+            /** Packaging */
+            packaging: number;
+        };
+        /** Check */
+        Check: {
+            /** Action */
+            action?: string | null;
+            /** Ok */
+            ok: boolean;
+            /** Setting */
+            setting?: string | null;
+            /** Text */
+            text: string;
+            /** Title */
+            title: string;
         };
         /** CheckResult */
         CheckResult: {
@@ -918,7 +1175,7 @@ export interface components {
             limit: number;
             /** Offset */
             offset: number;
-            overview: components["schemas"]["Overview"];
+            overview: components["schemas"]["app__customers__schemas__Overview"];
             period: components["schemas"]["Period"];
             /** Total */
             total: number;
@@ -1048,6 +1305,71 @@ export interface components {
             /** Units Sold */
             units_sold: string;
         };
+        /** DepartmentIn */
+        "DepartmentIn-Input": {
+            /** Cost Per Hour Paise */
+            cost_per_hour_paise: number;
+            /** Hours Per Day */
+            hours_per_day: number | string;
+            /** Id */
+            id?: string | null;
+            /** Name */
+            name: string;
+        };
+        /** DepartmentIn */
+        "DepartmentIn-Output": {
+            /** Cost Per Hour Paise */
+            cost_per_hour_paise: number;
+            /** Hours Per Day */
+            hours_per_day: string;
+            /** Id */
+            id?: string | null;
+            /** Name */
+            name: string;
+        };
+        /** Diff */
+        Diff: {
+            /** Better */
+            better: components["schemas"]["Bottleneck"][];
+            /** Blocked */
+            blocked?: string | null;
+            /** Deliveries */
+            deliveries: {
+                [key: string]: number | string;
+            }[];
+            /** Warn */
+            warn: boolean;
+            /** Worse */
+            worse: components["schemas"]["Bottleneck"][];
+        };
+        /** DowntimeIn */
+        "DowntimeIn-Input": {
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Hours */
+            hours?: number | string | null;
+            /** Machine */
+            machine?: string | null;
+            /** Reason */
+            reason?: string | null;
+        };
+        /** DowntimeIn */
+        "DowntimeIn-Output": {
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Hours */
+            hours?: string | null;
+            /** Machine */
+            machine?: string | null;
+            /** Reason */
+            reason?: string | null;
+        };
         /**
          * Draft
          * @description User corrections: raw text per field (null clears) and the full list of lines.
@@ -1077,6 +1399,113 @@ export interface components {
              * @default false
              */
             verified: boolean;
+        };
+        /** Factory */
+        "Factory-Input": {
+            /** Departments */
+            departments: components["schemas"]["DepartmentIn-Input"][];
+            /** Downtime */
+            downtime: components["schemas"]["DowntimeIn-Input"][];
+            /** Machines */
+            machines: components["schemas"]["MachineIn-Input"][];
+            /** Materials */
+            materials: components["schemas"]["MaterialCostIn"][];
+            /** Routes */
+            routes: components["schemas"]["RouteIn-Input"][];
+        };
+        /** Factory */
+        "Factory-Output": {
+            /** Departments */
+            departments: components["schemas"]["DepartmentIn-Output"][];
+            /** Downtime */
+            downtime: components["schemas"]["DowntimeIn-Output"][];
+            /** Machines */
+            machines: components["schemas"]["MachineIn-Output"][];
+            /** Materials */
+            materials: components["schemas"]["MaterialCostIn"][];
+            /** Routes */
+            routes: components["schemas"]["RouteIn-Output"][];
+        };
+        /** Feasibility */
+        Feasibility: {
+            /** Lines */
+            lines: string[];
+            /** Ok */
+            ok: boolean;
+        };
+        /** FinRow */
+        FinRow: {
+            /** Contribution */
+            contribution: number;
+            /** Cost */
+            cost: number;
+            /** Fix Cost */
+            fix_cost: number;
+            /** Id */
+            id: string;
+            /** Margin */
+            margin: number;
+            /** Penalty */
+            penalty: number;
+            /** Value */
+            value: number;
+        };
+        /** Finance */
+        Finance: {
+            /** Base Contribution */
+            base_contribution: number;
+            breakdown: components["schemas"]["Breakdown"];
+            /** Contribution */
+            contribution: number;
+            /** Cost */
+            cost: number;
+            /** Fix Cost */
+            fix_cost: number;
+            /** Fixes */
+            fixes: components["schemas"]["FixCost"][];
+            /** Margin */
+            margin: number;
+            /** Mfg Cost */
+            mfg_cost: number;
+            /** Penalty */
+            penalty: number;
+            /** Per Day */
+            per_day: number;
+            /** Rows */
+            rows: components["schemas"]["FinRow"][];
+            /** Value */
+            value: number;
+        };
+        /** Finances */
+        Finances: {
+            before: components["schemas"]["Finance"];
+            /** Fixes */
+            fixes: components["schemas"]["Fix"][];
+            with: components["schemas"]["Finance"];
+        };
+        /** Fix */
+        Fix: {
+            /** Cost */
+            cost: number;
+            /** Id */
+            id: string;
+            /** Label */
+            label: string;
+            /** Penalty Avoided */
+            penalty_avoided: number;
+            /** Selected */
+            selected: boolean;
+            /** Solves */
+            solves: string[];
+        };
+        /** FixCost */
+        FixCost: {
+            /** Cost */
+            cost: number;
+            /** Id */
+            id: string;
+            /** Label */
+            label: string;
         };
         /** FollowupIn */
         FollowupIn: {
@@ -1117,6 +1546,61 @@ export interface components {
             kind: "call" | "whatsapp" | "email" | "note" | "reminder";
             /** Note */
             note: string | null;
+        };
+        /** GanttRow */
+        GanttRow: {
+            /** Deadline */
+            deadline: string | null;
+            /**
+             * Finish
+             * Format: date
+             */
+            finish: string;
+            /** Id */
+            id: string;
+            /** Over Days */
+            over_days: string[];
+            /** Running */
+            running: boolean;
+            /** Short */
+            short: boolean;
+            /**
+             * Start
+             * Format: date
+             */
+            start: string;
+            /** Steps */
+            steps: components["schemas"]["GanttStep"][];
+        };
+        /** GanttStep */
+        GanttStep: {
+            /**
+             * Finish
+             * Format: date
+             */
+            finish: string;
+            /** Hours */
+            hours: {
+                [key: string]: number;
+            };
+            /** Machine */
+            machine: string;
+            /** Name */
+            name: string;
+            /** Setup */
+            setup: number;
+            /**
+             * Start
+             * Format: date
+             */
+            start: string;
+        };
+        /** Group */
+        Group: {
+            /** Orders */
+            orders: string[];
+            /** Shared */
+            shared: string[];
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -1168,6 +1652,31 @@ export interface components {
              * @default 60
              */
             repeat_recent_days: number;
+        };
+        /** Hint */
+        Hint: {
+            /** Moved */
+            moved: string;
+            /** Sequence */
+            sequence: string[];
+            /** Text */
+            text: string;
+            /** Title */
+            title: string;
+        };
+        /** HistoryItem */
+        HistoryItem: {
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Kind */
+            kind: string;
+            /** Summary */
+            summary: string;
+            /** Tabs */
+            tabs: number[];
         };
         /** InvoiceBrief */
         InvoiceBrief: {
@@ -1237,6 +1746,31 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /** LastChange */
+        LastChange: {
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Summary */
+            summary: string;
+            /** Tabs */
+            tabs: number[];
+        };
+        /** LoadRow */
+        LoadRow: {
+            /** Days */
+            days: {
+                [key: string]: number | null;
+            };
+            /** Machine */
+            machine: string;
+            /** Name */
+            name: string;
+            /** Over */
+            over: boolean;
+        };
         /** LoginRequest */
         LoginRequest: {
             /**
@@ -1251,6 +1785,75 @@ export interface components {
              * @description Company to sign in to. Required if the user has several.
              */
             tenant_id?: string | null;
+        };
+        /** MachineIn */
+        "MachineIn-Input": {
+            /** Cost Per Hour Paise */
+            cost_per_hour_paise: number;
+            /** Department */
+            department: string;
+            /** Hours Per Shift */
+            hours_per_shift: number | string;
+            /** Id */
+            id?: string | null;
+            /** Name */
+            name: string;
+            /** Night Shift Cost Per Hour Paise */
+            night_shift_cost_per_hour_paise: number;
+            /** Operators */
+            operators: number;
+            /** Shifts Per Day */
+            shifts_per_day: number;
+        };
+        /** MachineIn */
+        "MachineIn-Output": {
+            /** Cost Per Hour Paise */
+            cost_per_hour_paise: number;
+            /** Department */
+            department: string;
+            /** Hours Per Shift */
+            hours_per_shift: string;
+            /** Id */
+            id?: string | null;
+            /** Name */
+            name: string;
+            /** Night Shift Cost Per Hour Paise */
+            night_shift_cost_per_hour_paise: number;
+            /** Operators */
+            operators: number;
+            /** Shifts Per Day */
+            shifts_per_day: number;
+        };
+        /** MaterialCostIn */
+        MaterialCostIn: {
+            /**
+             * Code
+             * @default
+             */
+            code: string;
+            /** Express Cost Paise */
+            express_cost_paise: number;
+            /** Express Days */
+            express_days: number;
+            /** Express Supplier */
+            express_supplier?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Name
+             * @default
+             */
+            name: string;
+            /** Price Per Unit Paise */
+            price_per_unit_paise: number;
+            /**
+             * Unit
+             * @default
+             */
+            unit: string;
         };
         /** MaterialNeed */
         MaterialNeed: {
@@ -1302,6 +1905,27 @@ export interface components {
             /** Sales Paise */
             sales_paise: number;
         };
+        /** OptionRow */
+        OptionRow: {
+            /**
+             * Finish
+             * Format: date
+             */
+            finish: string;
+            /** Late Days */
+            late_days: number;
+            /**
+             * Start
+             * Format: date
+             */
+            start: string;
+        };
+        /** Options */
+        Options: {
+            full: components["schemas"]["SelectionOption"] | null;
+            own: components["schemas"]["SelectionOption"] | null;
+            part: components["schemas"]["SelectionOption"] | null;
+        };
         /** OrderCancel */
         OrderCancel: {
             /** Reason */
@@ -1346,6 +1970,30 @@ export interface components {
             unit_cost_paise?: number | null;
             /** Unit Price Paise */
             unit_price_paise: number;
+        };
+        /** OrderInfo */
+        OrderInfo: {
+            /** Customer */
+            customer: string;
+            /**
+             * Deadline
+             * Format: date
+             */
+            deadline: string;
+            /** Est Margin */
+            est_margin: number;
+            /** Number */
+            number: string;
+            /** Priority */
+            priority: string;
+            /** Product */
+            product: string;
+            /** Qty */
+            qty: number;
+            /** Unit */
+            unit: string;
+            /** Value */
+            value: number;
         };
         /** OrderKpis */
         OrderKpis: {
@@ -1481,19 +2129,6 @@ export interface components {
             /** Unit Price Paise */
             unit_price_paise?: number | null;
         };
-        /** Overview */
-        Overview: {
-            /** Active Customers */
-            active_customers: number;
-            /** Active Pct */
-            active_pct: number;
-            /** New Customers */
-            new_customers: number;
-            /** Total Customers */
-            total_customers: number;
-            /** Units Sold */
-            units_sold: string;
-        };
         /** PageOut */
         PageOut: {
             /** Number */
@@ -1545,12 +2180,129 @@ export interface components {
          * @enum {string}
          */
         Permission: "audit.read" | "settings.read" | "settings.write" | "users.manage" | "sensitive.view" | "orders.read" | "orders.write" | "customers.read" | "customers.write" | "invoices.write" | "planning.read" | "planning.write" | "planning.approve" | "purchasing.write" | "finance.read";
+        /** PlanOut */
+        PlanOut: {
+            /** Approval Note */
+            approval_note: string | null;
+            /** Approved At */
+            approved_at: string | null;
+            /** Generated At */
+            generated_at: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            last_change: components["schemas"]["LastChange"] | null;
+            /** Needs Reapproval */
+            needs_reapproval: boolean;
+            /** Number */
+            number: string;
+            result: components["schemas"]["PlanResult"];
+            /** Rule */
+            rule: string;
+            /**
+             * Start Date
+             * Format: date
+             */
+            start_date: string;
+            /** Status */
+            status: string;
+            /** Version */
+            version: number;
+        };
+        /**
+         * PlanPatch
+         * @description One edit. Every field is optional; the server recalculates everything after any change.
+         */
+        PlanPatch: {
+            /**
+             * Apply Hint
+             * @default false
+             */
+            apply_hint: boolean;
+            /** Fixes */
+            fixes?: string[] | null;
+            /** Lock */
+            lock?: {
+                [key: string]: boolean;
+            } | null;
+            /** Pin */
+            pin?: {
+                [key: string]: string | null;
+            } | null;
+            /** Rule */
+            rule?: ("deadline" | "value" | "margin" | "priority" | "custom") | null;
+            /** Selected */
+            selected?: string[] | null;
+            /** Sequence */
+            sequence?: string[] | null;
+            /** Start Date */
+            start_date?: string | null;
+            /** Use Option */
+            use_option?: ("part" | "full") | null;
+        };
+        /** PlanResult */
+        PlanResult: {
+            approval: components["schemas"]["Approval"];
+            /** Blocked */
+            blocked: {
+                [key: string]: string;
+            };
+            finance: components["schemas"]["Finances"];
+            /** Purchase Needs */
+            purchase_needs: components["schemas"]["PurchaseNeed"][];
+            schedule: components["schemas"]["Schedule"];
+            selection: components["schemas"]["Selection"];
+            sequence: components["schemas"]["Sequence"];
+        };
+        /** PlanningRules */
+        PlanningRules: {
+            /**
+             * Min Margin Pct
+             * @default 18
+             */
+            min_margin_pct: number;
+            /**
+             * Overhead Pct
+             * @default 7
+             */
+            overhead_pct: number;
+            /**
+             * Packaging Paise Per Unit
+             * @default 5
+             */
+            packaging_paise_per_unit: number;
+            /**
+             * Penalty Fixed Paise
+             * @default 2000000
+             */
+            penalty_fixed_paise: number;
+            /**
+             * Penalty Mode
+             * @default fixed
+             * @enum {string}
+             */
+            penalty_mode: "fixed" | "percent";
+            /**
+             * Penalty Percent
+             * @default 0.5
+             */
+            penalty_percent: number;
+        };
         /** PlanningSelection */
         PlanningSelection: {
             /** Marked */
             marked: boolean;
             /** Order Ids */
             order_ids: string[];
+        };
+        /** PreviewOut */
+        PreviewOut: {
+            diff: components["schemas"]["Diff"];
+            plan: components["schemas"]["PlanOut"];
+            /** Tabs */
+            tabs: number[];
         };
         /** ProductBought */
         ProductBought: {
@@ -1586,6 +2338,69 @@ export interface components {
             unit_cost_paise: number;
             /** Unit Price Paise */
             unit_price_paise: number;
+        };
+        /** PurchaseNeed */
+        PurchaseNeed: {
+            /** Code */
+            code: string;
+            /** Express */
+            express: boolean;
+            /** Kind */
+            kind: string;
+            /** Material */
+            material: string;
+            /** Name */
+            name: string;
+            /**
+             * Needed By
+             * Format: date
+             */
+            needed_by: string;
+            /** Orders */
+            orders: string[];
+            /** Qty */
+            qty: number;
+            /** Requested */
+            requested: boolean;
+            /** Unit */
+            unit: string;
+        };
+        /** PurchaseRequestOut */
+        PurchaseRequestOut: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Express */
+            express: boolean;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Material */
+            material: string;
+            /**
+             * Needed By
+             * Format: date
+             */
+            needed_by: string;
+            /** Order Numbers */
+            order_numbers: string[];
+            /** Quantity */
+            quantity: string;
+            /** Source */
+            source: string;
+            /** Status */
+            status: string;
+            /** Unit */
+            unit: string;
+        };
+        /** RaisePoIn */
+        RaisePoIn: {
+            /** Material Id */
+            material_id: string;
         };
         /** RankingSettings */
         RankingSettings: {
@@ -1651,6 +2466,61 @@ export interface components {
          * @enum {string}
          */
         Role: "owner" | "planner" | "purchaser" | "accountant";
+        /** RouteIn */
+        "RouteIn-Input": {
+            /**
+             * Product
+             * @default
+             */
+            product: string;
+            /**
+             * Product Id
+             * Format: uuid
+             */
+            product_id: string;
+            /** Steps */
+            steps: components["schemas"]["StepIn-Input"][];
+        };
+        /** RouteIn */
+        "RouteIn-Output": {
+            /**
+             * Product
+             * @default
+             */
+            product: string;
+            /**
+             * Product Id
+             * Format: uuid
+             */
+            product_id: string;
+            /** Steps */
+            steps: components["schemas"]["StepIn-Output"][];
+        };
+        /** RunningRow */
+        RunningRow: {
+            /** Customer */
+            customer: string;
+            /**
+             * Finish
+             * Format: date
+             */
+            finish: string;
+            /** Id */
+            id: string;
+            /** Machines */
+            machines: string[];
+            /** Number */
+            number: string;
+            /** Product */
+            product: string;
+            /** Progress */
+            progress: number;
+            /**
+             * Start
+             * Format: date
+             */
+            start: string;
+        };
         /** SaveIn */
         SaveIn: {
             /**
@@ -1693,6 +2563,129 @@ export interface components {
             /** Order Number */
             order_number: string | null;
         };
+        /** Schedule */
+        Schedule: {
+            /** Bottlenecks */
+            bottlenecks: components["schemas"]["Bottleneck"][];
+            /** Days */
+            days: string[];
+            /** Load */
+            load: components["schemas"]["LoadRow"][];
+            /** Rows */
+            rows: components["schemas"]["GanttRow"][];
+            /**
+             * Today
+             * Format: date
+             */
+            today: string;
+        };
+        /** Selection */
+        Selection: {
+            options: components["schemas"]["Options"];
+            /** Orders */
+            orders: {
+                [key: string]: components["schemas"]["OrderInfo"];
+            };
+            /** Running */
+            running: components["schemas"]["RunningRow"][];
+            /** Selected */
+            selected: string[];
+        };
+        /** SelectionOption */
+        SelectionOption: {
+            /** Alongside */
+            alongside: number;
+            /** Bottleneck Names */
+            bottleneck_names: string[];
+            /** Bottlenecks */
+            bottlenecks: number;
+            /** Contribution */
+            contribution: number;
+            /** Days */
+            days: number;
+            /** End */
+            end: string | null;
+            /** Idle Days */
+            idle_days: number;
+            /** Idle Machines */
+            idle_machines: string[];
+            /** Late */
+            late: string[];
+            /** Margin */
+            margin: number;
+            /** Orders */
+            orders: string[];
+            /** Per Day */
+            per_day: number;
+            /** Rows */
+            rows: {
+                [key: string]: components["schemas"]["OptionRow"];
+            };
+            /** Start */
+            start: string | null;
+            /** Utilisation */
+            utilisation: number;
+            /** Value */
+            value: number;
+        };
+        /** SeqRow */
+        SeqRow: {
+            /** Buffer */
+            buffer: number;
+            /**
+             * Deadline
+             * Format: date
+             */
+            deadline: string;
+            /**
+             * Finish
+             * Format: date
+             */
+            finish: string;
+            /** Group */
+            group: number;
+            /** Id */
+            id: string;
+            /** Late Days */
+            late_days: number;
+            /** Locked */
+            locked: boolean;
+            /** Machines */
+            machines: string[];
+            /** Pinned */
+            pinned: string | null;
+            /** Rank */
+            rank: number;
+            /**
+             * Start
+             * Format: date
+             */
+            start: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "on_time" | "late" | "material";
+            /** Warn Machines */
+            warn_machines: string[];
+        };
+        /** Sequence */
+        Sequence: {
+            feasibility: components["schemas"]["Feasibility"];
+            /** Groups */
+            groups: components["schemas"]["Group"][];
+            hint: components["schemas"]["Hint"] | null;
+            overview: components["schemas"]["app__planning__schemas__Overview"];
+            /** Rows */
+            rows: components["schemas"]["SeqRow"][];
+            /** Rule */
+            rule: string;
+            /**
+             * Start
+             * Format: date
+             */
+            start: string;
+        };
         /**
          * Signal
          * @description The one-line status shown on cards and the Status column. Worked out in code.
@@ -1713,6 +2706,24 @@ export interface components {
              * @enum {string}
              */
             tone: "hi" | "md" | "lo" | "ok" | "bl";
+        };
+        /** StepIn */
+        "StepIn-Input": {
+            /** Machine */
+            machine: string;
+            /** Minutes Per Unit */
+            minutes_per_unit: number | string;
+            /** Setup Hours */
+            setup_hours: number | string;
+        };
+        /** StepIn */
+        "StepIn-Output": {
+            /** Machine */
+            machine: string;
+            /** Minutes Per Unit */
+            minutes_per_unit: string;
+            /** Setup Hours */
+            setup_hours: string;
         };
         /** TokenResponse */
         TokenResponse: {
@@ -1830,6 +2841,38 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /** Overview */
+        app__customers__schemas__Overview: {
+            /** Active Customers */
+            active_customers: number;
+            /** Active Pct */
+            active_pct: number;
+            /** New Customers */
+            new_customers: number;
+            /** Total Customers */
+            total_customers: number;
+            /** Units Sold */
+            units_sold: string;
+        };
+        /** Overview */
+        app__planning__schemas__Overview: {
+            /** Bottlenecks */
+            bottlenecks: number;
+            /** Days */
+            days: number;
+            /** End */
+            end: string | null;
+            /** On Time */
+            on_time: number;
+            /** Orders */
+            orders: number;
+            /** Parallel */
+            parallel: number;
+            /** Start */
+            start: string | null;
+            /** Utilisation */
+            utilisation: number;
         };
     };
     responses: never;
@@ -3104,6 +4147,341 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OrderOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_factory_api_planning_factory_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Factory-Output"];
+                };
+            };
+        };
+    };
+    put_factory_api_planning_factory_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Factory-Input"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Factory-Output"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    current_plan_api_planning_plan_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanOut"] | null;
+                };
+            };
+        };
+    };
+    create_plan_api_planning_plans_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanOut"];
+                };
+            };
+        };
+    };
+    update_plan_api_planning_plans__plan_id__patch: {
+        parameters: {
+            query?: {
+                preview?: boolean;
+            };
+            header?: never;
+            path: {
+                plan_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlanPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreviewOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_api_planning_plans__plan_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApproveIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    generate_api_planning_plans__plan_id__generate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    history_api_planning_plans__plan_id__history_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistoryItem"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    raise_po_api_planning_plans__plan_id__purchase_requests_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RaisePoIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    purchase_requests_api_planning_purchase_requests_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchaseRequestOut"][];
+                };
+            };
+        };
+    };
+    get_rules_api_planning_rules_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanningRules"];
+                };
+            };
+        };
+    };
+    put_rules_api_planning_rules_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlanningRules"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanningRules"];
                 };
             };
             /** @description Validation Error */

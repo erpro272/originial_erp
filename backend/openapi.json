@@ -169,6 +169,55 @@
         "title": "AddressOut",
         "type": "object"
       },
+      "Approval": {
+        "properties": {
+          "checks": {
+            "items": {
+              "$ref": "#/components/schemas/Check"
+            },
+            "title": "Checks",
+            "type": "array"
+          },
+          "ready": {
+            "title": "Ready",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "checks",
+          "ready",
+          "total"
+        ],
+        "title": "Approval",
+        "type": "object"
+      },
+      "ApproveIn": {
+        "properties": {
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "raise_open_pos": {
+            "default": false,
+            "title": "Raise Open Pos",
+            "type": "boolean"
+          }
+        },
+        "title": "ApproveIn",
+        "type": "object"
+      },
       "AuditEntryOut": {
         "properties": {
           "action": {
@@ -331,6 +380,177 @@
           "files"
         ],
         "title": "Body_upload_api_invoices_uploads_post",
+        "type": "object"
+      },
+      "Bottleneck": {
+        "properties": {
+          "from": {
+            "format": "date",
+            "title": "From",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "machine",
+              "labour",
+              "material",
+              "material_wait",
+              "late"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "machine": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Machine"
+          },
+          "material": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Material"
+          },
+          "orders": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Orders",
+            "type": "array"
+          },
+          "resource": {
+            "title": "Resource",
+            "type": "string"
+          },
+          "size": {
+            "title": "Size",
+            "type": "number"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "to": {
+            "format": "date",
+            "title": "To",
+            "type": "string"
+          },
+          "was": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Was"
+          }
+        },
+        "required": [
+          "kind",
+          "resource",
+          "title",
+          "text",
+          "size",
+          "orders",
+          "from",
+          "to"
+        ],
+        "title": "Bottleneck",
+        "type": "object"
+      },
+      "Breakdown": {
+        "properties": {
+          "labour": {
+            "title": "Labour",
+            "type": "integer"
+          },
+          "machine": {
+            "title": "Machine",
+            "type": "integer"
+          },
+          "materials": {
+            "title": "Materials",
+            "type": "integer"
+          },
+          "overheads": {
+            "title": "Overheads",
+            "type": "integer"
+          },
+          "packaging": {
+            "title": "Packaging",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "materials",
+          "labour",
+          "machine",
+          "overheads",
+          "packaging"
+        ],
+        "title": "Breakdown",
+        "type": "object"
+      },
+      "Check": {
+        "properties": {
+          "action": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Action"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "setting": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Setting"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ok",
+          "title",
+          "text"
+        ],
+        "title": "Check",
         "type": "object"
       },
       "CheckResult": {
@@ -958,7 +1178,7 @@
             "type": "integer"
           },
           "overview": {
-            "$ref": "#/components/schemas/Overview"
+            "$ref": "#/components/schemas/app__customers__schemas__Overview"
           },
           "period": {
             "$ref": "#/components/schemas/Period"
@@ -1559,6 +1779,250 @@
         "title": "CustomerRow",
         "type": "object"
       },
+      "DepartmentIn-Input": {
+        "properties": {
+          "cost_per_hour_paise": {
+            "minimum": 0.0,
+            "title": "Cost Per Hour Paise",
+            "type": "integer"
+          },
+          "hours_per_day": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Hours Per Day"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "hours_per_day",
+          "cost_per_hour_paise"
+        ],
+        "title": "DepartmentIn",
+        "type": "object"
+      },
+      "DepartmentIn-Output": {
+        "properties": {
+          "cost_per_hour_paise": {
+            "minimum": 0.0,
+            "title": "Cost Per Hour Paise",
+            "type": "integer"
+          },
+          "hours_per_day": {
+            "title": "Hours Per Day",
+            "type": "string"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "hours_per_day",
+          "cost_per_hour_paise"
+        ],
+        "title": "DepartmentIn",
+        "type": "object"
+      },
+      "Diff": {
+        "properties": {
+          "better": {
+            "items": {
+              "$ref": "#/components/schemas/Bottleneck"
+            },
+            "title": "Better",
+            "type": "array"
+          },
+          "blocked": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blocked"
+          },
+          "deliveries": {
+            "items": {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "format": "date",
+                    "type": "string"
+                  }
+                ]
+              },
+              "type": "object"
+            },
+            "title": "Deliveries",
+            "type": "array"
+          },
+          "warn": {
+            "title": "Warn",
+            "type": "boolean"
+          },
+          "worse": {
+            "items": {
+              "$ref": "#/components/schemas/Bottleneck"
+            },
+            "title": "Worse",
+            "type": "array"
+          }
+        },
+        "required": [
+          "worse",
+          "better",
+          "deliveries",
+          "warn"
+        ],
+        "title": "Diff",
+        "type": "object"
+      },
+      "DowntimeIn-Input": {
+        "properties": {
+          "day": {
+            "format": "date",
+            "title": "Day",
+            "type": "string"
+          },
+          "hours": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hours"
+          },
+          "machine": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Machine"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "required": [
+          "day"
+        ],
+        "title": "DowntimeIn",
+        "type": "object"
+      },
+      "DowntimeIn-Output": {
+        "properties": {
+          "day": {
+            "format": "date",
+            "title": "Day",
+            "type": "string"
+          },
+          "hours": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hours"
+          },
+          "machine": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Machine"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "required": [
+          "day"
+        ],
+        "title": "DowntimeIn",
+        "type": "object"
+      },
       "Draft": {
         "description": "User corrections: raw text per field (null clears) and the full list of lines.",
         "properties": {
@@ -1651,6 +2115,327 @@
           }
         },
         "title": "DraftSave",
+        "type": "object"
+      },
+      "Factory-Input": {
+        "properties": {
+          "departments": {
+            "items": {
+              "$ref": "#/components/schemas/DepartmentIn-Input"
+            },
+            "title": "Departments",
+            "type": "array"
+          },
+          "downtime": {
+            "items": {
+              "$ref": "#/components/schemas/DowntimeIn-Input"
+            },
+            "title": "Downtime",
+            "type": "array"
+          },
+          "machines": {
+            "items": {
+              "$ref": "#/components/schemas/MachineIn-Input"
+            },
+            "title": "Machines",
+            "type": "array"
+          },
+          "materials": {
+            "items": {
+              "$ref": "#/components/schemas/MaterialCostIn"
+            },
+            "title": "Materials",
+            "type": "array"
+          },
+          "routes": {
+            "items": {
+              "$ref": "#/components/schemas/RouteIn-Input"
+            },
+            "title": "Routes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "departments",
+          "machines",
+          "routes",
+          "materials",
+          "downtime"
+        ],
+        "title": "Factory",
+        "type": "object"
+      },
+      "Factory-Output": {
+        "properties": {
+          "departments": {
+            "items": {
+              "$ref": "#/components/schemas/DepartmentIn-Output"
+            },
+            "title": "Departments",
+            "type": "array"
+          },
+          "downtime": {
+            "items": {
+              "$ref": "#/components/schemas/DowntimeIn-Output"
+            },
+            "title": "Downtime",
+            "type": "array"
+          },
+          "machines": {
+            "items": {
+              "$ref": "#/components/schemas/MachineIn-Output"
+            },
+            "title": "Machines",
+            "type": "array"
+          },
+          "materials": {
+            "items": {
+              "$ref": "#/components/schemas/MaterialCostIn"
+            },
+            "title": "Materials",
+            "type": "array"
+          },
+          "routes": {
+            "items": {
+              "$ref": "#/components/schemas/RouteIn-Output"
+            },
+            "title": "Routes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "departments",
+          "machines",
+          "routes",
+          "materials",
+          "downtime"
+        ],
+        "title": "Factory",
+        "type": "object"
+      },
+      "Feasibility": {
+        "properties": {
+          "lines": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok",
+          "lines"
+        ],
+        "title": "Feasibility",
+        "type": "object"
+      },
+      "FinRow": {
+        "properties": {
+          "contribution": {
+            "title": "Contribution",
+            "type": "integer"
+          },
+          "cost": {
+            "title": "Cost",
+            "type": "integer"
+          },
+          "fix_cost": {
+            "title": "Fix Cost",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "margin": {
+            "title": "Margin",
+            "type": "number"
+          },
+          "penalty": {
+            "title": "Penalty",
+            "type": "integer"
+          },
+          "value": {
+            "title": "Value",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "value",
+          "cost",
+          "penalty",
+          "fix_cost",
+          "contribution",
+          "margin"
+        ],
+        "title": "FinRow",
+        "type": "object"
+      },
+      "Finance": {
+        "properties": {
+          "base_contribution": {
+            "title": "Base Contribution",
+            "type": "integer"
+          },
+          "breakdown": {
+            "$ref": "#/components/schemas/Breakdown"
+          },
+          "contribution": {
+            "title": "Contribution",
+            "type": "integer"
+          },
+          "cost": {
+            "title": "Cost",
+            "type": "integer"
+          },
+          "fix_cost": {
+            "title": "Fix Cost",
+            "type": "integer"
+          },
+          "fixes": {
+            "items": {
+              "$ref": "#/components/schemas/FixCost"
+            },
+            "title": "Fixes",
+            "type": "array"
+          },
+          "margin": {
+            "title": "Margin",
+            "type": "number"
+          },
+          "mfg_cost": {
+            "title": "Mfg Cost",
+            "type": "integer"
+          },
+          "penalty": {
+            "title": "Penalty",
+            "type": "integer"
+          },
+          "per_day": {
+            "title": "Per Day",
+            "type": "integer"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/FinRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "value": {
+            "title": "Value",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "rows",
+          "value",
+          "cost",
+          "mfg_cost",
+          "breakdown",
+          "base_contribution",
+          "penalty",
+          "fix_cost",
+          "contribution",
+          "margin",
+          "per_day",
+          "fixes"
+        ],
+        "title": "Finance",
+        "type": "object"
+      },
+      "Finances": {
+        "properties": {
+          "before": {
+            "$ref": "#/components/schemas/Finance"
+          },
+          "fixes": {
+            "items": {
+              "$ref": "#/components/schemas/Fix"
+            },
+            "title": "Fixes",
+            "type": "array"
+          },
+          "with": {
+            "$ref": "#/components/schemas/Finance"
+          }
+        },
+        "required": [
+          "before",
+          "with",
+          "fixes"
+        ],
+        "title": "Finances",
+        "type": "object"
+      },
+      "Fix": {
+        "properties": {
+          "cost": {
+            "title": "Cost",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "penalty_avoided": {
+            "title": "Penalty Avoided",
+            "type": "integer"
+          },
+          "selected": {
+            "title": "Selected",
+            "type": "boolean"
+          },
+          "solves": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Solves",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "cost",
+          "penalty_avoided",
+          "solves",
+          "selected"
+        ],
+        "title": "Fix",
+        "type": "object"
+      },
+      "FixCost": {
+        "properties": {
+          "cost": {
+            "title": "Cost",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "cost"
+        ],
+        "title": "FixCost",
         "type": "object"
       },
       "FollowupIn": {
@@ -1791,6 +2576,138 @@
         "title": "FollowupOut",
         "type": "object"
       },
+      "GanttRow": {
+        "properties": {
+          "deadline": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deadline"
+          },
+          "finish": {
+            "format": "date",
+            "title": "Finish",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "over_days": {
+            "items": {
+              "format": "date",
+              "type": "string"
+            },
+            "title": "Over Days",
+            "type": "array"
+          },
+          "running": {
+            "title": "Running",
+            "type": "boolean"
+          },
+          "short": {
+            "title": "Short",
+            "type": "boolean"
+          },
+          "start": {
+            "format": "date",
+            "title": "Start",
+            "type": "string"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/GanttStep"
+            },
+            "title": "Steps",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "running",
+          "steps",
+          "start",
+          "finish",
+          "deadline",
+          "over_days",
+          "short"
+        ],
+        "title": "GanttRow",
+        "type": "object"
+      },
+      "GanttStep": {
+        "properties": {
+          "finish": {
+            "format": "date",
+            "title": "Finish",
+            "type": "string"
+          },
+          "hours": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Hours",
+            "type": "object"
+          },
+          "machine": {
+            "title": "Machine",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "setup": {
+            "title": "Setup",
+            "type": "number"
+          },
+          "start": {
+            "format": "date",
+            "title": "Start",
+            "type": "string"
+          }
+        },
+        "required": [
+          "machine",
+          "name",
+          "start",
+          "finish",
+          "hours",
+          "setup"
+        ],
+        "title": "GanttStep",
+        "type": "object"
+      },
+      "Group": {
+        "properties": {
+          "orders": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Orders",
+            "type": "array"
+          },
+          "shared": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Shared",
+            "type": "array"
+          }
+        },
+        "required": [
+          "orders",
+          "shared"
+        ],
+        "title": "Group",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1883,6 +2800,69 @@
           }
         },
         "title": "HealthSettings",
+        "type": "object"
+      },
+      "Hint": {
+        "properties": {
+          "moved": {
+            "title": "Moved",
+            "type": "string"
+          },
+          "sequence": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Sequence",
+            "type": "array"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sequence",
+          "title",
+          "text",
+          "moved"
+        ],
+        "title": "Hint",
+        "type": "object"
+      },
+      "HistoryItem": {
+        "properties": {
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "tabs": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Tabs",
+            "type": "array"
+          }
+        },
+        "required": [
+          "kind",
+          "summary",
+          "tabs",
+          "at"
+        ],
+        "title": "HistoryItem",
         "type": "object"
       },
       "InvoiceBrief": {
@@ -2088,6 +3068,71 @@
         "title": "JsonValueIn",
         "type": "object"
       },
+      "LastChange": {
+        "properties": {
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "tabs": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Tabs",
+            "type": "array"
+          }
+        },
+        "required": [
+          "summary",
+          "tabs",
+          "at"
+        ],
+        "title": "LastChange",
+        "type": "object"
+      },
+      "LoadRow": {
+        "properties": {
+          "days": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Days",
+            "type": "object"
+          },
+          "machine": {
+            "title": "Machine",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "over": {
+            "title": "Over",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "machine",
+          "name",
+          "days",
+          "over"
+        ],
+        "title": "LoadRow",
+        "type": "object"
+      },
       "LoginRequest": {
         "properties": {
           "email": {
@@ -2120,6 +3165,200 @@
           "password"
         ],
         "title": "LoginRequest",
+        "type": "object"
+      },
+      "MachineIn-Input": {
+        "properties": {
+          "cost_per_hour_paise": {
+            "minimum": 0.0,
+            "title": "Cost Per Hour Paise",
+            "type": "integer"
+          },
+          "department": {
+            "title": "Department",
+            "type": "string"
+          },
+          "hours_per_shift": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "maximum": 24.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Hours Per Shift"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "night_shift_cost_per_hour_paise": {
+            "minimum": 0.0,
+            "title": "Night Shift Cost Per Hour Paise",
+            "type": "integer"
+          },
+          "operators": {
+            "maximum": 50.0,
+            "minimum": 0.0,
+            "title": "Operators",
+            "type": "integer"
+          },
+          "shifts_per_day": {
+            "maximum": 3.0,
+            "minimum": 0.0,
+            "title": "Shifts Per Day",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "department",
+          "hours_per_shift",
+          "shifts_per_day",
+          "operators",
+          "cost_per_hour_paise",
+          "night_shift_cost_per_hour_paise"
+        ],
+        "title": "MachineIn",
+        "type": "object"
+      },
+      "MachineIn-Output": {
+        "properties": {
+          "cost_per_hour_paise": {
+            "minimum": 0.0,
+            "title": "Cost Per Hour Paise",
+            "type": "integer"
+          },
+          "department": {
+            "title": "Department",
+            "type": "string"
+          },
+          "hours_per_shift": {
+            "title": "Hours Per Shift",
+            "type": "string"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "night_shift_cost_per_hour_paise": {
+            "minimum": 0.0,
+            "title": "Night Shift Cost Per Hour Paise",
+            "type": "integer"
+          },
+          "operators": {
+            "maximum": 50.0,
+            "minimum": 0.0,
+            "title": "Operators",
+            "type": "integer"
+          },
+          "shifts_per_day": {
+            "maximum": 3.0,
+            "minimum": 0.0,
+            "title": "Shifts Per Day",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "department",
+          "hours_per_shift",
+          "shifts_per_day",
+          "operators",
+          "cost_per_hour_paise",
+          "night_shift_cost_per_hour_paise"
+        ],
+        "title": "MachineIn",
+        "type": "object"
+      },
+      "MaterialCostIn": {
+        "properties": {
+          "code": {
+            "default": "",
+            "title": "Code",
+            "type": "string"
+          },
+          "express_cost_paise": {
+            "minimum": 0.0,
+            "title": "Express Cost Paise",
+            "type": "integer"
+          },
+          "express_days": {
+            "maximum": 60.0,
+            "minimum": 0.0,
+            "title": "Express Days",
+            "type": "integer"
+          },
+          "express_supplier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Express Supplier"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "default": "",
+            "title": "Name",
+            "type": "string"
+          },
+          "price_per_unit_paise": {
+            "minimum": 0.0,
+            "title": "Price Per Unit Paise",
+            "type": "integer"
+          },
+          "unit": {
+            "default": "",
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "price_per_unit_paise",
+          "express_cost_paise",
+          "express_days"
+        ],
+        "title": "MaterialCostIn",
         "type": "object"
       },
       "MaterialNeed": {
@@ -2237,6 +3476,72 @@
         "title": "MonthPoint",
         "type": "object"
       },
+      "OptionRow": {
+        "properties": {
+          "finish": {
+            "format": "date",
+            "title": "Finish",
+            "type": "string"
+          },
+          "late_days": {
+            "title": "Late Days",
+            "type": "integer"
+          },
+          "start": {
+            "format": "date",
+            "title": "Start",
+            "type": "string"
+          }
+        },
+        "required": [
+          "start",
+          "finish",
+          "late_days"
+        ],
+        "title": "OptionRow",
+        "type": "object"
+      },
+      "Options": {
+        "properties": {
+          "full": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SelectionOption"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "own": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SelectionOption"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "part": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SelectionOption"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "own",
+          "part",
+          "full"
+        ],
+        "title": "Options",
+        "type": "object"
+      },
       "OrderCancel": {
         "properties": {
           "reason": {
@@ -2351,6 +3656,60 @@
           "ship_date"
         ],
         "title": "OrderCreate",
+        "type": "object"
+      },
+      "OrderInfo": {
+        "properties": {
+          "customer": {
+            "title": "Customer",
+            "type": "string"
+          },
+          "deadline": {
+            "format": "date",
+            "title": "Deadline",
+            "type": "string"
+          },
+          "est_margin": {
+            "title": "Est Margin",
+            "type": "number"
+          },
+          "number": {
+            "title": "Number",
+            "type": "string"
+          },
+          "priority": {
+            "title": "Priority",
+            "type": "string"
+          },
+          "product": {
+            "title": "Product",
+            "type": "string"
+          },
+          "qty": {
+            "title": "Qty",
+            "type": "number"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "number",
+          "customer",
+          "product",
+          "qty",
+          "unit",
+          "value",
+          "deadline",
+          "priority",
+          "est_margin"
+        ],
+        "title": "OrderInfo",
         "type": "object"
       },
       "OrderKpis": {
@@ -2825,39 +4184,6 @@
         "title": "OrderUpdate",
         "type": "object"
       },
-      "Overview": {
-        "properties": {
-          "active_customers": {
-            "title": "Active Customers",
-            "type": "integer"
-          },
-          "active_pct": {
-            "title": "Active Pct",
-            "type": "number"
-          },
-          "new_customers": {
-            "title": "New Customers",
-            "type": "integer"
-          },
-          "total_customers": {
-            "title": "Total Customers",
-            "type": "integer"
-          },
-          "units_sold": {
-            "title": "Units Sold",
-            "type": "string"
-          }
-        },
-        "required": [
-          "total_customers",
-          "active_customers",
-          "active_pct",
-          "new_customers",
-          "units_sold"
-        ],
-        "title": "Overview",
-        "type": "object"
-      },
       "PageOut": {
         "properties": {
           "number": {
@@ -2972,6 +4298,331 @@
         "title": "Permission",
         "type": "string"
       },
+      "PlanOut": {
+        "properties": {
+          "approval_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approval Note"
+          },
+          "approved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved At"
+          },
+          "generated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generated At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "last_change": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LastChange"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "needs_reapproval": {
+            "title": "Needs Reapproval",
+            "type": "boolean"
+          },
+          "number": {
+            "title": "Number",
+            "type": "string"
+          },
+          "result": {
+            "$ref": "#/components/schemas/PlanResult"
+          },
+          "rule": {
+            "title": "Rule",
+            "type": "string"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "status",
+          "needs_reapproval",
+          "rule",
+          "start_date",
+          "version",
+          "generated_at",
+          "approved_at",
+          "approval_note",
+          "result",
+          "last_change"
+        ],
+        "title": "PlanOut",
+        "type": "object"
+      },
+      "PlanPatch": {
+        "description": "One edit. Every field is optional; the server recalculates everything after any change.",
+        "properties": {
+          "apply_hint": {
+            "default": false,
+            "title": "Apply Hint",
+            "type": "boolean"
+          },
+          "fixes": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fixes"
+          },
+          "lock": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "boolean"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lock"
+          },
+          "pin": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pin"
+          },
+          "rule": {
+            "anyOf": [
+              {
+                "enum": [
+                  "deadline",
+                  "value",
+                  "margin",
+                  "priority",
+                  "custom"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rule"
+          },
+          "selected": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selected"
+          },
+          "sequence": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sequence"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "use_option": {
+            "anyOf": [
+              {
+                "enum": [
+                  "part",
+                  "full"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Use Option"
+          }
+        },
+        "title": "PlanPatch",
+        "type": "object"
+      },
+      "PlanResult": {
+        "properties": {
+          "approval": {
+            "$ref": "#/components/schemas/Approval"
+          },
+          "blocked": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Blocked",
+            "type": "object"
+          },
+          "finance": {
+            "$ref": "#/components/schemas/Finances"
+          },
+          "purchase_needs": {
+            "items": {
+              "$ref": "#/components/schemas/PurchaseNeed"
+            },
+            "title": "Purchase Needs",
+            "type": "array"
+          },
+          "schedule": {
+            "$ref": "#/components/schemas/Schedule"
+          },
+          "selection": {
+            "$ref": "#/components/schemas/Selection"
+          },
+          "sequence": {
+            "$ref": "#/components/schemas/Sequence"
+          }
+        },
+        "required": [
+          "selection",
+          "sequence",
+          "schedule",
+          "finance",
+          "approval",
+          "purchase_needs",
+          "blocked"
+        ],
+        "title": "PlanResult",
+        "type": "object"
+      },
+      "PlanningRules": {
+        "properties": {
+          "min_margin_pct": {
+            "default": 18.0,
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Min Margin Pct",
+            "type": "number"
+          },
+          "overhead_pct": {
+            "default": 7.0,
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Overhead Pct",
+            "type": "number"
+          },
+          "packaging_paise_per_unit": {
+            "default": 5,
+            "minimum": 0.0,
+            "title": "Packaging Paise Per Unit",
+            "type": "integer"
+          },
+          "penalty_fixed_paise": {
+            "default": 2000000,
+            "minimum": 0.0,
+            "title": "Penalty Fixed Paise",
+            "type": "integer"
+          },
+          "penalty_mode": {
+            "default": "fixed",
+            "enum": [
+              "fixed",
+              "percent"
+            ],
+            "title": "Penalty Mode",
+            "type": "string"
+          },
+          "penalty_percent": {
+            "default": 0.5,
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Penalty Percent",
+            "type": "number"
+          }
+        },
+        "title": "PlanningRules",
+        "type": "object"
+      },
       "PlanningSelection": {
         "properties": {
           "marked": {
@@ -2994,6 +4645,30 @@
           "marked"
         ],
         "title": "PlanningSelection",
+        "type": "object"
+      },
+      "PreviewOut": {
+        "properties": {
+          "diff": {
+            "$ref": "#/components/schemas/Diff"
+          },
+          "plan": {
+            "$ref": "#/components/schemas/PlanOut"
+          },
+          "tabs": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Tabs",
+            "type": "array"
+          }
+        },
+        "required": [
+          "plan",
+          "diff",
+          "tabs"
+        ],
+        "title": "PreviewOut",
         "type": "object"
       },
       "ProductBought": {
@@ -3090,6 +4765,145 @@
           "unit_cost_paise"
         ],
         "title": "ProductOut",
+        "type": "object"
+      },
+      "PurchaseNeed": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "express": {
+            "title": "Express",
+            "type": "boolean"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "material": {
+            "title": "Material",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "needed_by": {
+            "format": "date",
+            "title": "Needed By",
+            "type": "string"
+          },
+          "orders": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Orders",
+            "type": "array"
+          },
+          "qty": {
+            "title": "Qty",
+            "type": "number"
+          },
+          "requested": {
+            "title": "Requested",
+            "type": "boolean"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "material",
+          "code",
+          "name",
+          "unit",
+          "qty",
+          "needed_by",
+          "orders",
+          "express",
+          "kind",
+          "requested"
+        ],
+        "title": "PurchaseNeed",
+        "type": "object"
+      },
+      "PurchaseRequestOut": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "express": {
+            "title": "Express",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "material": {
+            "title": "Material",
+            "type": "string"
+          },
+          "needed_by": {
+            "format": "date",
+            "title": "Needed By",
+            "type": "string"
+          },
+          "order_numbers": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Order Numbers",
+            "type": "array"
+          },
+          "quantity": {
+            "title": "Quantity",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "material",
+          "quantity",
+          "unit",
+          "needed_by",
+          "express",
+          "order_numbers",
+          "source",
+          "status",
+          "created_at"
+        ],
+        "title": "PurchaseRequestOut",
+        "type": "object"
+      },
+      "RaisePoIn": {
+        "properties": {
+          "material_id": {
+            "title": "Material Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "material_id"
+        ],
+        "title": "RaisePoIn",
         "type": "object"
       },
       "RankingSettings": {
@@ -3205,6 +5019,113 @@
         "title": "Role",
         "type": "string"
       },
+      "RouteIn-Input": {
+        "properties": {
+          "product": {
+            "default": "",
+            "title": "Product",
+            "type": "string"
+          },
+          "product_id": {
+            "format": "uuid",
+            "title": "Product Id",
+            "type": "string"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/StepIn-Input"
+            },
+            "title": "Steps",
+            "type": "array"
+          }
+        },
+        "required": [
+          "product_id",
+          "steps"
+        ],
+        "title": "RouteIn",
+        "type": "object"
+      },
+      "RouteIn-Output": {
+        "properties": {
+          "product": {
+            "default": "",
+            "title": "Product",
+            "type": "string"
+          },
+          "product_id": {
+            "format": "uuid",
+            "title": "Product Id",
+            "type": "string"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/StepIn-Output"
+            },
+            "title": "Steps",
+            "type": "array"
+          }
+        },
+        "required": [
+          "product_id",
+          "steps"
+        ],
+        "title": "RouteIn",
+        "type": "object"
+      },
+      "RunningRow": {
+        "properties": {
+          "customer": {
+            "title": "Customer",
+            "type": "string"
+          },
+          "finish": {
+            "format": "date",
+            "title": "Finish",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "machines": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Machines",
+            "type": "array"
+          },
+          "number": {
+            "title": "Number",
+            "type": "string"
+          },
+          "product": {
+            "title": "Product",
+            "type": "string"
+          },
+          "progress": {
+            "title": "Progress",
+            "type": "integer"
+          },
+          "start": {
+            "format": "date",
+            "title": "Start",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "customer",
+          "product",
+          "progress",
+          "start",
+          "finish",
+          "machines"
+        ],
+        "title": "RunningRow",
+        "type": "object"
+      },
       "SaveIn": {
         "properties": {
           "acknowledged": {
@@ -3309,6 +5230,357 @@
         "title": "SaveOut",
         "type": "object"
       },
+      "Schedule": {
+        "properties": {
+          "bottlenecks": {
+            "items": {
+              "$ref": "#/components/schemas/Bottleneck"
+            },
+            "title": "Bottlenecks",
+            "type": "array"
+          },
+          "days": {
+            "items": {
+              "format": "date",
+              "type": "string"
+            },
+            "title": "Days",
+            "type": "array"
+          },
+          "load": {
+            "items": {
+              "$ref": "#/components/schemas/LoadRow"
+            },
+            "title": "Load",
+            "type": "array"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/GanttRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "today": {
+            "format": "date",
+            "title": "Today",
+            "type": "string"
+          }
+        },
+        "required": [
+          "days",
+          "today",
+          "rows",
+          "load",
+          "bottlenecks"
+        ],
+        "title": "Schedule",
+        "type": "object"
+      },
+      "Selection": {
+        "properties": {
+          "options": {
+            "$ref": "#/components/schemas/Options"
+          },
+          "orders": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/OrderInfo"
+            },
+            "title": "Orders",
+            "type": "object"
+          },
+          "running": {
+            "items": {
+              "$ref": "#/components/schemas/RunningRow"
+            },
+            "title": "Running",
+            "type": "array"
+          },
+          "selected": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Selected",
+            "type": "array"
+          }
+        },
+        "required": [
+          "orders",
+          "selected",
+          "running",
+          "options"
+        ],
+        "title": "Selection",
+        "type": "object"
+      },
+      "SelectionOption": {
+        "properties": {
+          "alongside": {
+            "title": "Alongside",
+            "type": "integer"
+          },
+          "bottleneck_names": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Bottleneck Names",
+            "type": "array"
+          },
+          "bottlenecks": {
+            "title": "Bottlenecks",
+            "type": "integer"
+          },
+          "contribution": {
+            "title": "Contribution",
+            "type": "integer"
+          },
+          "days": {
+            "title": "Days",
+            "type": "integer"
+          },
+          "end": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End"
+          },
+          "idle_days": {
+            "title": "Idle Days",
+            "type": "integer"
+          },
+          "idle_machines": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Idle Machines",
+            "type": "array"
+          },
+          "late": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Late",
+            "type": "array"
+          },
+          "margin": {
+            "title": "Margin",
+            "type": "number"
+          },
+          "orders": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Orders",
+            "type": "array"
+          },
+          "per_day": {
+            "title": "Per Day",
+            "type": "integer"
+          },
+          "rows": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/OptionRow"
+            },
+            "title": "Rows",
+            "type": "object"
+          },
+          "start": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start"
+          },
+          "utilisation": {
+            "title": "Utilisation",
+            "type": "integer"
+          },
+          "value": {
+            "title": "Value",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "orders",
+          "value",
+          "start",
+          "end",
+          "days",
+          "alongside",
+          "idle_days",
+          "idle_machines",
+          "utilisation",
+          "bottlenecks",
+          "bottleneck_names",
+          "late",
+          "contribution",
+          "margin",
+          "per_day",
+          "rows"
+        ],
+        "title": "SelectionOption",
+        "type": "object"
+      },
+      "SeqRow": {
+        "properties": {
+          "buffer": {
+            "title": "Buffer",
+            "type": "integer"
+          },
+          "deadline": {
+            "format": "date",
+            "title": "Deadline",
+            "type": "string"
+          },
+          "finish": {
+            "format": "date",
+            "title": "Finish",
+            "type": "string"
+          },
+          "group": {
+            "title": "Group",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "late_days": {
+            "title": "Late Days",
+            "type": "integer"
+          },
+          "locked": {
+            "title": "Locked",
+            "type": "boolean"
+          },
+          "machines": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Machines",
+            "type": "array"
+          },
+          "pinned": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pinned"
+          },
+          "rank": {
+            "title": "Rank",
+            "type": "integer"
+          },
+          "start": {
+            "format": "date",
+            "title": "Start",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "on_time",
+              "late",
+              "material"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "warn_machines": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warn Machines",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "rank",
+          "start",
+          "finish",
+          "deadline",
+          "buffer",
+          "late_days",
+          "group",
+          "machines",
+          "warn_machines",
+          "locked",
+          "pinned",
+          "status"
+        ],
+        "title": "SeqRow",
+        "type": "object"
+      },
+      "Sequence": {
+        "properties": {
+          "feasibility": {
+            "$ref": "#/components/schemas/Feasibility"
+          },
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/Group"
+            },
+            "title": "Groups",
+            "type": "array"
+          },
+          "hint": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Hint"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "overview": {
+            "$ref": "#/components/schemas/app__planning__schemas__Overview"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/SeqRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "rule": {
+            "title": "Rule",
+            "type": "string"
+          },
+          "start": {
+            "format": "date",
+            "title": "Start",
+            "type": "string"
+          }
+        },
+        "required": [
+          "rule",
+          "start",
+          "rows",
+          "groups",
+          "hint",
+          "overview",
+          "feasibility"
+        ],
+        "title": "Sequence",
+        "type": "object"
+      },
       "Signal": {
         "description": "The one-line status shown on cards and the Status column. Worked out in code.",
         "properties": {
@@ -3363,6 +5635,68 @@
           "label"
         ],
         "title": "Signal",
+        "type": "object"
+      },
+      "StepIn-Input": {
+        "properties": {
+          "machine": {
+            "title": "Machine",
+            "type": "string"
+          },
+          "minutes_per_unit": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Minutes Per Unit"
+          },
+          "setup_hours": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Setup Hours"
+          }
+        },
+        "required": [
+          "machine",
+          "setup_hours",
+          "minutes_per_unit"
+        ],
+        "title": "StepIn",
+        "type": "object"
+      },
+      "StepIn-Output": {
+        "properties": {
+          "machine": {
+            "title": "Machine",
+            "type": "string"
+          },
+          "minutes_per_unit": {
+            "title": "Minutes Per Unit",
+            "type": "string"
+          },
+          "setup_hours": {
+            "title": "Setup Hours",
+            "type": "string"
+          }
+        },
+        "required": [
+          "machine",
+          "setup_hours",
+          "minutes_per_unit"
+        ],
+        "title": "StepIn",
         "type": "object"
       },
       "TokenResponse": {
@@ -3698,6 +6032,103 @@
           "type"
         ],
         "title": "ValidationError",
+        "type": "object"
+      },
+      "app__customers__schemas__Overview": {
+        "properties": {
+          "active_customers": {
+            "title": "Active Customers",
+            "type": "integer"
+          },
+          "active_pct": {
+            "title": "Active Pct",
+            "type": "number"
+          },
+          "new_customers": {
+            "title": "New Customers",
+            "type": "integer"
+          },
+          "total_customers": {
+            "title": "Total Customers",
+            "type": "integer"
+          },
+          "units_sold": {
+            "title": "Units Sold",
+            "type": "string"
+          }
+        },
+        "required": [
+          "total_customers",
+          "active_customers",
+          "active_pct",
+          "new_customers",
+          "units_sold"
+        ],
+        "title": "Overview",
+        "type": "object"
+      },
+      "app__planning__schemas__Overview": {
+        "properties": {
+          "bottlenecks": {
+            "title": "Bottlenecks",
+            "type": "integer"
+          },
+          "days": {
+            "title": "Days",
+            "type": "integer"
+          },
+          "end": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End"
+          },
+          "on_time": {
+            "title": "On Time",
+            "type": "integer"
+          },
+          "orders": {
+            "title": "Orders",
+            "type": "integer"
+          },
+          "parallel": {
+            "title": "Parallel",
+            "type": "integer"
+          },
+          "start": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start"
+          },
+          "utilisation": {
+            "title": "Utilisation",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "orders",
+          "start",
+          "end",
+          "days",
+          "utilisation",
+          "on_time",
+          "bottlenecks",
+          "parallel"
+        ],
+        "title": "Overview",
         "type": "object"
       }
     },
@@ -6222,6 +8653,522 @@
         "summary": "Cancel",
         "tags": [
           "orders"
+        ]
+      }
+    },
+    "/api/planning/factory": {
+      "get": {
+        "operationId": "get_factory_api_planning_factory_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Factory-Output"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Factory",
+        "tags": [
+          "planning"
+        ]
+      },
+      "put": {
+        "operationId": "put_factory_api_planning_factory_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Factory-Input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Factory-Output"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Put Factory",
+        "tags": [
+          "planning"
+        ]
+      }
+    },
+    "/api/planning/plan": {
+      "get": {
+        "description": "The working plan (recalculated if anything it depends on changed), or the last approved one.",
+        "operationId": "current_plan_api_planning_plan_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/PlanOut"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Current Plan Api Planning Plan Get"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Current Plan",
+        "tags": [
+          "planning"
+        ]
+      }
+    },
+    "/api/planning/plans": {
+      "post": {
+        "operationId": "create_plan_api_planning_plans_post",
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Plan",
+        "tags": [
+          "planning"
+        ]
+      }
+    },
+    "/api/planning/plans/{plan_id}": {
+      "patch": {
+        "description": "Any edit. With `preview=true` nothing is saved: returns the recalculated plan and what got worse/better.",
+        "operationId": "update_plan_api_planning_plans__plan_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plan_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plan Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "preview",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Preview",
+              "type": "boolean"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreviewOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Plan",
+        "tags": [
+          "planning"
+        ]
+      }
+    },
+    "/api/planning/plans/{plan_id}/approve": {
+      "post": {
+        "operationId": "approve_api_planning_plans__plan_id__approve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plan_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plan Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Approve",
+        "tags": [
+          "planning"
+        ]
+      }
+    },
+    "/api/planning/plans/{plan_id}/generate": {
+      "post": {
+        "operationId": "generate_api_planning_plans__plan_id__generate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plan_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plan Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Generate",
+        "tags": [
+          "planning"
+        ]
+      }
+    },
+    "/api/planning/plans/{plan_id}/history": {
+      "get": {
+        "operationId": "history_api_planning_plans__plan_id__history_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plan_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plan Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/HistoryItem"
+                  },
+                  "title": "Response History Api Planning Plans  Plan Id  History Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "History",
+        "tags": [
+          "planning"
+        ]
+      }
+    },
+    "/api/planning/plans/{plan_id}/purchase-requests": {
+      "post": {
+        "operationId": "raise_po_api_planning_plans__plan_id__purchase_requests_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plan_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plan Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RaisePoIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Raise Po",
+        "tags": [
+          "planning"
+        ]
+      }
+    },
+    "/api/planning/purchase-requests": {
+      "get": {
+        "operationId": "purchase_requests_api_planning_purchase_requests_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PurchaseRequestOut"
+                  },
+                  "title": "Response Purchase Requests Api Planning Purchase Requests Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Purchase Requests",
+        "tags": [
+          "planning"
+        ]
+      }
+    },
+    "/api/planning/rules": {
+      "get": {
+        "operationId": "get_rules_api_planning_rules_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanningRules"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Rules",
+        "tags": [
+          "planning"
+        ]
+      },
+      "put": {
+        "operationId": "put_rules_api_planning_rules_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanningRules"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanningRules"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Put Rules",
+        "tags": [
+          "planning"
         ]
       }
     },

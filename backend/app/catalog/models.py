@@ -29,6 +29,11 @@ class Material(Base, TenantScoped, TimestampMixin):
     code: Mapped[str] = mapped_column(String(64))
     name: Mapped[str] = mapped_column(String(200))
     unit: Mapped[str] = mapped_column(String(16), default="t")
+    # Planning costs: price per unit, and what an express delivery costs and saves.
+    price_per_unit_paise: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
+    express_cost_paise: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
+    express_days: Mapped[int] = mapped_column(default=0, server_default="0")
+    express_supplier: Mapped[str | None] = mapped_column(String(200))
 
 
 class ProductMaterial(Base, TenantScoped):

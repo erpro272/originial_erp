@@ -481,6 +481,22 @@ async def set_planning_selection(
     return len(orders)
 
 
+async def set_planned(session: AsyncSession, actor: uuid.UUID, promised: dict[uuid.UUID, date]) -> None:
+    """Planning approved a plan: accepted orders become planned, and every order gets its promised date."""
+    orders = (await session.execute(select(Order).where(Order.id.in_(promised)))).scalars()
+    for o in orders:
+        before = {
+            "status": o.status,
+            "promised_date": o.promised_date.isoformat() if o.promised_date else None,
+        }
+        if o.status == "accepted":
+            o.status = "planned"
+        o.promised_date = promised[o.id]
+        await audit.record(session, actor_id=actor, action="update", entity_type="order", entity_id=o.id,
+                           summary=f"{o.number} planned · promised {o.promised_date.isoformat()}", before=before,
+                           after={"status": o.status, "promised_date": o.promised_date.isoformat()})  # fmt: skip
+
+
 async def reassign_customer(session: AsyncSession, source: uuid.UUID, target: uuid.UUID) -> int:
     """Used when two customer records are merged."""
     from sqlalchemy import update

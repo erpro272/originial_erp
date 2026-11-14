@@ -4,4 +4,5 @@ import app.catalog.models
 import app.core.models
 import app.customers.models
 import app.invoices.models
-import app.orders.models  # noqa: F401
+import app.orders.models
+import app.planning.models  # noqa: F401
