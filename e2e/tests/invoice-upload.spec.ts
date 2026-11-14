@@ -19,13 +19,19 @@ test("upload → verify (QR cross-check, highlight, warning) → match → save"
   await page.getByLabel("Grand total / invoice value").click();
   await expect(page.getByTestId("highlight")).toBeVisible();
 
-  // Change the number (unique per run): the QR no longer agrees -> a warning to accept.
-  const number = `DMC/26-27/E2E-${Date.now().toString(36)}`;
+  // Change the number and IRN (unique per run, so reruns aren't duplicates): the QR no
+  // longer agrees -> warnings to accept.
+  const run = Date.now().toString(36);
+  const number = `DMC/26-27/E2E-${run}`;
   await page.getByLabel("Invoice number").fill(number);
+  await page.getByLabel("IRN").fill(run.padEnd(64, "0"));
   await expect(page.getByText(/Invoice number on the invoice doesn't match the QR code/).first()).toBeVisible();
   const save = page.getByRole("button", { name: "Save invoice" });
   await expect(save).toBeDisabled();
-  await page.getByRole("checkbox", { name: /Accept: Invoice number/ }).check();
+  await page.getByRole("checkbox", { name: /I've checked all \d+ warnings/ }).check();
+  // On reruns the same customer/date/total was saved before: confirm it's not a duplicate.
+  const dupConfirm = page.getByRole("checkbox", { name: /Possible duplicate .* Save anyway/ });
+  if (await dupConfirm.isVisible()) await dupConfirm.check();
   await expect(page.getByText("Ready to save.")).toBeVisible();
   await save.click();
 

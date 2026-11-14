@@ -59,7 +59,7 @@ test("create, edit and cancel an order", async ({ page }) => {
   await dialog.getByLabel("Ship date").fill(ship);
   await expect(dialog).toContainText("₹62,500");
   await dialog.getByRole("button", { name: "Create order" }).click();
-  const toast = page.getByText(/^ORD-\d+ created$/);
+  const toast = page.getByText(/^ORD-\d+ created$/).first();
   await expect(toast).toBeVisible();
   const number = (await toast.textContent())!.replace(" created", "");
 

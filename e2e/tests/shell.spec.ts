@@ -48,7 +48,7 @@ test("switching company changes the tenant, and data stays separate", async ({ p
   await signIn(page, "owner@demo.example", /Demo Manufacturing/);
   await page.getByRole("button", { name: /Account menu/ }).click();
   await page.getByRole("menuitem", { name: "Second Fasteners Pvt Ltd" }).click();
-  await expect(page.getByText("Switched to Second Fasteners Pvt Ltd")).toBeVisible();
+  await expect(page.getByText("Switched to Second Fasteners Pvt Ltd", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: /Account menu/ })).toContainText("Second Fasteners");
 
   await page.goto("/settings/audit-log");
