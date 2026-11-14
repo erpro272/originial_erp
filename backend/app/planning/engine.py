@@ -668,7 +668,8 @@ def suggest_fixes(f: Factory, rules: Rules, running: list[Job], jobs: list[Job],
     return sorted(keep, key=lambda x: x["label"])
 
 
-def _option_metrics(f: Factory, ev: Eval, running: list[Job], ids: list[str], today: date) -> dict[str, Any]:
+def _option_metrics(f: Factory, ev: Eval, running: list[Job], ids: list[str], today: date,
+                    by: dict[str, Job]) -> dict[str, Any]:  # fmt: skip
     run_end = max((ev.sched.placed[j.id].finish for j in running), default=None)
     alongside = 0
     idle: list[tuple[str, date]] = []
@@ -686,7 +687,12 @@ def _option_metrics(f: Factory, ev: Eval, running: list[Job], ids: list[str], to
             "late": [i for i in ids if ev.a["rows"][i]["late_days"]],
             "contribution": ev.fin["contribution"], "margin": ev.fin["margin"], "per_day": ev.fin["per_day"],
             "rows": {i: {"start": ev.a["rows"][i]["start"], "finish": ev.a["rows"][i]["finish"],
-                         "late_days": ev.a["rows"][i]["late_days"]} for i in ids}}  # fmt: skip
+                         "late_days": ev.a["rows"][i]["late_days"],
+                         "route": [f.machines[st.machine].name for st in by[i].steps if st.machine in f.machines],
+                         "idle_fill": bool(by[i].steps) and by[i].steps[0].machine in {
+                             m.id for m in f.machines.values() if m.name in {n for n, _ in idle}}}
+                     for i in ids},
+            "dropped": {}}  # fmt: skip
 
 
 def options(f: Factory, rules: Rules, running: list[Job], cands: list[Job], selected: list[str], inp: Inputs,
@@ -721,12 +727,44 @@ def options(f: Factory, rules: Rules, running: list[Job], cands: list[Job], sele
             cur, cur_ev = best, best_ev
         return cur
 
-    out = {}
+    out: dict[str, Any] = {}
     own = [i for i in selected if i in by]
+    own_ev = ev_of(own) if own else None
     for key, ids in (("own", own), ("part", search(own, False)), ("full", search(own, True))):
         ids = sorted(ids, key=lambda i: own.index(i) if i in own else len(own))
-        out[key] = _option_metrics(f, ev_of(ids), running, ids, today) if ids else None
+        if not ids:
+            out[key] = None
+            continue
+        m = _option_metrics(f, ev_of(ids), running, ids, today, by)
+        if own_ev is not None:
+            m["dropped"] = {i: _why_left_out(f, rules, by[i], own_ev) for i in own if i not in ids}
+        out[key] = m
     return out
+
+
+def _why_left_out(f: Factory, rules: Rules, j: Job, own: Eval) -> str:
+    """Plain reasons, from the numbers, why the optimizer leaves one of your orders out."""
+    why = []
+    cost = job_cost(f, rules, j)["total"]
+    if j.value and 100 * (j.value - cost) / j.value < rules.min_margin_pct:
+        why.append("low margin")
+    short = {f.materials[sh["material"]].name.lower() for sh in own.sched.shortages if sh["job"] == j.id}
+    if short:
+        why.append("short of " + ", ".join(sorted(short)))
+    if own.a["rows"].get(j.id, {}).get("late_days"):
+        why.append("ships late")
+    late_machines = {
+        st.machine for b in own.a["bottlenecks"] if b["kind"] == "late"
+        for k in own.sched.placed if k in b["orders"] for st in own.sched.placed[k].job.steps
+    }  # fmt: skip
+    busy = [
+        f.machines[st.machine].name
+        for st in j.steps
+        if st.machine in late_machines and st.machine in f.machines
+    ]
+    if busy and "ships late" not in why:
+        why.append(f"crowds {busy[0]}")
+    return ", ".join(why) or "earns less per production day"
 
 
 # ---- the one result every tab reads ---------------------------------------------------------
@@ -743,8 +781,13 @@ def _iso(v: Any) -> Any:
 
 
 def compute(f: Factory, rules: Rules, running: list[Job], cands: list[Job], selected: list[str], rule: str,
-            inp: Inputs, today: date, requested: set[str], opts: dict[str, Any] | None = None) -> dict[str, Any]:  # fmt: skip
-    """Everything the 5 tabs show, from one set of inputs. `opts` reuses unchanged selection options."""
+            inp: Inputs, today: date, requested: set[str], opts: dict[str, Any] | None = None,
+            base: list[str] | None = None) -> dict[str, Any]:  # fmt: skip
+    """Everything the 5 tabs show, from one set of inputs.
+
+    `selected` = the ticked orders the plan is built from; `base` = the owner's own picks the optimizer
+    starts from (differs from `selected` after "Use this selection"); `opts` reuses unchanged options.
+    """
     by = {j.id: j for j in cands}
     jobs = [by[i] for i in selected if i in by]
     inp.sequence = by_rule(rule, jobs, f, rules, inp.sequence)
@@ -767,7 +810,10 @@ def compute(f: Factory, rules: Rules, running: list[Job], cands: list[Job], sele
                      "finish": cur.sched.placed[j.id].finish,
                      "machines": [f.machines[s.machine].name for s in j.steps]} for j in running]  # fmt: skip
     if opts is None:
-        opts = _iso(options(f, rules, running, cands, selected, inp, today))
+        opts = _iso(options(f, rules, running, cands, base if base is not None else selected, inp, today))
+    # Which option is in use: the one whose orders are exactly the ticked orders.
+    using = next((k for k in ("own", "part", "full")
+                  if opts.get(k) and set(opts[k]["orders"]) == set(selected)), None)  # fmt: skip
 
     # Tab 2 --------------------------------------------------------------------------------
     over_machines = {b["resource"] for b in a["bottlenecks"] if b["kind"] == "machine"}
@@ -862,6 +908,7 @@ def compute(f: Factory, rules: Rules, running: list[Job], cands: list[Job], sele
     lines = [f"{b['title']} · {b['text']}" for b in problems]
     out: dict[str, Any] = _iso({
         "selection": {"orders": orders, "selected": [i for i in selected if i in by], "running": running_rows,
+                      "using": using, "base": [i for i in (base if base is not None else selected) if i in by],
                       "options": opts},
         "sequence": {"rule": rule, "start": inp.start, "rows": seq, "groups": a["groups"], "hint": hint,
                      "overview": {"orders": len(jobs), "start": a["start"], "end": a["end"], "days": a["days"],

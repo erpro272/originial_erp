@@ -91,7 +91,12 @@ export function useCustomerOptions() {
 /** After any order change, refresh everything that shows orders. */
 export function useInvalidateOrders() {
   const qc = useQueryClient();
-  return () => qc.invalidateQueries({ queryKey: ["orders"] });
+  // Planning reads the same orders: refresh the plan too, so both screens always agree.
+  return () =>
+    Promise.all([
+      qc.invalidateQueries({ queryKey: ["orders"] }),
+      qc.invalidateQueries({ queryKey: ["planning"] }),
+    ]);
 }
 
 export function useSaveRanking() {

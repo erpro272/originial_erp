@@ -10,9 +10,10 @@ async function auth(
   return { Authorization: `Bearer ${(await login.json()).access_token}` };
 }
 
-/** Creates a fresh accepted order sent to Planning, so the test can rerun on the same database. */
+/** Creates a fresh order (by default accepted and sent to Planning), so tests rerun on the same database. */
 async function newPlanningOrder(
   request: APIRequestContext,
+  opts: { status?: "new" | "accepted"; send?: boolean } = {},
 ): Promise<{ id: string; number: string }> {
   const headers = await auth(request);
   const customers = await (
@@ -32,18 +33,19 @@ async function newPlanningOrder(
     data: {
       customer_id: customers[0].id,
       product_id: nuts.id,
-      quantity: "5000",
+      quantity: "50", // tiny: reruns must not use up stock other tests rely on
       unit_price_paise: 1200,
       ship_date: ship,
-      status: "accepted",
+      status: opts.status ?? "accepted",
     },
   });
   expect(r.ok()).toBeTruthy();
   const order = await r.json();
-  await request.post("/api/orders/planning-selection", {
-    headers,
-    data: { order_ids: [order.id], marked: true },
-  });
+  if (opts.send ?? true)
+    await request.post("/api/orders/planning-selection", {
+      headers,
+      data: { order_ids: [order.id], marked: true },
+    });
   return order;
 }
 
@@ -110,4 +112,45 @@ test("plan: an order sent to Planning is planned, checked and approved", async (
   ).json();
   expect(o.status).toBe("planned");
   expect(o.promised_date).toBeTruthy();
+});
+
+test("Orders → Send to Planning shows up ticked; options switch; Custom sequencing works", async ({
+  page,
+  request,
+}) => {
+  const order = await newPlanningOrder(request, { status: "new", send: false });
+  await signIn(page, "owner@demo.example");
+  // Orders received: tick the (new) order and send it to Planning.
+  await page.getByLabel("Search orders").fill(order.number);
+  await page
+    .getByRole("row", { name: new RegExp(order.number) })
+    .getByRole("checkbox")
+    .check();
+  await page.getByRole("button", { name: "Send to Planning" }).click();
+  await expect(page.getByText(/1 sent to Planning/).first()).toBeVisible();
+
+  await page.getByRole("link", { name: "Planning", exact: true }).click();
+  await expect(page.getByLabel(`Include ${order.number}`)).toBeChecked();
+
+  // "Use this selection": the ticks and the Current marker move to that option.
+  const use = page.getByRole("button", { name: "Use this selection" });
+  if (await use.count()) {
+    await use.first().click();
+    await expect(
+      page.getByRole("button", { name: "✓ Using this" }),
+    ).toHaveCount(1);
+    await expect(page.getByText(/Plan updated · .*Using/)).toBeVisible();
+  }
+
+  // Generate, then sequence by hand ("Custom").
+  const generate = page.getByRole("button", { name: "Generate plan →" });
+  if (await generate.isVisible()) await generate.click();
+  else
+    await page
+      .getByRole("tab", { name: /Proposed manufacturing sequence/ })
+      .click();
+  await page.getByRole("tab", { name: "Custom", exact: true }).click();
+  await expect(
+    page.getByRole("tab", { name: "Custom", exact: true }),
+  ).toHaveAttribute("aria-selected", "true");
 });

@@ -3483,9 +3483,20 @@
             "title": "Finish",
             "type": "string"
           },
+          "idle_fill": {
+            "title": "Idle Fill",
+            "type": "boolean"
+          },
           "late_days": {
             "title": "Late Days",
             "type": "integer"
+          },
+          "route": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Route",
+            "type": "array"
           },
           "start": {
             "format": "date",
@@ -3496,7 +3507,9 @@
         "required": [
           "start",
           "finish",
-          "late_days"
+          "late_days",
+          "route",
+          "idle_fill"
         ],
         "title": "OptionRow",
         "type": "object"
@@ -4522,6 +4535,7 @@
             "anyOf": [
               {
                 "enum": [
+                  "own",
                   "part",
                   "full"
                 ],
@@ -5285,6 +5299,13 @@
       },
       "Selection": {
         "properties": {
+          "base": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Base",
+            "type": "array"
+          },
           "options": {
             "$ref": "#/components/schemas/Options"
           },
@@ -5308,11 +5329,29 @@
             },
             "title": "Selected",
             "type": "array"
+          },
+          "using": {
+            "anyOf": [
+              {
+                "enum": [
+                  "own",
+                  "part",
+                  "full"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Using"
           }
         },
         "required": [
           "orders",
           "selected",
+          "base",
+          "using",
           "running",
           "options"
         ],
@@ -5343,6 +5382,13 @@
           "days": {
             "title": "Days",
             "type": "integer"
+          },
+          "dropped": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Dropped",
+            "type": "object"
           },
           "end": {
             "anyOf": [
@@ -5433,7 +5479,8 @@
           "contribution",
           "margin",
           "per_day",
-          "rows"
+          "rows",
+          "dropped"
         ],
         "title": "SelectionOption",
         "type": "object"

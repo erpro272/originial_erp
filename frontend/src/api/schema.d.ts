@@ -1912,8 +1912,12 @@ export interface components {
              * Format: date
              */
             finish: string;
+            /** Idle Fill */
+            idle_fill: boolean;
             /** Late Days */
             late_days: number;
+            /** Route */
+            route: string[];
             /**
              * Start
              * Format: date
@@ -2237,7 +2241,7 @@ export interface components {
             /** Start Date */
             start_date?: string | null;
             /** Use Option */
-            use_option?: ("part" | "full") | null;
+            use_option?: ("own" | "part" | "full") | null;
         };
         /** PlanResult */
         PlanResult: {
@@ -2578,6 +2582,8 @@ export interface components {
         };
         /** Selection */
         Selection: {
+            /** Base */
+            base: string[];
             options: components["schemas"]["Options"];
             /** Orders */
             orders: {
@@ -2587,6 +2593,8 @@ export interface components {
             running: components["schemas"]["RunningRow"][];
             /** Selected */
             selected: string[];
+            /** Using */
+            using: ("own" | "part" | "full") | null;
         };
         /** SelectionOption */
         SelectionOption: {
@@ -2600,6 +2608,10 @@ export interface components {
             contribution: number;
             /** Days */
             days: number;
+            /** Dropped */
+            dropped: {
+                [key: string]: string;
+            };
             /** End */
             end: string | null;
             /** Idle Days */

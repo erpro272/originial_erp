@@ -132,6 +132,9 @@ async def _jobs(
             progress=o.progress_pct or 0,
         )  # fmt: skip
         by_id[job.id] = o
+        approved_plan = plan is not None and plan.status == "approved"
+        if approved_plan and o.status == "accepted" and str(o.id) not in mine:
+            continue  # new orders belong to the next plan, not to an approved one
         if o.status == "accepted" or (o.status == "planned" and str(o.id) in mine) or approved_here:
             cands.append(job)
         else:
@@ -179,10 +182,11 @@ async def _compute(session: AsyncSession, plan: Plan, today: date) -> tuple[dict
     cands, running, _ = await _jobs(session, plan)
     requested = await _requested(session, plan)
     inp = _inputs(plan)
-    ofp = _fp(f, rules.model_dump(), cands, running, plan.selected, plan.start_date, today)
+    base = list((plan.inputs or {}).get("base", plan.selected))
+    ofp = _fp(f, rules.model_dump(), cands, running, base, plan.start_date, today)
     opts = plan.result["selection"]["options"] if plan.result and plan.options_fingerprint == ofp else None
     result = eng.compute(f, _engine_rules(rules), running, cands, list(plan.selected), plan.rule, inp, today,
-                         requested, opts)  # fmt: skip
+                         requested, opts, base)  # fmt: skip
     # Fingerprint the inputs as the engine tidied them (sequence by rule etc.), so a re-read is stable.
     fp = _fp(f, rules.model_dump(), cands, running, plan.selected, plan.rule, result["inputs"],
              plan.start_date, today, sorted(requested))  # fmt: skip
@@ -195,7 +199,12 @@ async def _save(session: AsyncSession, plan: Plan, result: dict[str, Any], fp: s
     plan.inputs = {**(plan.inputs or {}), **result["inputs"]}
     plan.result, plan.fingerprint, plan.options_fingerprint = result, fp, ofp
     plan.version += 1
-    if plan.status == "approved" and tabs:
+    if plan.status == "approved" and set(tabs) & {
+        2,
+        3,
+        4,
+        5,
+    }:  # its schedule, sequence, money or checklist moved
         plan.needs_reapproval = True
     session.add(PlanEvent(plan_id=plan.id, kind=kind, summary=summary, tabs=tabs, actor_id=actor))
     await session.flush()
@@ -204,34 +213,58 @@ async def _save(session: AsyncSession, plan: Plan, result: dict[str, Any], fp: s
 
 async def _refresh(session: AsyncSession, plan: Plan, today: date) -> Plan:
     """Bring the plan up to date with the rest of the ERP (orders, stock, factory data, rules)."""
-    if plan.status in WORKING:
-        await _auto_add_marked(session, plan)
+    synced = await _sync_with_orders(session, plan) if plan.status in WORKING else []
     result, fp, ofp = await _compute(session, plan, today)
+    if plan.status in WORKING and result["selection"]["using"] is None and result["selection"]["selected"]:
+        # The ticked orders no longer match any option (data changed): they become the owner's own picks.
+        plan.inputs = {**(plan.inputs or {}), "base": list(plan.selected)}
+        result, fp, ofp = await _compute(session, plan, today)
     if fp != plan.fingerprint:
         old = set((plan.result or {}).get("selection", {}).get("orders", {}))
         new = set(result["selection"]["orders"])
         num = {**(plan.result or {}).get("selection", {}).get("orders", {}), **result["selection"]["orders"]}
-        parts = []
+        parts = list(synced)
         if new - old:
             parts.append("new in Orders: " + ", ".join(sorted(num[i]["number"] for i in new - old)))
         if old - new:
             parts.append("no longer plannable: " + ", ".join(sorted(num[i]["number"] for i in old - new)))
         summary = "Plan updated · " + ("; ".join(parts) if parts else "orders, stock or factory data changed")
         if plan.result is None:
-            summary = "Plan opened"
+            summary = "Plan started" + (f" · {'; '.join(synced)}" if synced else "")
         await _save(session, plan, result, fp, ofp, None, "refresh" if plan.result else "created", summary)
     return plan
 
 
-async def _auto_add_marked(session: AsyncSession, plan: Plan) -> None:
-    """Orders sent to Planning from Orders received join the working plan (unless the owner removed them)."""
-    excluded = set((plan.inputs or {}).get("excluded", []))
-    marked = (
-        await session.execute(select(Order.id).where(Order.status == "accepted", Order.marked_for_planning))
-    ).scalars()
-    add = [str(i) for i in marked if str(i) not in plan.selected and str(i) not in excluded]
-    if add:
-        plan.selected = [*plan.selected, *add]
+async def _marked(session: AsyncSession) -> list[str]:
+    """Accepted orders that are 'In planning' in Orders received."""
+    q = select(Order.id).where(Order.status == "accepted", Order.marked_for_planning).order_by(Order.number)
+    return [str(i) for i in (await session.execute(q)).scalars()]
+
+
+async def _sync_with_orders(session: AsyncSession, plan: Plan) -> list[str]:
+    """Ticked in Planning == "In planning" in Orders: one fact, kept the same both ways.
+
+    Planning edits write the flag through the Orders service (see update_plan); here, changes made in
+    Orders (Send to / Remove from Planning, cancel, status change) flow into the working plan.
+    """
+    marked = await _marked(session)
+    keep = [i for i in plan.selected if i in marked]
+    new = keep + [i for i in marked if i not in keep]
+    if new == list(plan.selected):
+        return []
+    added, removed = set(new) - set(plan.selected), set(plan.selected) - set(new)
+    nums = {
+        str(o.id): o.number
+        for o in (await session.execute(select(Order).where(Order.id.in_([uuid.UUID(i) for i in added | removed])))).scalars()
+    }  # fmt: skip
+    plan.selected = new
+    plan.inputs = {**(plan.inputs or {}), "base": new}  # the owner's own picks changed in Orders
+    out = []
+    if added:
+        out.append("sent from Orders received: " + ", ".join(sorted(nums.get(i, "?") for i in added)))
+    if removed:
+        out.append("no longer in planning: " + ", ".join(sorted(nums.get(i, "?") for i in removed)))
+    return out
 
 
 # ---- output ---------------------------------------------------------------------------------
@@ -261,6 +294,10 @@ async def current_plan(session: AsyncSession) -> Plan | None:
 
 async def get_current(session: AsyncSession) -> PlanOut | None:
     plan = await current_plan(session)
+    idle = plan is None or (plan.status == "approved" and not plan.needs_reapproval)
+    if idle and await _marked(session):
+        # Orders were sent to Planning and nothing is being planned: start the next plan for them.
+        return await _new_plan(session, None)
     if plan is None:
         return None
     return await _out(session, await _refresh(session, plan, clock.today()))
@@ -277,12 +314,15 @@ async def create_plan(session: AsyncSession, actor: uuid.UUID) -> PlanOut:
     cur = await current_plan(session)
     if cur is not None and cur.status in WORKING:
         raise DomainError(f"{cur.number} is still being worked on. Approve it first, or keep editing it.")
+    return await _new_plan(session, actor)
+
+
+async def _new_plan(session: AsyncSession, actor: uuid.UUID | None) -> PlanOut:
     n = await counters.next_value(session, "plan", start=0)
-    marked = (
-        await session.execute(select(Order.id).where(Order.status == "accepted", Order.marked_for_planning))
-    ).scalars()
-    plan = Plan(number=f"PLAN-{n:03d}", status="draft", rule="deadline", start_date=eng.next_working(clock.today(), await load_factory(session)),
-                selected=[str(i) for i in marked], inputs={})  # fmt: skip
+    marked = await _marked(session)
+    start = eng.next_working(clock.today(), await load_factory(session))
+    plan = Plan(number=f"PLAN-{n:03d}", status="draft", rule="deadline", start_date=start, selected=marked,
+                inputs={"base": marked})  # fmt: skip
     session.add(plan)
     await session.flush()
     await audit.record(session, actor_id=actor, action="create", entity_type="plan", entity_id=plan.id,
@@ -302,16 +342,19 @@ def _apply(plan: Plan, p: PlanPatch, result: dict[str, Any]) -> tuple[list[str],
     inp = _inputs(plan)
     num = {k: v["number"] for k, v in result["selection"]["orders"].items()}
     selected = list(plan.selected)
-    excluded = set((plan.inputs or {}).get("excluded", []))
+    base = list((plan.inputs or {}).get("base", selected))
     summary = "Plan changed"
     if p.use_option:
         opt = result["selection"]["options"].get(p.use_option)
         if not opt:
             raise DomainError("That option isn't available.")
-        dropped = set(selected) - set(opt["orders"])
-        selected = list(opt["orders"])
-        excluded = (excluded | dropped) - set(selected)
-        summary = f"Used the {'partly' if p.use_option == 'part' else 'fully'} optimized selection"
+        selected = list(opt["orders"])  # the owner's own picks (base) stay, so the 3 options stay comparable
+        label = {
+            "own": "your selection",
+            "part": "the partly optimized selection",
+            "full": "the fully optimized selection",
+        }
+        summary = f"Using {label[p.use_option]}"
     if p.selected is not None:
         unknown = [i for i in p.selected if i not in num]
         if unknown:
@@ -319,7 +362,7 @@ def _apply(plan: Plan, p: PlanPatch, result: dict[str, Any]) -> tuple[list[str],
         added = [i for i in p.selected if i not in selected]
         removed = [i for i in selected if i not in p.selected]
         selected = list(p.selected)
-        excluded = (excluded | set(removed)) - set(added)
+        base = list(selected)  # ticking by hand = the owner's own picks
         bits = ([f"added {', '.join(num[i] for i in added)}"] if added else []) + (
             [f"removed {', '.join(num[i] for i in removed)}"] if removed else [])  # fmt: skip
         summary = "Orders selected · " + "; ".join(bits) if bits else "Orders selected"
@@ -369,7 +412,7 @@ def _apply(plan: Plan, p: PlanPatch, result: dict[str, Any]) -> tuple[list[str],
             f"removed {labels.get(x, x)}" for x in sorted(fx_removed)
         ]
         summary = "Fixes · " + "; ".join(bits) if bits else "Fixes unchanged"
-    _store_inputs(plan, inp, {"excluded": sorted(excluded)})
+    _store_inputs(plan, inp, {"base": base})
     return selected, summary
 
 
@@ -396,10 +439,24 @@ async def update_plan(session: AsyncSession, actor: uuid.UUID, plan_id: uuid.UUI
         return PreviewOut(plan=out, diff=Diff.model_validate(diff | {"blocked": blocked}), tabs=tabs)
     if plan.status == "approved":
         summary += " · needs re-approval"
+    if plan.status in WORKING:
+        await _write_ticks_to_orders(session, actor, snapshot[0], list(plan.selected))
     tabs = await _save(session, plan, result, fp, ofp, actor, "change", summary)
     await audit.record(session, actor_id=actor, action="update", entity_type="plan", entity_id=plan.id,
                        summary=f"{plan.number}: {summary}")  # fmt: skip
     return PreviewOut(plan=await _out(session, plan), diff=Diff.model_validate(diff), tabs=tabs)
+
+
+async def _write_ticks_to_orders(
+    session: AsyncSession, actor: uuid.UUID, old: list[str], new: list[str]
+) -> None:
+    """Planning ticks -> "In planning" on the orders, through the Orders service."""
+    added = [uuid.UUID(i) for i in new if i not in old]
+    removed = [uuid.UUID(i) for i in old if i not in new]
+    if added:
+        await orders_service.set_planning_selection(session, actor, added, True)
+    if removed:
+        await orders_service.set_planning_selection(session, actor, removed, False)
 
 
 async def generate(session: AsyncSession, actor: uuid.UUID, plan_id: uuid.UUID) -> PlanOut:
@@ -464,9 +521,9 @@ async def approve(session: AsyncSession, actor: uuid.UUID, plan_id: uuid.UUID, b
         await _request_po(session, plan, actor, n, "approval")
     promised = {uuid.UUID(row["id"]): date.fromisoformat(row["finish"]) for row in r["sequence"]["rows"]}
     await orders_service.set_planned(session, actor, promised)
-    plan.status, plan.needs_reapproval = "approved", False
-    plan.approved_at, plan.approved_by, plan.approval_note = datetime.now(UTC), actor, body.note
+    plan.status = "approved"
     await _refresh(session, plan, clock.today())
+    plan.needs_reapproval = False  # the approval itself (POs, planned orders) is the new baseline
     session.add(PlanEvent(plan_id=plan.id, kind="approved", tabs=[], actor_id=actor,
                           summary="Plan approved" + (f" · {body.note}" if body.note else "")))  # fmt: skip
     await events.emit(session, "plan.approved", {

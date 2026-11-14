@@ -91,3 +91,13 @@ Short records of choices and the reason for each. Newest at the bottom.
 29. **Purchase requests** are recorded now (material, quantity, needed-by, express, plan, orders,
     who/when, status) for the Purchasing module to turn into POs later. *Owner request.*
 30. **One working plan at a time**; approved plans are kept as history. *Owner chose option A.*
+31. **Planning ticks == "In planning" in Orders** (one fact, synced both ways): ticking/unticking in
+    Planning writes the flag through the Orders service; Send to / Remove from Planning in Orders
+    ticks/unticks in the working plan. *Owner feedback: sending from Orders must show in Planning.*
+32. **"Send to Planning" accepts New orders** (only accepted orders can be planned, and sending one is
+    the owner's decision to accept it). Planned / in-production / closed orders are refused.
+33. **Selection options keep the owner's own picks** as the optimizer's starting point; "Use this
+    selection" switches the ticked orders and moves "Current"; "Your selection" switches back.
+34. **Orders sent to Planning when no plan is being worked on start the next plan** (PLAN-002, …)
+    automatically. An approved plan only looks at its own orders and needs re-approval only when its
+    sequence, schedule, money or checklist change; the approval itself is the new baseline.

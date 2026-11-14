@@ -92,6 +92,8 @@ isolation). One company per website: no company picker or switcher in the UI.
   (recorded for the future Purchasing module) + `plan.approved` event. Factory setup
   (departments, machines, routes, material costs, downtime) and company rules
   (`planning-rules`: late penalty fixed or %, overhead %, packaging, minimum margin).
+  Ticks == `Order.marked_for_planning` (synced both ways); `inputs.base` = owner's own picks the
+  optimizer starts from; `selection.using` = option in use. No working plan + orders sent → new draft.
 - Seed: `seed/demo_data.py` (dates relative to today; mirrors the Orders mockup). Startup
   (`seed.run --if-empty`) only runs with `ERP_SEED_DEMO=true` (compose/dev), fills demo data into
   demo companies with no business data, never touches a company with data; `--reset` is refused

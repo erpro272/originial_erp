@@ -37,6 +37,8 @@ class OptionRow(BaseModel):
     start: date
     finish: date
     late_days: int
+    route: list[str]
+    idle_fill: bool
 
 
 class SelectionOption(BaseModel):
@@ -56,6 +58,7 @@ class SelectionOption(BaseModel):
     margin: float
     per_day: int
     rows: dict[str, OptionRow]
+    dropped: dict[str, str]
 
 
 class Options(BaseModel):
@@ -67,6 +70,8 @@ class Options(BaseModel):
 class Selection(BaseModel):
     orders: dict[str, OrderInfo]
     selected: list[str]
+    base: list[str]
+    using: Literal["own", "part", "full"] | None
     running: list[RunningRow]
     options: Options
 
@@ -304,7 +309,7 @@ class PlanPatch(BaseModel):
     """One edit. Every field is optional; the server recalculates everything after any change."""
 
     selected: list[str] | None = None
-    use_option: Literal["part", "full"] | None = None
+    use_option: Literal["own", "part", "full"] | None = None
     rule: Literal["deadline", "value", "margin", "priority", "custom"] | None = None
     start_date: date | None = None
     sequence: list[str] | None = None

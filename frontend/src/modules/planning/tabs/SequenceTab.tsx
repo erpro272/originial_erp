@@ -226,7 +226,7 @@ export function SequenceTab({ plan, go }: TabProps) {
               size="sm"
               options={RULES.map((r) => ({ ...r }))}
               value={seq.rule as Rule}
-              onChange={(v) => edit && v !== "custom" && run({ rule: v })}
+              onChange={(v) => edit && run({ rule: v })}
             />
             <label className="flex items-center gap-2 rounded-full border border-line-input px-3.5 py-1.5 text-[13px] font-medium text-ink-2">
               Start

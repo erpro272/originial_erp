@@ -467,11 +467,16 @@ async def set_planning_selection(
     orders = list((await session.execute(select(Order).where(Order.id.in_(ids)))).scalars())
     if len(orders) != len(set(ids)):
         raise NotFound("One or more orders were not found.")
-    bad = [o.number for o in orders if marked and o.status != "accepted"]
+    bad = [o.number for o in orders if marked and o.status not in ("new", "accepted")]
     if bad:
-        raise DomainError("Only accepted orders can be sent to Planning: " + ", ".join(sorted(bad)),
-                          details={"orders": sorted(bad)})  # fmt: skip
+        raise DomainError("Already planned, in production or closed, so it can't be sent to Planning: "
+                          + ", ".join(sorted(bad)), details={"orders": sorted(bad)})  # fmt: skip
     for o in orders:
+        if marked and o.status == "new":  # sending a new order to Planning accepts it
+            o.status = "accepted"
+            await audit.record(session, actor_id=actor, action="update", entity_type="order", entity_id=o.id,
+                               summary=f"{o.number} accepted (sent to Planning)",
+                               before={"status": "new"}, after={"status": "accepted"})  # fmt: skip
         if o.marked_for_planning != marked:
             o.marked_for_planning = marked
             await audit.record(session, actor_id=actor, action="update", entity_type="order",

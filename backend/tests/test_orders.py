@@ -102,17 +102,20 @@ async def test_cannot_cancel_in_production(client: AsyncClient, co: Company, dat
 async def test_bulk_planning_selection(client: AsyncClient, co: Company, data) -> None:  # type: ignore[no-untyped-def]
     h = await headers_for(client, co)
     a = await _create(client, h, data, status="accepted")
-    b = await _create(client, h, data)  # new
+    b = await _create(client, h, data)  # new: sending it to Planning accepts it
+    c = await _create(client, h, data, status="accepted")
+    await client.patch(f"/orders/{c['id']}", headers=h, json={"status": "planned"})
+    r = await client.post(
+        "/orders/planning-selection", headers=h, json={"order_ids": [a["id"], c["id"]], "marked": True}
+    )
+    assert r.status_code == 400 and r.json()["error"]["details"]["orders"] == [c["number"]]
     r = await client.post(
         "/orders/planning-selection", headers=h, json={"order_ids": [a["id"], b["id"]], "marked": True}
     )
-    assert r.status_code == 400 and r.json()["error"]["details"]["orders"] == [b["number"]]
-    r = await client.post(
-        "/orders/planning-selection", headers=h, json={"order_ids": [a["id"]], "marked": True}
-    )
-    assert r.json() == {"updated": 1}
+    assert r.json() == {"updated": 2}
+    assert (await client.get(f"/orders/{b['id']}", headers=h)).json()["status"] == "accepted"
     page = (await client.get("/orders", headers=h, params={"planning_only": True})).json()
-    assert [o["number"] for o in page["items"]] == [a["number"]]
+    assert sorted(o["number"] for o in page["items"]) == sorted([a["number"], b["number"]])
 
 
 async def test_permissions(client: AsyncClient, co: Company, data) -> None:  # type: ignore[no-untyped-def]

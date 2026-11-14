@@ -171,3 +171,100 @@ async def test_factory_validation(client: AsyncClient) -> None:
     assert (await client.put("/planning/factory", headers=h, json=closed)).json()["downtime"][0][
         "reason"
     ] == "Christmas"
+
+
+async def test_ticks_and_orders_stay_in_sync_both_ways(client: AsyncClient) -> None:
+    """Ticked in Planning == "In planning" in Orders, and orders sent later always show up."""
+    co = await make_company("plan-sync")
+    h = await headers_for(client, co)
+    bolts = await fx.product(co.id, "B1", "Bolts")
+    cust = str(await fx.customer(co.id, "Sync Ltd"))
+    a = await _order(client, h, str(bolts), cust, "100", 10)
+    b = await _order(client, h, str(bolts), cust, "100", 12)
+    c = await _order(client, h, str(bolts), cust, "100", 14, mark=False)
+
+    plan = (
+        await client.get("/planning/plan", headers=h)
+    ).json()  # orders were sent: a draft starts by itself
+    assert plan["status"] == "draft" and set(plan["result"]["selection"]["selected"]) == {a, b}
+    pid = plan["id"]
+
+    async def marked(oid: str) -> bool:
+        return bool((await client.get(f"/orders/{oid}", headers=h)).json()["marked_for_planning"])
+
+    # Untick b in Planning -> no longer "In planning" in Orders; tick c -> it is.
+    await client.patch(f"/planning/plans/{pid}", headers=h, json={"selected": [a, c]})
+    assert not await marked(b) and await marked(c)
+    # Send b again from Orders -> it is ticked again (even though it was unticked before).
+    await client.post("/orders/planning-selection", headers=h, json={"order_ids": [b], "marked": True})
+    sel = (await client.get("/planning/plan", headers=h)).json()["result"]["selection"]
+    assert set(sel["selected"]) == {a, b, c}
+    # Remove from Planning in Orders -> unticked here.
+    await client.post("/orders/planning-selection", headers=h, json={"order_ids": [c], "marked": False})
+    sel = (await client.get("/planning/plan", headers=h)).json()["result"]["selection"]
+    assert set(sel["selected"]) == {a, b} and sel["using"] == "own"
+
+
+async def test_use_selection_switches_and_keeps_the_options(client: AsyncClient) -> None:
+    co = await make_company("plan-use")
+    h = await headers_for(client, co)
+    bolts = str(await fx.product(co.id, "B1", "Bolts"))
+    cust = str(await fx.customer(co.id, "Use Ltd"))
+    a = await _order(client, h, bolts, cust, "100", 10)
+    extra = await _order(client, h, bolts, cust, "100", 12, mark=False)  # fits with no extra cost
+    plan = (await client.get("/planning/plan", headers=h)).json()
+    opts = plan["result"]["selection"]["options"]
+    assert plan["result"]["selection"]["using"] == "own" and set(opts["part"]["orders"]) == {a, extra}
+
+    r = (await client.patch(f"/planning/plans/{plan['id']}", headers=h, json={"use_option": "part"})).json()
+    sel = r["plan"]["result"]["selection"]
+    assert sel["using"] == "part" and set(sel["selected"]) == {a, extra}
+    assert sel["options"]["own"]["orders"] == [a]  # your own picks stay, so the 3 options stay comparable
+    assert (await client.get(f"/orders/{extra}", headers=h)).json()["marked_for_planning"]
+
+    back = (await client.patch(f"/planning/plans/{plan['id']}", headers=h, json={"use_option": "own"})).json()
+    assert back["plan"]["result"]["selection"]["using"] == "own"
+    assert back["plan"]["result"]["selection"]["selected"] == [a]
+
+
+async def test_new_order_after_approval_starts_the_next_plan(client: AsyncClient) -> None:
+    co = await make_company("plan-next")
+    h = await headers_for(client, co)
+    bolts = str(await fx.product(co.id, "B1", "Bolts"))
+    cust = str(await fx.customer(co.id, "Next Ltd"))
+    await _order(client, h, bolts, cust, "100", 10)
+    plan = (await client.get("/planning/plan", headers=h)).json()
+    await client.post(f"/planning/plans/{plan['id']}/generate", headers=h)
+    await client.post(f"/planning/plans/{plan['id']}/approve", headers=h, json={"raise_open_pos": True})
+
+    await _order(client, h, bolts, cust, "100", 12, mark=False)  # a new accepted order, not sent yet
+    still = (await client.get("/planning/plan", headers=h)).json()
+    assert (
+        still["number"] == plan["number"] and not still["needs_reapproval"]
+    )  # unrelated order: no re-approval
+
+    nxt = await _order(client, h, bolts, cust, "100", 14)  # sent to Planning
+    cur = (await client.get("/planning/plan", headers=h)).json()
+    assert (
+        cur["number"] != plan["number"]
+        and cur["status"] == "draft"
+        and cur["result"]["selection"]["selected"] == [nxt]
+    )
+
+
+async def test_approval_does_not_trigger_its_own_reapproval(client: AsyncClient) -> None:
+    co = await make_company("plan-appr")
+    h = await headers_for(client, co)
+    bolts = str(await fx.product(co.id, "B1", "Bolts", bom=[("STX", "Steel X", Decimal("0.01"))]))
+    await fx.stock(co.id, "STX", Decimal("0"))  # short: approval raises a PO
+    cust = str(await fx.customer(co.id, "Appr Ltd"))
+    await _order(client, h, bolts, cust, "100", 10)
+    await _order(client, h, bolts, cust, "100", 12, mark=False)  # another accepted order stays outside
+    plan = (await client.get("/planning/plan", headers=h)).json()
+    await client.post(f"/planning/plans/{plan['id']}/generate", headers=h)
+    ap = (
+        await client.post(f"/planning/plans/{plan['id']}/approve", headers=h, json={"raise_open_pos": True})
+    ).json()
+    assert ap["status"] == "approved" and not ap["needs_reapproval"]
+    again = (await client.get("/planning/plan", headers=h)).json()
+    assert again["status"] == "approved" and not again["needs_reapproval"]

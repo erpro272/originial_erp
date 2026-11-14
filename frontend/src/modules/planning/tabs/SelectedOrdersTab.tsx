@@ -30,7 +30,9 @@ export function SelectedOrdersTab({ plan, go }: TabProps) {
   const gen = useGenerate(plan.id);
   const { toast } = useToast();
   const [sort, setSort] = useState<"deadline" | "value" | "margin">("deadline");
-  const [hover, setHover] = useState<OptKey>("own");
+  const using = (sel.using ?? "own") as OptKey;
+  // Which option the timeline highlights: the one in use, until the owner clicks another column.
+  const [focus, setFocus] = useState<OptKey | null>(null);
   // Show the tick at once while the server recalculates the plan.
   const [pendingSel, setPendingSel] = useState<string[] | null>(null);
   const current = pendingSel ?? sel.selected;
@@ -70,7 +72,7 @@ export function SelectedOrdersTab({ plan, go }: TabProps) {
   const totals = {
     qty: picked.reduce((s, r) => s + r.qty, 0),
     value: picked.reduce((s, r) => s + r.value, 0),
-    contribution: opts.own?.contribution ?? 0,
+    contribution: opts[using]?.contribution ?? 0,
   };
 
   return (
@@ -85,7 +87,7 @@ export function SelectedOrdersTab({ plan, go }: TabProps) {
         </div>
       </div>
 
-      <OrderTimeline plan={plan} hover={hover} />
+      <OrderTimeline plan={plan} focus={focus ?? using} onFocus={setFocus} />
 
       {/* the orders */}
       <section className="overflow-hidden rounded-card border border-line">
@@ -217,8 +219,12 @@ export function SelectedOrdersTab({ plan, go }: TabProps) {
 
       <SelectionOptions
         plan={plan}
-        onHover={setHover}
-        onUse={(k) => run({ use_option: k }, `${OPT_LABEL[k]} applied · plan recalculated`)}
+        focus={focus ?? using}
+        onFocus={setFocus}
+        onUse={async (k) => {
+          await run({ use_option: k }, `Using ${OPT_LABEL[k].toLowerCase()} · plan recalculated`);
+          setFocus(null);
+        }}
         editable={edit}
         busy={patch.isPending}
       />
@@ -259,39 +265,73 @@ export function SelectedOrdersTab({ plan, go }: TabProps) {
   );
 }
 
-/* ---- order timeline: running orders vs the 3 options ------------------------------------- */
+/* ---- order timeline: running orders vs. the 3 selection options (mockup) ------------------- */
 
-function OrderTimeline({ plan, hover }: { plan: TabProps["plan"]; hover: OptKey }) {
+const isoDay = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+function OrderTimeline({
+  plan,
+  focus,
+  onFocus,
+}: {
+  plan: TabProps["plan"];
+  focus: OptKey;
+  onFocus: (k: OptKey) => void;
+}) {
   const sel = plan.result.selection;
   const opts = sel.options;
-  const all = [
+  const keys = (["own", "part", "full"] as OptKey[]).filter((k) => opts[k]);
+  const dates = [
     ...sel.running.flatMap((r) => [r.start, r.finish]),
-    ...(["own", "part", "full"] as OptKey[]).flatMap((k) =>
-      Object.values(opts[k]?.rows ?? {}).flatMap((r) => [r.start, r.finish]),
-    ),
+    ...keys.flatMap((k) => Object.values(opts[k]!.rows).flatMap((r) => [r.start, r.finish])),
   ];
-  if (!all.length) return null;
-  const first = all.reduce((a, b) => (a < b ? a : b));
-  const last = all.reduce((a, b) => (a > b ? a : b));
+  if (!dates.length) return null;
+  const first = dates.reduce((a, b) => (a < b ? a : b));
+  const last = dates.reduce((a, b) => (a > b ? a : b));
   const days: string[] = [];
-  for (
-    let d = new Date(`${first}T00:00:00`);
-    d <= new Date(`${last}T00:00:00`);
-    d.setDate(d.getDate() + 1)
-  )
-    days.push(
-      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`,
-    );
+  for (let d = new Date(`${first}T00:00:00`); isoDay(d) <= last; d.setDate(d.getDate() + 1))
+    days.push(isoDay(d));
   const col = (iso: string) => days.indexOf(iso) + 2;
   const grid = { gridTemplateColumns: `200px repeat(${days.length}, minmax(42px, 1fr))` };
-  const runEnd = sel.running.reduce((m, r) => (r.finish > m ? r.finish : m), "");
-  const own = new Set(opts.own?.orders ?? []);
-  const name = (id: string) => sel.orders[id]?.number ?? "";
+  const minW = 200 + days.length * 42;
+  // Days the running orders still hold the machines.
+  const runDays = new Set(
+    sel.running.flatMap((r) => days.filter((d) => d >= r.start && d <= r.finish)),
+  );
+  const base = new Set(sel.base);
+  const num = (id: string) => sel.orders[id]?.number ?? "";
+  const tags: Record<OptKey, { tone: TagTone; text: string }> = {
+    own: { tone: "bl", text: "Your picks" },
+    part: { tone: "md", text: "Keeps your orders" },
+    full: { tone: "ok", text: "Free choice" },
+  };
+  // "Best score" uses the optimizer's own order: fewest late deliveries, then most contribution.
+  const score = (k: OptKey) => [opts[k]!.late.length, -opts[k]!.contribution, opts[k]!.bottlenecks];
+  const best = keys.reduce((b, k) => {
+    const [x, y] = [score(k), score(b)];
+    return x[0]! < y[0]! || (x[0] === y[0] && (x[1]! < y[1]! || (x[1] === y[1] && x[2]! < y[2]!)))
+      ? k
+      : b;
+  }, keys[0]!);
 
+  const row = (label: string, content: React.ReactNode, key: string) => (
+    <div
+      key={key}
+      className="relative grid min-h-7 items-center"
+      style={{ ...grid, minWidth: minW }}
+    >
+      <span className="sticky left-0 z-[2] col-start-1 row-start-1 flex h-full items-center border-r border-line bg-inherit pr-3 pl-8 font-mono text-[11.5px] text-ink-3">
+        {label}
+      </span>
+      {content}
+    </div>
+  );
   const bar = (cls: string, a: string, b: string, text: string) => (
     <b
+      title={text}
       className={cn(
-        "z-[1] mx-0.5 flex h-[18px] items-center overflow-hidden rounded-[5px] border px-[7px] text-[10.5px] font-medium whitespace-nowrap",
+        "z-[1] row-start-1 mx-0.5 flex h-[18px] items-center overflow-hidden rounded-[5px] border px-[7px] text-[10.5px] font-medium whitespace-nowrap",
         cls,
       )}
       style={{ gridColumn: `${col(a)} / ${col(b) + 1}` }}
@@ -299,69 +339,9 @@ function OrderTimeline({ plan, hover }: { plan: TabProps["plan"]; hover: OptKey 
       {text}
     </b>
   );
-  const group = (
-    k: OptKey,
-    o: SelectionOption | null | undefined,
-    tag: { tone: TagTone; text: string },
-    sub: string,
-  ) =>
-    o && (
-      <div
-        key={k}
-        className={cn(
-          "relative border-t border-line pb-1.5",
-          hover === k && "bg-primary/[0.035] shadow-[inset_3px_0_0_var(--color-primary)]",
-        )}
-      >
-        <div className="flex items-center gap-2.5 px-5 pt-2.5 pb-1">
-          <b className="text-sm">{OPT_LABEL[k]}</b>
-          <small className="text-xs text-muted">{sub}</small>
-          <Tag tone={tag.tone} size="sm">
-            {tag.text}
-          </Tag>
-        </div>
-        {o.orders.map((id) => {
-          const r = o.rows[id]!;
-          return (
-            <div key={id} className="grid min-h-7 items-center" style={grid}>
-              <span className="sticky left-0 z-[2] flex h-full items-center border-r border-line bg-white pr-3 pl-8 font-mono text-[11.5px] text-ink-3">
-                {name(id)}
-              </span>
-              {bar(
-                r.late_days
-                  ? "border-hi-line bg-hi-bg text-hi"
-                  : own.has(id)
-                    ? "border-load-ink/30 bg-load text-load-ink"
-                    : "border-ok-line bg-ok-bg text-ok",
-                r.start,
-                r.finish,
-                r.late_days
-                  ? `${plural(r.late_days, "day")} late`
-                  : own.has(id)
-                    ? ""
-                    : "Added by optimizer",
-              )}
-            </div>
-          );
-        })}
-        {k !== "own" &&
-          [...own]
-            .filter((id) => !o.orders.includes(id))
-            .map((id) => (
-              <div key={id} className="grid min-h-7 items-center" style={grid}>
-                <span className="sticky left-0 z-[2] flex h-full items-center border-r border-line bg-white pr-3 pl-8 font-mono text-[11.5px] text-ink-3">
-                  {name(id)}
-                </span>
-                <span className="col-[2/-1] pl-2 text-[11.5px] text-subtle italic">
-                  Left out by the optimizer
-                </span>
-              </div>
-            ))}
-      </div>
-    );
 
   return (
-    <details className="group overflow-hidden rounded-card border border-line">
+    <details className="group overflow-hidden rounded-card border border-line" open>
       <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-3 px-5 py-4 select-none hover:bg-surface [&::-webkit-details-marker]:hidden">
         <h3 className="m-0 text-[17px] font-semibold">
           <span className="inline-block w-[18px] text-muted transition-transform group-open:rotate-90">
@@ -373,92 +353,171 @@ function OrderTimeline({ plan, hover }: { plan: TabProps["plan"]; hover: OptKey 
           </small>
         </h3>
         <span className="hidden flex-wrap gap-4 text-[13px] text-ink-3 group-open:flex">
-          <Legend cls="bg-surface-2 border-faint" text="Running" />
+          <Legend cls="bg-faint/60 border-faint" text="Running" />
           <Legend cls="bg-load border-load-ink/30" text="Your order" />
           <Legend cls="bg-ok-bg border-ok-line" text="Added by optimizer" />
           <Legend cls="bg-hi-bg border-hi-line" text="Late" />
+          <Legend
+            cls="border-line bg-[repeating-linear-gradient(135deg,color-mix(in_srgb,var(--color-muted)_18%,transparent)_0_2px,transparent_2px_4px)]"
+            text="Running orders' days"
+          />
         </span>
       </summary>
       <div className="relative overflow-x-auto border-t border-divider">
+        {/* day columns: Sundays and the days running orders hold the machines */}
         <div
-          className="grid min-h-11 items-center bg-surface text-center text-xs text-ink-2"
-          style={grid}
+          className="pointer-events-none absolute inset-0 grid"
+          style={{ ...grid, minWidth: minW }}
+        >
+          <span />
+          {days.map((d) => (
+            <i
+              key={d}
+              className={cn(
+                "border-l border-divider-2",
+                dayParts(d).sun && "bg-surface",
+                runDays.has(d) &&
+                  "bg-[repeating-linear-gradient(135deg,color-mix(in_srgb,var(--color-muted)_7%,transparent)_0_4px,transparent_4px_9px)]",
+              )}
+            />
+          ))}
+        </div>
+        <div
+          className="relative grid min-h-11 items-center bg-surface text-center text-xs text-ink-2"
+          style={{ ...grid, minWidth: minW }}
         >
           <span className="sticky left-0 z-[2] h-full border-r border-line bg-surface" />
           {days.map((d) => {
             const p = dayParts(d);
             return (
-              <span
-                key={d}
-                className={cn(
-                  "flex flex-col font-semibold",
-                  p.sun && "text-subtle",
-                  d <= runEnd && "bg-surface-2/60",
-                )}
-              >
+              <span key={d} className={cn("flex flex-col font-semibold", p.sun && "text-subtle")}>
                 <small className="text-[10.5px] font-normal text-subtle">{p.dow}</small>
                 {p.day}
               </span>
             );
           })}
         </div>
+
         {sel.running.length > 0 && (
-          <div className="border-t border-line pb-1.5">
-            <div className="flex items-center gap-2.5 px-5 pt-2.5 pb-1">
+          <div className="relative border-t border-line bg-white pb-1.5">
+            <div className="flex items-center gap-2.5 px-5 pt-2.5 pb-1" style={{ minWidth: minW }}>
               <b className="text-sm">Running now</b>
               <small className="text-xs text-muted">in production or already planned</small>
               <Tag tone="lo" size="sm">
                 Locked
               </Tag>
             </div>
-            {sel.running.map((r) => (
-              <div key={r.id} className="grid min-h-7 items-center" style={grid}>
-                <span className="sticky left-0 z-[2] flex h-full items-center border-r border-line bg-white pr-3 pl-8 font-mono text-[11.5px] text-ink-3">
-                  {r.number}
-                </span>
-                {bar(
-                  "border-faint bg-surface-2 text-ink-3",
+            {sel.running.map((r) =>
+              row(
+                r.number,
+                bar(
+                  "border-faint bg-faint/50 text-ink-3",
                   r.start,
                   r.finish,
                   `${r.machines[0] ?? ""} · ${r.customer}`,
-                )}
-              </div>
-            ))}
+                ),
+                r.id,
+              ),
+            )}
           </div>
         )}
-        {group(
-          "own",
-          opts.own,
-          { tone: "bl", text: "Current" },
-          opts.own
-            ? `${plural(opts.own.orders.length, "order")} · ${range(opts.own.start, opts.own.end)}`
-            : "",
-        )}
-        {group(
-          "part",
-          opts.part,
-          { tone: "md", text: "Keeps your orders" },
-          opts.part
-            ? `${plural(opts.part.orders.length, "order")} · ${range(opts.part.start, opts.part.end)}`
-            : "",
-        )}
-        {group(
-          "full",
-          opts.full,
-          { tone: "ok", text: "Free choice" },
-          opts.full
-            ? `${plural(opts.full.orders.length, "order")} · ${range(opts.full.start, opts.full.end)}`
-            : "",
-        )}
+
+        {keys.map((k) => {
+          const o = opts[k]!;
+          const on = focus === k;
+          return (
+            <div
+              key={k}
+              role="button"
+              tabIndex={0}
+              aria-pressed={on}
+              aria-label={`Highlight ${OPT_LABEL[k]}`}
+              onClick={() => onFocus(k)}
+              onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onFocus(k)}
+              className={cn(
+                "relative cursor-pointer border-t border-line pb-1.5 transition-opacity",
+                on
+                  ? "bg-surface-blue shadow-[inset_3px_0_0_var(--color-primary)]"
+                  : "bg-white hover:bg-surface",
+              )}
+            >
+              <div
+                className="flex flex-wrap items-center gap-2.5 px-5 pt-2.5 pb-1"
+                style={{ minWidth: minW }}
+              >
+                <b className="text-sm">{OPT_LABEL[k]}</b>
+                <small className="text-xs text-muted">
+                  {k === "part" && o.orders.length > base.size
+                    ? `keeps your ${base.size} + ${o.orders.length - base.size}`
+                    : plural(o.orders.length, "order")}{" "}
+                  · {range(o.start, o.end)}
+                </small>
+                {sel.using === k ? (
+                  <Tag tone="bl" size="sm">
+                    Current
+                  </Tag>
+                ) : (
+                  <Tag tone={tags[k].tone} size="sm">
+                    {tags[k].text}
+                  </Tag>
+                )}
+                {k === best && keys.length > 1 && (
+                  <Tag tone="ok" size="sm">
+                    Best score
+                  </Tag>
+                )}
+              </div>
+              {o.orders.map((id) => {
+                const r = o.rows[id]!;
+                const route = r.route.join(" → ");
+                const added = !base.has(id);
+                const text = r.late_days
+                  ? `${r.route[0] ?? ""} · ${plural(r.late_days, "day")} late`
+                  : added
+                    ? `${route}${r.idle_fill ? " · idle machine" : ""}`
+                    : route;
+                const cls = r.late_days
+                  ? "border-hi-line bg-hi-bg text-hi"
+                  : added
+                    ? "border-ok-line bg-ok-bg text-ok"
+                    : "border-load-ink/30 bg-load text-load-ink";
+                return row(num(id), bar(cls, r.start, r.finish, text), id);
+              })}
+              {Object.entries(o.dropped).map(([id, why]) =>
+                row(
+                  num(id),
+                  <span className="z-[1] col-[2/-1] row-start-1 pl-2 text-[11.5px] text-subtle italic">
+                    Left out · {why}
+                  </span>,
+                  `x${id}`,
+                ),
+              )}
+            </div>
+          );
+        })}
       </div>
       <div className="flex flex-wrap justify-between gap-2 border-t border-divider px-5 py-3 text-[13px] text-muted">
-        <span>
-          Shaded days: running orders are still on the machines. Hover an option below to highlight
-          it here.
-        </span>
+        <span>{timelineNote(opts, keys)}</span>
+        <span>Click an option in the table below to highlight it here.</span>
       </div>
     </details>
   );
+}
+
+/** The footer sentence, from the numbers. */
+function timelineNote(
+  opts: TabProps["plan"]["result"]["selection"]["options"],
+  keys: OptKey[],
+): string {
+  const own = opts.own;
+  const better = keys.filter(
+    (k) => k !== "own" && opts[k] && own && opts[k]!.idle_days < own.idle_days,
+  );
+  if (own && better.length)
+    return `Optimized options start more work alongside the running orders, so machines sit idle for fewer days (${own.idle_days} → ${Math.min(...better.map((k) => opts[k]!.idle_days))} machine-days).`;
+  if (own && own.idle_days)
+    return `${plural(own.idle_days, "machine-day")} idle while running orders finish (${own.idle_machines.join(", ")}).`;
+  return "No machine sits idle while the running orders finish.";
 }
 
 function Legend({ cls, text }: { cls: string; text: string }) {
@@ -470,7 +529,7 @@ function Legend({ cls, text }: { cls: string; text: string }) {
   );
 }
 
-/* ---- your selection vs the optimizer -------------------------------------------------------- */
+/* ---- your selection vs. what the optimizer suggests ------------------------------------------ */
 
 interface Metric {
   label: string;
@@ -482,22 +541,25 @@ interface Metric {
 
 function SelectionOptions({
   plan,
-  onHover,
+  focus,
+  onFocus,
   onUse,
   editable,
   busy,
 }: {
   plan: TabProps["plan"];
-  onHover: (k: OptKey) => void;
-  onUse: (k: Exclude<OptKey, "own">) => void;
+  focus: OptKey;
+  onFocus: (k: OptKey) => void;
+  onUse: (k: OptKey) => void;
   editable: boolean;
   busy: boolean;
 }) {
   const sel = plan.result.selection;
   const opts = sel.options;
   const keys: OptKey[] = ["own", "part", "full"];
-  const own = new Set(opts.own?.orders ?? []);
+  const base = new Set(sel.base);
   const num = (id: string) => (sel.orders[id]?.number ?? "").replace(/^ORD-/, "");
+  const lateList = (o: SelectionOption) => o.late.map((i) => sel.orders[i]?.number).join(", ");
   const metrics: Metric[] = [
     { label: "Sales value", get: (o) => o.value, show: (o) => rupeesCompact(o.value), best: "max" },
     {
@@ -534,10 +596,7 @@ function SelectionOptions({
     {
       label: "Late deliveries",
       get: (o) => o.late.length,
-      show: (o) =>
-        o.late.length
-          ? `${o.late.length} · ${o.late.map((i) => sel.orders[i]?.number).join(", ")}`
-          : "0",
+      show: (o) => (o.late.length ? `${o.late.length} · ${lateList(o)}` : "0"),
       best: "min",
     },
     {
@@ -566,6 +625,9 @@ function SelectionOptions({
     const b = m.best === "max" ? Math.max(...vals) : Math.min(...vals);
     return new Set(present.filter((k) => m.get(opts[k]!) === b && vals.some((v) => v !== b)));
   };
+  const same = (k: OptKey) =>
+    opts[k] &&
+    JSON.stringify([...opts[k]!.orders].sort()) === JSON.stringify([...sel.selected].sort());
 
   // Plain-language summary, built from the numbers above (no AI maths).
   const summary = (() => {
@@ -575,7 +637,7 @@ function SelectionOptions({
     if (!o || !f) return null;
     const out: string[] = [];
     const diff = f.contribution - o.contribution;
-    const dropped = [...own].filter((i) => !f.orders.includes(i)).map((i) => sel.orders[i]?.number);
+    const dropped = Object.keys(f.dropped).map((i) => sel.orders[i]?.number);
     let full = `Fully optimized earns ${rupeesCompact(Math.abs(diff))} ${diff >= 0 ? "more" : "less"} than your selection`;
     if (f.late.length < o.late.length)
       full += f.late.length ? ", with fewer late deliveries" : ", with no late deliveries";
@@ -603,7 +665,7 @@ function SelectionOptions({
         <AssistantBadge>Planning assistant</AssistantBadge>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[900px] border-collapse">
+        <table className="w-full min-w-[980px] border-collapse">
           <thead>
             <tr>
               <th className="w-[240px]" />
@@ -611,16 +673,19 @@ function SelectionOptions({
                 <th
                   key={k}
                   scope="col"
-                  onMouseEnter={() => onHover(k)}
-                  onFocus={() => onHover(k)}
+                  tabIndex={0}
+                  aria-pressed={focus === k}
+                  onClick={() => onFocus(k)}
+                  onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onFocus(k)}
                   className={cn(
-                    "p-4 text-left align-top font-normal normal-case",
-                    k === "own" && "bg-surface-blue shadow-[inset_0_3px_0_var(--color-primary)]",
+                    "cursor-pointer p-4 text-left align-top font-normal normal-case hover:bg-surface",
+                    focus === k &&
+                      "bg-surface-blue shadow-[inset_0_3px_0_var(--color-primary)] hover:bg-surface-blue",
                   )}
                 >
                   <div className="mb-1 flex items-center gap-2">
                     <b className="text-[17px] font-semibold">{OPT_LABEL[k]}</b>
-                    {k === "own" && (
+                    {sel.using === k && (
                       <Tag tone="bl" size="sm">
                         Current
                       </Tag>
@@ -653,26 +718,23 @@ function SelectionOptions({
                         key={id}
                         className={cn(
                           "rounded-md border px-1.5 py-0.5 font-mono text-[11.5px]",
-                          own.has(id)
+                          base.has(id)
                             ? "border-line-input bg-surface-2 text-ink-2"
                             : "border-ok-line bg-ok-bg text-ok",
                         )}
                       >
-                        {own.has(id) ? "" : "+"}
+                        {base.has(id) ? "" : "+"}
                         {num(id)}
                       </span>
                     ))}
-                    {k !== "own" &&
-                      [...own]
-                        .filter((id) => !opts[k]?.orders.includes(id))
-                        .map((id) => (
-                          <span
-                            key={id}
-                            className="rounded-md border border-line-input bg-white px-1.5 py-0.5 font-mono text-[11.5px] text-subtle line-through"
-                          >
-                            {num(id)}
-                          </span>
-                        ))}
+                    {Object.keys(opts[k]?.dropped ?? {}).map((id) => (
+                      <span
+                        key={id}
+                        className="rounded-md border border-line-input bg-white px-1.5 py-0.5 font-mono text-[11.5px] text-subtle line-through"
+                      >
+                        {num(id)}
+                      </span>
+                    ))}
                   </div>
                 </td>
               ))}
@@ -719,23 +781,14 @@ function SelectionOptions({
               <th />
               {keys.map((k) => (
                 <td key={k} className="border-t border-line px-4 py-4">
-                  {k === "own" ? (
+                  {same(k) ? (
                     <Button variant="pill" size="pill" disabled>
                       ✓ Using this
                     </Button>
                   ) : (
                     editable &&
                     opts[k] && (
-                      <Button
-                        variant="dark"
-                        size="sm"
-                        disabled={
-                          busy ||
-                          JSON.stringify([...opts[k]!.orders].sort()) ===
-                            JSON.stringify([...own].sort())
-                        }
-                        onClick={() => onUse(k)}
-                      >
+                      <Button variant="dark" size="sm" disabled={busy} onClick={() => onUse(k)}>
                         Use this selection
                       </Button>
                     )

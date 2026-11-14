@@ -51,7 +51,11 @@
 - Factory setup page; company rules via small comment icons (late penalty fixed or %, overheads,
   packaging, minimum margin). Purchase requests recorded for the future Purchasing module.
 - Company switcher removed (one company per website).
-- Tests: 229 pytest, 32 Vitest, 13 Playwright.
+- Owner feedback round 1 (fixed): Send to Planning from Orders shows in Planning (both ways,
+  also after approval → next plan), "Use this selection" switches and moves "Current", Custom
+  sequencing, order timeline rebuilt like the mockup (machine routes, idle-machine fills, left-out
+  reasons, click to highlight), approval no longer flags itself for re-approval.
+- Tests: 233 pytest, 32 Vitest, 14 Playwright.
 
 ## Next
 - Owner review of Feature 2 (Planning).
