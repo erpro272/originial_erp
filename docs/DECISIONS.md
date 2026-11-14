@@ -34,3 +34,28 @@ Short records of choices and the reason for each. Newest at the bottom.
    support TS 7 yet.
 10. **Invoice extraction model** is `claude-sonnet-5-5`, as specified by the owner, with the
     API's server-side refusal fallback enabled.
+11. **Orders page layout follows the updated mockup** (`docs/mockups/orders-customers.html`):
+    tabs directly under the title; KPI box inside each tab. *Owner request.*
+12. **"Requirement" in the ranking = order quantity** (slide 9 "Requirement: 50 Nutbolts").
+    Order priority (high/medium/low) is an extra factor. Default: weighted mix.
+13. **Sales figures on Customers come from invoices**, not orders (orders are a pipeline).
+    Outstanding = sum of balance due on invoices, as of today (not period-bound).
+14. **Units sold counts pieces only** (PCS/NOS/…), per the mockup "pcs · this period".
+15. **Health rules** (owner's note, editable): New = first purchase in the period;
+    Repeat = 2+ purchases and bought in the last 60 days; Inactive = previously regular,
+    60–90 days; Dormant = 90+ days; High-value = top 10% by period sales; Declining =
+    period sales under 70% of the previous equal period. A customer can have several
+    tags; the table shows the most urgent (dormant > inactive > declining > new >
+    high-value > repeat).
+16. **Order status signals** are computed: stock is allocated to open orders by ship date;
+    "behind" compares remaining work with working days left (Sunday off). Machine-down
+    messages come with Production.
+17. **The AI returns text exactly as printed; code normalises it** (Indian day-first dates,
+    paise, state codes). Keeps "the AI never does maths" and makes normalisation testable.
+18. **Invoice files are encrypted with the company key before storage** (Layer 2 also for
+    files); S3 server-side encryption is optional on top.
+19. **Duplicates**: exact (same seller GSTIN + number + FY, or same IRN) blocks saving;
+    possible (same customer + date + total) needs confirmation. Duplicate customers are
+    merged, not deleted.
+20. **Read-only joins across modules for display** (orders list shows customer and product
+    names via SQL joins). Writes never cross modules: merges call each module's service.

@@ -23,7 +23,9 @@ Dashboard tab at the end of the nav, added later). Built **one feature at a time
 - **Frontend** `frontend/`: React 18 + TS (Vite 8), React Router 6, TanStack Query/Table/
   Virtual, Tailwind v4 (tokens in `src/styles.css`), Radix (shadcn-style components in
   `src/components/ui`), dnd-kit, react-hook-form + zod, openapi-fetch.
-- **E2E** `e2e/`: Playwright 1.63 against the running stack.
+- **E2E** `e2e/`: Playwright 1.63 against the running stack (tests are rerunnable on the same DB).
+- **Invoice files**: Pillow + pillow-heif (HEIC), pypdfium2 (PDF pages), zxing-cpp (QR),
+  rapidfuzz (customer name matching).
 - TypeScript is pinned to 5.9: openapi-typescript needs TS 5 and typescript-eslint
   doesn't support TS 7 yet.
 
@@ -67,6 +69,21 @@ company picker), `planner@`, `purchaser@`, `accountant@demo.example`, `owner@sec
 - Tests: `backend/tests`, real Postgres DB `erp_test` (recreated per run), seed via
   `seed.run.seed()`. Use helpers in `tests/conftest.py` (`login`, `owner`, `planner`).
 
+## Modules built so far
+- `catalog/` products, materials, BOM, stock (minimal; Purchasing will own it).
+- `orders/` lifecycle (`TRANSITIONS`), signals (stock allocated by ship date -> shortage /
+  waiting / behind; working days skip Sundays), ranking (`order-ranking` setting), KPIs.
+  Money is recalculated only when quantity/price/cost change.
+- `customers/` master data, health rules (`customer-health` setting, `health.py` is pure),
+  period metrics read from invoices via `invoices/stats.py` only, follow-ups, merge.
+- `invoices/` Appendix A spec in `fields.py` drives the AI schema + normalisation + review
+  UI. Pipeline: upload -> ARQ job `extract_invoice` -> review (`/check` is side-effect free)
+  -> save (one transaction). Files and page images are encrypted with the company key
+  (`put_encrypted`); served only via `/api/files/<signed token>` (5 min).
+  Sample invoices: `samples/invoices/*` + matching mock fixtures; regenerate both with
+  `uv run python -m scripts.make_sample_invoices`.
+- Seed: `seed/demo_data.py` (dates relative to today; mirrors the Orders mockup).
+
 ## Frontend conventions
 - Design system = the two mockups. Use tokens only (`bg-primary`, `text-ink`, `border-line`,
   `rounded-card`, tag tones `hi|md|lo|ok|bl`). ESLint blocks raw hex colours.
@@ -80,6 +97,10 @@ company picker), `planner@`, `purchaser@`, `accountant@demo.example`, `owner@sec
 - Brand: neutral placeholder `Brand` (`VITE_BRAND_NAME`).
 - Tests: Vitest + RTL next to components (`*.test.tsx`); `src/test/utils.tsx` mocks fetch.
 - `/_design` (dev only) shows every shared component.
+- Orders module routes: `/orders` (received), `/orders/customers`, `/orders/customers/:id`,
+  `/orders/customers/imports`, `/orders/customers/imports/:uploadId` (review).
+- Reporting period lives in the URL (`?period=fytd|this_month|...&from&to`).
+- Charts: hand-rolled SVG, one validated hue, hover tooltip + sr-only table (see dataviz rules).
 
 ## Gotchas
 - Official MinIO images are gone from Docker Hub; compose uses the community build

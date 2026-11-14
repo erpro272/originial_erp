@@ -21,16 +21,32 @@
   pages for all modules (+ Dashboard), owner-only Audit log page, `/_design` gallery.
 - Tests: 61 pytest (real Postgres), 29 Vitest, 5 Playwright.
 
+### Feature 1 — Orders (2026-11-14) · awaiting owner review
+- **Orders received** (updated mockup: tabs under the title): KPI box, top-3 "needs attention"
+  cards ranked by the owner's settings, status lines from real stock/schedule logic with
+  Raise PO, orders table (current/past, filters, saved views, 16 columns, CSV, paging,
+  bulk send to Planning), create/edit/cancel with lifecycle rules.
+- **Customers** (owner's spec + mockup): reporting period, metrics, health chips (new,
+  repeat, high-value, declining, inactive, dormant; editable rules), customers table (34
+  fields), profile (sales chart, invoices, orders, details, follow-ups: call/WhatsApp/email/
+  note/reminder), add/edit with GSTIN checksum, merge duplicates.
+- **Invoice upload**: bulk upload (photo/scan/PDF/HEIC, camera), background extraction
+  (Claude `claude-sonnet-5-5`; mock mode without a key), QR decoded in code, normalisation
+  in code, every Appendix A field, deterministic checks, verification screen with
+  click-to-highlight, customer matching, duplicate detection, single-transaction save,
+  versioned extraction record, encrypted files and bank details.
+- Tests: 210 pytest, 30 Vitest, 12 Playwright.
+
 ## Next
-- **Feature 1 — Orders**: 1A Orders received (cards, ranking settings, table with views and
-  filters, create/edit/cancel), 1B Customers + invoice upload/extraction/verification.
-  Starts with a plan for owner approval.
-- Then Feature 2 — Planning (6 tabs + plan comparison).
+- Feature 2 — Planning (6 tabs + plan comparison), after the owner's review of Feature 1.
 - Later: Dashboard tab (owner will specify), Purchasing, Production, Billing, Finance,
   AI assistant panel.
 
 ## Known follow-ups
-- Frontend bundle is one ~615 KB chunk (≈190 KB gzip); split per module with lazy routes
-  once modules exist.
+- Frontend bundle: split per module with lazy routes (now worth doing).
+- E-invoice QR: payload is decoded and cross-checked; verifying the IRP signature needs
+  the NIC public key certificate (follow-up).
+- Customer list metrics are computed per request in Python (fine for hundreds to a few
+  thousand customers; move to SQL/materialised views if a tenant grows past that).
 - User management UI (invite users, change roles) is not built yet; users come from the seed.
 - Key rotation for tenant data keys is designed for (versioned `tenant_keys`) but not built.
