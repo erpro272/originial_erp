@@ -59,6 +59,7 @@ class SelectionOption(BaseModel):
     margin: float
     per_day: int
     rows: dict[str, OptionRow]
+    sequence: list[str] = []  # the order the option was scored in (step 2 runs it in this order)
     dropped: dict[str, str]
 
 
@@ -97,7 +98,8 @@ class SeqRow(BaseModel):
 
 class Group(BaseModel):
     orders: list[str]
-    shared: list[str]
+    shared: list[str]  # machines two orders of the group both use on the same days
+    conflict: list[str] = []  # ...of which over capacity: the reason an order is late
 
 
 class Hint(BaseModel):
@@ -105,6 +107,7 @@ class Hint(BaseModel):
     title: str
     text: str
     moved: str
+    dismissed: bool = False
 
 
 class Overview(BaseModel):
@@ -116,11 +119,20 @@ class Overview(BaseModel):
     on_time: int
     bottlenecks: int
     parallel: int
+    late: int = 0
+
+
+class FeasibilityLine(BaseModel):
+    kind: Literal["constraint", "machine", "labour", "material", "material_wait", "late"]
+    tone: Literal["bad", "warn"]
+    text: str
+    orders: list[str]
+    machine: str | None = None
 
 
 class Feasibility(BaseModel):
     ok: bool
-    lines: list[str]
+    lines: list[FeasibilityLine]
 
 
 class Sequence(BaseModel):
@@ -320,6 +332,7 @@ class PlanPatch(BaseModel):
     pin: dict[str, date | None] | None = None
     fixes: list[str] | None = None
     apply_hint: bool | None = None
+    dismiss_hint: bool | None = None
 
 
 class ApproveIn(BaseModel):

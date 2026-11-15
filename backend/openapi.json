@@ -2217,7 +2217,7 @@
         "properties": {
           "lines": {
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/FeasibilityLine"
             },
             "title": "Lines",
             "type": "array"
@@ -2232,6 +2232,60 @@
           "lines"
         ],
         "title": "Feasibility",
+        "type": "object"
+      },
+      "FeasibilityLine": {
+        "properties": {
+          "kind": {
+            "enum": [
+              "constraint",
+              "machine",
+              "labour",
+              "material",
+              "material_wait",
+              "late"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "machine": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Machine"
+          },
+          "orders": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Orders",
+            "type": "array"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "tone": {
+            "enum": [
+              "bad",
+              "warn"
+            ],
+            "title": "Tone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "tone",
+          "text",
+          "orders"
+        ],
+        "title": "FeasibilityLine",
         "type": "object"
       },
       "FinRow": {
@@ -2686,6 +2740,14 @@
       },
       "Group": {
         "properties": {
+          "conflict": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Conflict",
+            "type": "array"
+          },
           "orders": {
             "items": {
               "type": "string"
@@ -2804,6 +2866,11 @@
       },
       "Hint": {
         "properties": {
+          "dismissed": {
+            "default": false,
+            "title": "Dismissed",
+            "type": "boolean"
+          },
           "moved": {
             "title": "Moved",
             "type": "string"
@@ -4457,6 +4524,17 @@
             ],
             "title": "Apply Hint"
           },
+          "dismiss_hint": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dismiss Hint"
+          },
           "fixes": {
             "anyOf": [
               {
@@ -5516,6 +5594,14 @@
             "title": "Rows",
             "type": "object"
           },
+          "sequence": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Sequence",
+            "type": "array"
+          },
           "start": {
             "anyOf": [
               {
@@ -6215,6 +6301,11 @@
               }
             ],
             "title": "End"
+          },
+          "late": {
+            "default": 0,
+            "title": "Late",
+            "type": "integer"
           },
           "on_time": {
             "title": "On Time",

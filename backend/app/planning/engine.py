@@ -19,7 +19,7 @@ from typing import Any
 
 EPS = 1e-6
 # Bump when the engine's logic changes, so saved plan results are recalculated (part of the fingerprint).
-ENGINE_VERSION = 3
+ENGINE_VERSION = 6
 FULL_POOL = 10  # orders the fully optimized option searches exhaustively (2^N subsets)
 FULL_REFINE = 8  # best subsets whose sequence is then improved by pairwise swaps
 HORIZON_DAYS = 400
@@ -170,6 +170,8 @@ class Sched:
     normal_cap: dict[tuple[str, date], float]
     shortages: list[dict[str, Any]]  # material problems
     blocked: dict[str, str]
+    # hours an order forced to finish by a date (pin) could not fit in its machines' working time
+    overflow: dict[str, float] = field(default_factory=dict)
 
 
 def _night(fixes: set[str]) -> set[tuple[str, date]]:
@@ -192,6 +194,8 @@ def schedule(f: Factory, running: list[Job], jobs: list[Job], inp: Inputs, today
     used: dict[tuple[str, date], float] = defaultdict(float)
     cap: dict[tuple[str, date], float] = {}
     normal: dict[tuple[str, date], float] = {}
+    overflow: dict[str, float] = defaultdict(float)
+    current: list[str] = [""]  # the job being placed
 
     def capacity(m: str, d: date) -> float:
         if (m, d) not in cap:
@@ -217,11 +221,14 @@ def schedule(f: Factory, running: list[Job], jobs: list[Job], inp: Inputs, today
         if finish_by is not None:
             window = days_in(earliest, finish_by, f) or [next_working(finish_by, f)]
             for d in window:
-                take = min(max(capacity(step.machine, d) - used[(step.machine, d)], 0.0), need)
+                begin = max(used[(step.machine, d)], after if d == earliest else 0.0)
+                take = min(max(capacity(step.machine, d) - begin, 0.0), need)
                 if take > EPS:
                     alloc[d] = take
                     need -= take
+                    end = begin + take
             if need > EPS:  # squeeze the rest in: this is a forced overload
+                overflow[current[0]] += need
                 share = need / len(window)
                 for d in window:
                     alloc[d] = alloc.get(d, 0.0) + share
@@ -245,6 +252,7 @@ def schedule(f: Factory, running: list[Job], jobs: list[Job], inp: Inputs, today
 
     def run_job(job: Job, earliest: date, ready: date, finish_by: date | None) -> Placed:
         steps = []
+        current[0] = job.id
         at = max(earliest, ready)
         after = 0.0  # step k starts only when step k-1 has finished (same day, later hours, or a later day)
         for st in job.steps:
@@ -308,7 +316,7 @@ def schedule(f: Factory, running: list[Job], jobs: list[Job], inp: Inputs, today
     for s in shortages:
         p = placed[s["job"]]
         s["needed_by"] = p.start
-    return Sched(placed, used, cap, normal, shortages, blocked)
+    return Sched(placed, used, cap, normal, shortages, blocked, dict(overflow))
 
 
 # ---- analysis -------------------------------------------------------------------------------
@@ -335,6 +343,12 @@ def _fmt_range(a: date, b: date) -> str:
     if a.month == b.month:
         return f"{a.day}–{b.day} {b.strftime('%b')}"
     return f"{_fmt_day(a)} – {_fmt_day(b)}"
+
+
+def hrs(h: float) -> str:
+    """'1 hr', '2.5 hrs', '15 hrs'."""
+    v = f"{h:.0f}" if h >= 10 else f"{h:.1f}".rstrip("0").rstrip(".")
+    return f"{v} hr" if v == "1" else f"{v} hrs"
 
 
 def _qty(q: float, unit: str) -> str:
@@ -584,6 +598,17 @@ def by_rule(rule: str, jobs: list[Job], f: Factory, rules: Rules, current: list[
     return [j.id for j in sorted(jobs, key=keys.get(rule, keys["deadline"]))]
 
 
+def keep_locked(new: list[str], old: list[str], locks: dict[str, date] | dict[str, Any]) -> list[str]:
+    """`new` (e.g. sorted by a rule) with every locked order put back in the slot it had in `old`."""
+    slots = {old.index(j): j for j in locks if j in old and j in new}
+    rest = [x for x in new if x not in slots.values()]
+    out: list[str] = []
+    for k in range(len(new)):
+        out.append(slots.pop(k) if k in slots else rest.pop(0) if rest else "")
+    out = [x for x in out if x] + [slots[k] for k in sorted(slots)]
+    return out
+
+
 # ---- evaluation, hint, fixes, options --------------------------------------------------------
 
 
@@ -625,7 +650,7 @@ def suggest_hint(f: Factory, rules: Rules, running: list[Job], jobs: list[Job], 
         for pos in range(len(seq)):
             new = [x for x in seq if x != i]
             new.insert(pos, i)
-            if new == seq:
+            if new == seq or any(new.index(lk) != seq.index(lk) for lk in inp.locks if lk in seq):
                 continue
             ev = evaluate(f, rules, running, jobs, replace(inp, sequence=new), today)
             if ev.key() < cur.key() and (best is None or ev.key() < best[0]):
@@ -640,6 +665,15 @@ def suggest_hint(f: Factory, rules: Rules, running: list[Job], jobs: list[Job], 
     late = ev.late
     effect = (f"All {len(new)} orders ship on time." if late == 0
               else f"Late deliveries {cur.late} → {late}.")  # fmt: skip
+    b = ev.a["rows"][before]
+    dl = _job(jobs, before).deadline
+    if b["late_days"]:
+        effect += f" {num[before]} then finishes {_fmt_day(b['finish'])}, {b['late_days']} day{'s' * (b['late_days'] != 1)} late."
+    else:
+        still = "still finishes" if b["finish"] <= cur.a["rows"][before]["finish"] else "finishes"
+        gap = b["buffer"]
+        effect += (f" {num[before]} {still} {_fmt_day(b['finish'])}, "
+                   + (f"{gap} day{'s' * (gap != 1)} before its deadline." if gap else f"on its deadline ({_fmt_day(dl)})."))  # fmt: skip
     if ev.a["days"] != cur.a["days"]:
         effect += f" Plan length {cur.a['days']} → {ev.a['days']} days."
     else:
@@ -689,6 +723,79 @@ def suggest_fixes(f: Factory, rules: Rules, running: list[Job], jobs: list[Job],
             keep.append({"id": fx, "label": info["label"], "cost": info["cost"], "penalty_avoided": 0,
                          "solves": [], "selected": True})  # fmt: skip
     return sorted(keep, key=lambda x: x["label"])
+
+
+def constraints(f: Factory, rules: Rules, running: list[Job], jobs: list[Job], inp: Inputs, ev: Eval,
+                today: date) -> list[dict[str, Any]]:  # fmt: skip
+    """Machine hours missing to deliver the late orders on time.
+
+    The scheduler never books a machine above its hours: an order that competes for a busy machine waits,
+    and ships late. To size that, re-plan with each late order forced to finish by its deadline (when its
+    material is there in time); the overload that would take, per machine and days, is the constraint:
+    "CNC 01 over capacity by 15 hrs, 19-20 Nov".
+    """
+    late = {j.id: j.deadline for j in jobs
+            if ev.a["rows"][j.id]["late_days"] and ev.sched.placed[j.id].material_ready <= j.deadline}  # fmt: skip
+    if not late:
+        return []
+    forced = evaluate(f, rules, running, jobs, replace(inp, pins={**inp.pins, **late}), today)
+    fs = forced.sched
+    by_m: dict[str, dict[str, Any]] = {}
+    for jid in late:
+        j = _job(jobs, jid)
+        # machine hours the on-time version of this order can't fit into the working time before its deadline
+        extra = fs.overflow.get(jid, 0.0) - ev.sched.overflow.get(jid, 0.0)
+        if extra <= 0.05:
+            continue
+        # the machine it queued for: the route step that waited longest after it could have started
+        p = ev.sched.placed[jid]
+        ready, blame, wait = p.material_ready, None, -1
+        for st, alloc in zip(j.steps, p.steps, strict=False):
+            if not alloc:
+                continue
+            could = max(ready, inp.start)
+            w = working_days(could, min(alloc), f)
+            if w > wait:
+                blame, wait = (st.machine, could, min(alloc)), w
+            ready = max(alloc)
+        if blame is None:
+            continue
+        m, a, b = blame
+        if wait:  # the days it queued: up to the last working day before it got the machine
+            b -= timedelta(1)
+            while not is_working(b, f) and b > a:
+                b -= timedelta(1)
+            b = max(a, b)
+        c = by_m.setdefault(m, {"kind": "constraint", "resource": f.machines[m].name, "machine": m,
+                                "from": a, "to": b, "size": 0.0, "orders": []})  # fmt: skip
+        c["from"], c["to"] = min(c["from"], a), max(c["to"], b)
+        c["size"] = round(c["size"] + extra, 1)
+        c["orders"].append(jid)
+    return [c | {"title": f"{c['resource']} over capacity by {hrs(c['size'])}", "text": _fmt_range(c["from"], c["to"])}
+            for c in by_m.values()]  # fmt: skip
+
+
+def feasibility(f: Factory, bottlenecks: list[dict[str, Any]], num: dict[str, str]) -> list[dict[str, Any]]:
+    """Plain lines for the feasibility card: red = a resource problem, amber = a late delivery."""
+    lines = []
+    for b in bottlenecks:
+        k = b["kind"]
+        who = ", ".join(num.get(i, "") for i in b["orders"])
+        if k in ("constraint", "machine"):
+            word = "over capacity" if k == "constraint" else "overloaded"
+            text = f"{b['resource']} {word} by {hrs(b['size'])}, {_fmt_range(b['from'], b['to'])}"
+        elif k == "labour":
+            text = f"{b['resource']} labour short by {hrs(b['size'])}, {_fmt_range(b['from'], b['to'])}"
+        elif k == "material":
+            unit = f.materials[b["material"]].unit
+            text = f"{b['resource'][:1].upper()}{b['resource'][1:]} short by {_qty(b['size'], unit)} · affects {who}"
+        elif k == "material_wait":
+            text = f"{who} waits for {b['resource']} until {_fmt_day(b['from'])}"
+        else:
+            text = b["title"]
+        lines.append({"kind": k, "tone": "warn" if k == "late" else "bad", "text": text, "orders": b["orders"],
+                      "machine": b["resource"] if k in ("constraint", "machine") else None})  # fmt: skip
+    return lines
 
 
 def _cap(f: Factory, s: Sched, m: str, d: date) -> float:
@@ -857,6 +964,9 @@ def options(f: Factory, rules: Rules, running: list[Job], cands: list[Job], sele
         ids = sorted(seq, key=lambda i: (ev.a["rows"][i]["start"], ev.a["rows"][i]["finish"], by[i].number))
         own_idle = {n for n, _ in _idle(f, own_ev, running, today)} if own_ev is not None else None
         m = _option_metrics(f, ev, running, ids, today, by, own_idle)
+        cons = constraints(f, rules, running, [by[i] for i in seq], Inputs(inp.start, list(seq)), ev, today)
+        m["bottlenecks"] += len(cons)
+        m["bottleneck_names"] = [b["resource"] for b in cons] + m["bottleneck_names"]
         m["sequence"] = list(seq)
         if own_ev is not None:
             m["dropped"] = {i: _why_left_out(f, rules, by[i], own_ev) for i in own if i not in seq}
@@ -923,7 +1033,7 @@ def compute(f: Factory, rules: Rules, running: list[Job], cands: list[Job], sele
     """
     by = {j.id: j for j in cands}
     jobs = [by[i] for i in selected if i in by]
-    inp.sequence = by_rule(rule, jobs, f, rules, inp.sequence)
+    inp.sequence = keep_locked(by_rule(rule, jobs, f, rules, inp.sequence), inp.sequence, inp.locks)
     inp.locks = {k: v for k, v in inp.locks.items() if k in inp.sequence}
     inp.pins = {k: v for k, v in inp.pins.items() if k in inp.sequence}
     cur = evaluate(f, rules, running, jobs, inp, today)
@@ -950,7 +1060,10 @@ def compute(f: Factory, rules: Rules, running: list[Job], cands: list[Job], sele
                   if opts.get(k) and set(opts[k]["orders"]) == set(selected)), None)  # fmt: skip
 
     # Tab 2 --------------------------------------------------------------------------------
-    over_machines = {b["resource"] for b in a["bottlenecks"] if b["kind"] == "machine"}
+    cons = constraints(f, rules, running, jobs, inp, cur, today) if jobs else []
+    over_machines = {
+        b["resource"] for b in [*cons, *a["bottlenecks"]] if b["kind"] in ("machine", "constraint")
+    }
     group_of = {jid: gi for gi, g in enumerate(a["groups"]) for jid in g["orders"]}
     seq = []
     for rank, jid in enumerate(inp.sequence, start=1):
@@ -964,7 +1077,8 @@ def compute(f: Factory, rules: Rules, running: list[Job], cands: list[Job], sele
                     "buffer": r["buffer"], "late_days": r["late_days"], "group": group_of[jid],
                     "machines": names, "warn_machines": [n for n in names if n in over_machines],
                     "locked": jid in inp.locks, "pinned": inp.pins.get(jid), "status": status})  # fmt: skip
-    problems = [b for b in a["bottlenecks"]]
+    problems = [*cons, *a["bottlenecks"]]
+    groups = [g | {"conflict": [m for m in g["shared"] if m in over_machines]} for g in a["groups"]]
     on_time = sum(1 for r in a["rows"].values() if not r["late_days"])
     hint = suggest_hint(f, rules, running, jobs, inp, cur, today) if jobs else None
     fixes = suggest_fixes(f, rules, running, jobs, inp, cur, today) if jobs else []
@@ -1039,19 +1153,20 @@ def compute(f: Factory, rules: Rules, running: list[Job], cands: list[Job], sele
          "setting": "min_margin_pct"},
     ]  # fmt: skip
 
-    lines = [f"{b['title']} · {b['text']}" for b in problems]
+    lines = feasibility(f, problems, num)
     out: dict[str, Any] = _iso({
         "selection": {"orders": orders, "selected": [i for i in selected if i in by], "running": running_rows,
                       "using": using, "base": [i for i in (base if base is not None else selected) if i in by],
                       "options": opts},
-        "sequence": {"rule": rule, "start": inp.start, "rows": seq, "groups": a["groups"], "hint": hint,
+        "sequence": {"rule": rule, "start": inp.start, "rows": seq, "groups": groups, "hint": hint,
                      "overview": {"orders": len(jobs), "start": a["start"], "end": a["end"], "days": a["days"],
                                   "utilisation": a["utilisation"], "on_time": on_time,
                                   "bottlenecks": len([b for b in problems if b["kind"] != "late"]),
-                                  "parallel": sum(1 for g in a["groups"] if len(g["orders"]) > 1)},
+                                  "parallel": sum(1 for g in a["groups"] if len(g["orders"]) > 1),
+                                  "late": len(jobs) - on_time},
                      "feasibility": {"ok": not problems, "lines": lines}},
         "schedule": {"days": days, "today": today, "rows": gantt, "load": load,
-                     "bottlenecks": [b for b in problems if b["kind"] != "late"]},
+                     "bottlenecks": [b for b in problems if b["kind"] not in ("late", "constraint")]},
         "finance": {"before": fin_before, "with": fin_with, "fixes": fixes},
         "approval": {"checks": checks, "ready": sum(1 for ck in checks if ck["ok"]), "total": len(checks)},
         "purchase_needs": list(needs.values()),

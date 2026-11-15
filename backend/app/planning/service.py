@@ -202,7 +202,10 @@ async def _compute(session: AsyncSession, plan: Plan, today: date) -> tuple[dict
     requested = await _requested(session, plan)
     inp = _inputs(plan)
     base = list((plan.inputs or {}).get("base", plan.selected))
-    ofp = _fp(f, rules.model_dump(), objective.model_dump(), cands, running, base, plan.start_date, today)
+    own_order = [i for i in inp.sequence if i in base]
+    ofp = _fp(
+        f, rules.model_dump(), objective.model_dump(), cands, running, base, own_order, plan.start_date, today
+    )
     opts = plan.result["selection"]["options"] if plan.result and plan.options_fingerprint == ofp else None
     result = eng.compute(f, _engine_rules(rules, objective), running, cands, list(plan.selected), plan.rule, inp,
                          today, requested, opts, base)  # fmt: skip
@@ -233,6 +236,8 @@ async def _save(session: AsyncSession, plan: Plan, result: dict[str, Any], fp: s
 async def _refresh(session: AsyncSession, plan: Plan, today: date) -> Plan:
     """Bring the plan up to date with the rest of the ERP (orders, stock, factory data, rules)."""
     synced = await _sync_with_orders(session, plan) if plan.status in WORKING else []
+    if plan.status in WORKING and plan.start_date < today:  # a plan can't start in the past
+        plan.start_date = eng.next_working(today, await load_factory(session))
     result, fp, ofp = await _compute(session, plan, today)
     if plan.status in WORKING and result["selection"]["using"] is None and result["selection"]["selected"]:
         # The ticked orders no longer match any option (data changed): they become the owner's own picks.
@@ -293,11 +298,15 @@ async def _out(session: AsyncSession, plan: Plan) -> PlanOut:
     ev = (await session.execute(select(PlanEvent).where(PlanEvent.plan_id == plan.id)
                                 .order_by(PlanEvent.created_at.desc(), PlanEvent.id).limit(1))).scalar_one_or_none()  # fmt: skip
     assert plan.result is not None
+    result = plan.result
+    hint = result["sequence"]["hint"]
+    if hint and (plan.inputs or {}).get("dismissed_hint") == hint["sequence"]:
+        result = {**result, "sequence": {**result["sequence"], "hint": {**hint, "dismissed": True}}}
     return PlanOut(
         id=plan.id, number=plan.number, status=plan.status, needs_reapproval=plan.needs_reapproval, rule=plan.rule,
         start_date=plan.start_date, version=plan.version, generated_at=plan.generated_at,
         approved_at=plan.approved_at, approval_note=plan.approval_note,
-        result=PlanResult.model_validate(plan.result),
+        result=PlanResult.model_validate(result),
         last_change=LastChange(summary=ev.summary, tabs=ev.tabs, at=ev.created_at) if ev else None,
     )  # fmt: skip
 
@@ -369,6 +378,11 @@ def _apply(plan: Plan, p: PlanPatch, result: dict[str, Any]) -> tuple[list[str],
         if not opt:
             raise DomainError("That option isn't available.")
         selected = list(opt["orders"])  # the owner's own picks (base) stay, so the 3 options stay comparable
+        # Step 2 runs the option exactly as it was scored on step 1 (its own best order).
+        inp.sequence = [i for i in opt.get("sequence", opt["orders"]) if i in selected]
+        inp.locks = {k: v for k, v in inp.locks.items() if k in selected}
+        if p.use_option != "own":
+            plan.rule = "custom"
         label = {
             "own": "your selection",
             "part": "the partly optimized selection",
@@ -390,6 +404,8 @@ def _apply(plan: Plan, p: PlanPatch, result: dict[str, Any]) -> tuple[list[str],
         plan.rule = p.rule
         summary = f"Sequenced by {p.rule}"
     if p.start_date:
+        if p.start_date < clock.today():
+            raise DomainError("The plan can't start in the past.")
         plan.start_date = p.start_date
         inp.start = p.start_date
         summary = f"Start date set to {p.start_date.isoformat()}"
@@ -399,6 +415,11 @@ def _apply(plan: Plan, p: PlanPatch, result: dict[str, Any]) -> tuple[list[str],
             raise DomainError("There is no suggestion to apply.")
         p = p.model_copy(update={"sequence": hint["sequence"]})
         summary = f"Sequence changed · {hint['title']}"
+    if p.dismiss_hint:
+        hint = result["sequence"]["hint"]
+        if hint:
+            _store_inputs(plan, inp, {"dismissed_hint": hint["sequence"]})
+            summary = f"Suggestion dismissed · {hint['title']}"
     if p.sequence is not None:
         if sorted(p.sequence) != sorted(inp.sequence):
             raise DomainError("The new order must contain the same orders.")

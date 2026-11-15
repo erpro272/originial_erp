@@ -121,7 +121,8 @@ def test_three_options_are_distinct() -> None:
     on_floor = [job("run", (op("a", 0, 480, 1),), MON + timedelta(3), running=True)]  # Press 01, Monday
     o = eng.options(F, R, on_floor, cands, picked, inp, MON)
     own, part, full = o["own"], o["part"], o["full"]
-    assert set(own["orders"]) == set(picked) and own["late"] == ["urgent"] and own["bottlenecks"] == 1
+    assert set(own["orders"]) == set(picked) and own["late"] == ["urgent"] and own["bottlenecks"] == 2
+    assert own["bottleneck_names"] == ["CNC 01", "Steel"]  # CNC 01 competition + the steel shortage
     assert set(picked) <= set(part["orders"]) and "fill" in part["orders"] and part["late"] == []
     assert part["rows"]["fill"]["idle_fill"]  # CNC 02 sat idle while the running order ran
     assert "short" not in full["orders"] and full["late"] == [] and full["bottlenecks"] == 0

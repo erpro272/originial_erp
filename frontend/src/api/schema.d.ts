@@ -1450,9 +1450,28 @@ export interface components {
         /** Feasibility */
         Feasibility: {
             /** Lines */
-            lines: string[];
+            lines: components["schemas"]["FeasibilityLine"][];
             /** Ok */
             ok: boolean;
+        };
+        /** FeasibilityLine */
+        FeasibilityLine: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "constraint" | "machine" | "labour" | "material" | "material_wait" | "late";
+            /** Machine */
+            machine?: string | null;
+            /** Orders */
+            orders: string[];
+            /** Text */
+            text: string;
+            /**
+             * Tone
+             * @enum {string}
+             */
+            tone: "bad" | "warn";
         };
         /** FinRow */
         FinRow: {
@@ -1618,6 +1637,11 @@ export interface components {
         };
         /** Group */
         Group: {
+            /**
+             * Conflict
+             * @default []
+             */
+            conflict: string[];
             /** Orders */
             orders: string[];
             /** Shared */
@@ -1676,6 +1700,11 @@ export interface components {
         };
         /** Hint */
         Hint: {
+            /**
+             * Dismissed
+             * @default false
+             */
+            dismissed: boolean;
             /** Moved */
             moved: string;
             /** Sequence */
@@ -2260,6 +2289,8 @@ export interface components {
         PlanPatch: {
             /** Apply Hint */
             apply_hint?: boolean | null;
+            /** Dismiss Hint */
+            dismiss_hint?: boolean | null;
             /** Fixes */
             fixes?: string[] | null;
             /** Lock */
@@ -2697,6 +2728,11 @@ export interface components {
             rows: {
                 [key: string]: components["schemas"]["OptionRow"];
             };
+            /**
+             * Sequence
+             * @default []
+             */
+            sequence: string[];
             /** Start */
             start: string | null;
             /** Utilisation */
@@ -2939,6 +2975,11 @@ export interface components {
             days: number;
             /** End */
             end: string | null;
+            /**
+             * Late
+             * @default 0
+             */
+            late: number;
             /** On Time */
             on_time: number;
             /** Orders */
