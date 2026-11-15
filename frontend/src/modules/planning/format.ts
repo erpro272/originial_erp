@@ -41,3 +41,29 @@ export function range(a?: string | null, b?: string | null): string {
 export function plural(n: number, word: string): string {
   return `${n} ${word}${n === 1 ? "" : "s"}`;
 }
+
+/** "today, 19:58" / "yesterday, 09:10" / "13 Nov, 19:58" */
+export function generatedLabel(at: string, now: Date = new Date()): string {
+  const d = new Date(at);
+  const time = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  const day = isoDay(d);
+  if (day === isoDay(now)) return `today, ${time}`;
+  const y = new Date(now);
+  y.setDate(y.getDate() - 1);
+  if (day === isoDay(y)) return `yesterday, ${time}`;
+  return `${d.toLocaleDateString("en-GB", { day: "numeric", month: "short" })}, ${time}`;
+}
+
+/** "different lines, same days" / "both need CNC 01, which causes the overload". */
+export function groupReason(
+  g: { orders: string[]; shared: string[]; conflict: string[] },
+  rows: { id: string; machines: string[] }[],
+): string {
+  const m = g.conflict[0] ?? g.shared[0];
+  if (!m) return "different lines, same days";
+  const users = g.orders.filter((id) => rows.find((r) => r.id === id)?.machines.includes(m)).length;
+  const who = users === 2 ? "both need" : `${users} orders need`;
+  return g.conflict.length
+    ? `${who} ${m}, which causes the overload`
+    : `${who} ${m}, one after the other`;
+}

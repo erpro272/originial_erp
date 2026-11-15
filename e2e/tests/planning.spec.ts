@@ -81,18 +81,93 @@ test("Selected orders: sent from Orders, on the timeline, synced back, options s
   const use = page.getByRole("button", { name: "Use this selection" });
   if ((await use.count()) > 1) {
     await use.last().click(); // Fully optimized
-    await expect(page.getByRole("columnheader", { name: /Fully optimized/ })).toContainText("Current");
-    await expect(page.getByRole("button", { name: "✓ Using this" })).toHaveCount(1);
+    await expect(
+      page.getByRole("columnheader", { name: /Fully optimized/ }),
+    ).toContainText("Current");
+    await expect(
+      page.getByRole("button", { name: "✓ Using this" }),
+    ).toHaveCount(1);
     await page.getByRole("columnheader", { name: /Your selection/ }).click();
-    await page.getByRole("button", { name: "Use this selection" }).first().click(); // back to Your selection
-    await expect(page.getByRole("columnheader", { name: /Your selection/ })).toContainText("Current");
+    await page
+      .getByRole("button", { name: "Use this selection" })
+      .first()
+      .click(); // back to Your selection
+    await expect(
+      page.getByRole("columnheader", { name: /Your selection/ }),
+    ).toContainText("Current");
   }
 
-  // Steps 2–5 are locked for now.
-  await expect(page.getByRole("tab", { name: /Production schedule/ })).toHaveAttribute("aria-disabled", "true");
+  // Steps 3–5 are locked for now.
+  await expect(
+    page.getByRole("tab", { name: /Production schedule/ }),
+  ).toHaveAttribute("aria-disabled", "true");
   await page.goto("/planning?step=3");
-  await expect(page.getByText(/coming soon/i).first()).toBeVisible();
+  await expect(
+    page.getByText(/no plan generated yet|coming next/i).first(),
+  ).toBeVisible();
 
   // Clean up: cancel the test order so reruns keep the planning pool small.
-  await request.post(`/api/orders/${order.id}/cancel`, { headers: await auth(request), data: { reason: "e2e test order" } });
+  await request.post(`/api/orders/${order.id}/cancel`, {
+    headers: await auth(request),
+    data: { reason: "e2e test order" },
+  });
+});
+
+test("Proposed manufacturing sequence: generate, hint with undo, lock keeps its slot under a rule", async ({
+  page,
+}) => {
+  await signIn(page, "owner@demo.example");
+  await page.goto("/planning");
+  await page
+    .getByRole("button", { name: /Generate plan →|Recalculate plan →/ })
+    .click();
+  await expect(page).toHaveURL(/step=2/);
+  await expect(page.getByText("Plan overview")).toBeVisible();
+  await expect(page.getByText(/^Generated today, \d\d:\d\d$/)).toBeVisible();
+  const feas = page.getByLabel("Plan feasibility");
+  await expect(feas.getByText(/Feasible|Needs adjustment/)).toBeVisible();
+  const rows = page.locator('[data-testid^="seq-"]');
+  const order = async () =>
+    rows.evaluateAll((els) =>
+      els.map((e) => (e as HTMLElement).dataset.testid),
+    );
+  await expect(rows.first()).toBeVisible();
+
+  // Rules re-sort; Custom is kept as the owner left it.
+  await page.getByRole("tab", { name: "Deadline", exact: true }).click();
+  await expect(
+    page.getByRole("tab", { name: "Deadline", exact: true }),
+  ).toHaveAttribute("aria-selected", "true");
+
+  // The suggestion, if there is one: apply it, see the effect, then undo.
+  const apply = page.getByRole("button", { name: "Apply this order" });
+  if (await apply.count()) {
+    const was = await order();
+    await apply.click();
+    await expect(
+      page.getByRole("status").filter({ hasText: "Undo" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("tab", { name: "Custom", exact: true }),
+    ).toHaveAttribute("aria-selected", "true");
+    await page.getByRole("button", { name: "Undo" }).click();
+    await expect.poll(order).toEqual(was);
+  }
+
+  // Lock the last order, sort by value: it keeps its slot. Then unlock.
+  const ids = await order();
+  const last = ids[ids.length - 1]!.slice(4);
+  await page.getByRole("button", { name: `Lock ${last}` }).click();
+  await expect(
+    page.getByRole("button", { name: `Unlock ${last}` }),
+  ).toBeVisible();
+  await page.getByRole("tab", { name: "Highest value" }).click();
+  await expect(
+    page.getByRole("tab", { name: "Highest value" }),
+  ).toHaveAttribute("aria-selected", "true");
+  await expect.poll(async () => (await order()).at(-1)).toBe(`seq-${last}`);
+  await page.getByRole("button", { name: `Unlock ${last}` }).click();
+  await expect(
+    page.getByRole("button", { name: `Lock ${last}` }),
+  ).toBeVisible();
 });

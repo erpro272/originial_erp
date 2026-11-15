@@ -5,6 +5,8 @@ export type Plan = Schemas["PlanOut"];
 export type Selection = Schemas["Selection"];
 export type SelectionOption = Schemas["SelectionOption"];
 export type PlanPatch = Schemas["PlanPatch"];
+export type SeqRow = Schemas["SeqRow"];
+export type Sequence = Schemas["Sequence"];
 export type OptKey = "own" | "part" | "full";
 
 export const PLAN_KEY = ["planning", "plan"] as const;
@@ -45,6 +47,20 @@ export function usePatchPlan(planId: string | undefined) {
         }),
       ),
     onSuccess: (r) => set(r.plan),
+  });
+}
+
+/** Generate (or recalculate) the plan: opens step 2 and stamps "Generated today, HH:MM". */
+export function useGenerate(planId: string | undefined) {
+  const set = useSetPlan();
+  return useMutation({
+    mutationFn: async () =>
+      unwrap(
+        await api.POST("/api/planning/plans/{plan_id}/generate", {
+          params: { path: { plan_id: planId! } },
+        }),
+      ),
+    onSuccess: set,
   });
 }
 

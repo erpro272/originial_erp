@@ -25,6 +25,7 @@ const opt = (
   margin: 0,
   per_day: 0,
   dropped: {},
+  sequence: Object.keys(rows),
   rows: Object.fromEntries(
     Object.entries(rows).map(([id, [start, finish, late_days, route, idle_fill]]) => [
       id,

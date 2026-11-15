@@ -4,18 +4,26 @@ import { ApiError } from "@/api/client";
 import { useAuth } from "@/auth/AuthContext";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
-import { OPT_LABEL, usePatchPlan, type OptKey, type Plan, type PlanPatch } from "./api";
-import { plural } from "./format";
+import {
+  OPT_LABEL,
+  useGenerate,
+  usePatchPlan,
+  type OptKey,
+  type Plan,
+  type PlanPatch,
+} from "./api";
+import { generatedLabel, plural } from "./format";
 import { OptionsTable } from "./OptionsTable";
 import { OrdersInPlan } from "./OrdersInPlan";
 import { OrderTimeline } from "./OrderTimeline";
 
 /** Step 1: Selected orders. Timeline, the orders, and the 3 selection options all read one plan. */
-export function SelectedOrders({ plan }: { plan: Plan }) {
+export function SelectedOrders({ plan, go }: { plan: Plan; go: (step: string) => void }) {
   const { can } = useAuth();
   const editable = can("planning.write");
   const sel = plan.result.selection;
   const patch = usePatchPlan(plan.id);
+  const generate = useGenerate(plan.id);
   const { toast } = useToast();
   const using = (sel.using ?? "own") as OptKey;
   // The timeline highlights the option in use, until the owner clicks another one.
@@ -83,13 +91,33 @@ export function SelectedOrders({ plan }: { plan: Plan }) {
         <div className="flex flex-col gap-1">
           <b className="text-base">Ready to plan {plural(ticked.length, "order")}</b>
           <span className="text-sm text-muted">
-            Sequence, machine and labour load, materials and financials come in the next steps,
-            which are being rebuilt.
+            We'll work out the manufacturing sequence and machine routes. Production schedule,
+            financials and approval are being rebuilt.
           </span>
         </div>
-        <Button disabled title="Next steps coming soon">
-          Generate plan → <span className="font-normal">(coming soon)</span>
-        </Button>
+        <div className="flex items-center gap-4">
+          <span className="text-[13px] text-muted">
+            Last generated: {plan.generated_at ? generatedLabel(plan.generated_at) : "never"}
+          </span>
+          {editable && (
+            <Button
+              disabled={!ticked.length || generate.isPending || patch.isPending}
+              onClick={async () => {
+                try {
+                  await generate.mutateAsync();
+                  go("2");
+                } catch (e) {
+                  toast({
+                    title: e instanceof ApiError ? e.message : "Couldn't generate the plan.",
+                    tone: "error",
+                  });
+                }
+              }}
+            >
+              {plan.generated_at ? "Recalculate plan →" : "Generate plan →"}
+            </Button>
+          )}
+        </div>
       </div>
     </section>
   );

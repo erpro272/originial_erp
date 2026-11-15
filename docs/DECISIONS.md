@@ -121,3 +121,13 @@ Short records of choices and the reason for each. Newest at the bottom.
     only with no new late delivery or bottleneck. Fully = every subset of up to 10 accepted orders, each
     with its best sequence; clean plans (no late, no bottleneck) first, then the Best-score rule.
     "Best score" uses the same ranking. `ENGINE_VERSION` is part of the plan fingerprint.
+40. **Step 2 feasibility (owner's choice)**: the scheduler never books a machine above its hours, so a
+    competing order waits and ships late. "CNC 01 over capacity by N hrs, dates" = the machine hours the
+    late order can't fit before its deadline (re-plan forced to the deadline, route hand-off respected),
+    blamed on the machine it queued longest for, over the days it queued. Counted as a bottleneck on
+    step 1 too, so both steps agree.
+41. **Step 2 edits (owner's choices)**: using an optimizer option runs its scored order (rule = Custom);
+    drag applies at once with an Undo banner (late / plan length / bottlenecks before → after); every
+    change recalculates automatically, ↻ Recalculate = Generate again (latest data + new timestamp).
+    Locked orders keep their slot under every rule; a dismissed suggestion stays hidden until the
+    suggestion changes.

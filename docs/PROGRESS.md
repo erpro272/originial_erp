@@ -56,6 +56,14 @@
   sequencing, order timeline rebuilt like the mockup (machine routes, idle-machine fills, left-out
   reasons, click to highlight), approval no longer flags itself for re-approval.
 - Tests: 233 pytest, 32 Vitest, 14 Playwright.
+- v1 archived (`archive/planning-v1/`); rebuild one step at a time:
+  - Step 1 Selected orders (2026-11-14): finite-capacity timeline, the three options, demo upsert.
+  - Step 2 Proposed manufacturing sequence (2026-11-15) · awaiting owner review: Generate plan opens
+    it (locked panel before), overview, feasibility (machine hours missing to be on time, material,
+    late), suggested move (apply / dismiss), rules (deadline, value, margin, customer priority,
+    custom) with locks keeping their slot, start date, drag with Undo banner, parallel groups with the
+    machine that causes the overload, ↻ Recalculate. Using a step-1 option runs it in its scored order.
+    Steps 3–5 locked ("coming next"). Tests: 252 pytest, 36 Vitest, 14 Playwright.
 
 ## Next
 - Planning v1 archived in `archive/planning-v1/` (owner request). Rebuild in progress:
