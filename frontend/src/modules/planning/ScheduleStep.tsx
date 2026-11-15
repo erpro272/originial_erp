@@ -437,8 +437,8 @@ export function ScheduleStep({ plan, go }: { plan: Plan; go: (step: string) => v
         <Button variant="pill" onClick={() => go("2")}>
           ← Proposed sequence
         </Button>
-        <Button variant="dark" disabled title="Financial analysis is being rebuilt">
-          Next: Financial analysis → <span className="font-normal">(coming next)</span>
+        <Button variant="dark" onClick={() => go("4")}>
+          Next: Financial analysis →
         </Button>
       </div>
       {reorder.modal}

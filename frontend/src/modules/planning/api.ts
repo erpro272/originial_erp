@@ -9,6 +9,8 @@ export type SeqRow = Schemas["SeqRow"];
 export type Sequence = Schemas["Sequence"];
 export type GanttRow = Schemas["GanttRow"];
 export type Preview = Schemas["PreviewOut"];
+export type Rules = Schemas["PlanningRules"];
+export type Finance = Schemas["Finance"];
 export type OptKey = "own" | "part" | "full";
 
 export const PLAN_KEY = ["planning", "plan"] as const;
@@ -107,4 +109,23 @@ const PALETTE = [
 export function machineTone(machineId: string, order: string[]): string {
   const i = order.indexOf(machineId);
   return PALETTE[(i < 0 ? 0 : i) % PALETTE.length]!;
+}
+
+/** Company rules (late penalty, overheads, packaging, minimum margin): the comment-icon numbers. */
+export function useRules() {
+  return useQuery({
+    queryKey: ["planning", "rules"],
+    queryFn: async () => unwrap(await api.GET("/api/planning/rules")),
+  });
+}
+
+export function usePutRules() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: Rules) => unwrap(await api.PUT("/api/planning/rules", { body })),
+    onSuccess: (r) => {
+      qc.setQueryData(["planning", "rules"], r);
+      void qc.invalidateQueries({ queryKey: PLAN_KEY }); // the plan recalculates with the new rule
+    },
+  });
 }

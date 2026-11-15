@@ -11,6 +11,7 @@ import { useToast } from "@/components/ui/Toast";
 import { useCreatePlan, useGenerate, usePlan, type Plan } from "./api";
 import { plural } from "./format";
 import { SelectedOrders } from "./SelectedOrders";
+import { FinanceStep } from "./FinanceStep";
 import { ScheduleStep } from "./ScheduleStep";
 import { SequenceStep } from "./SequenceStep";
 
@@ -21,9 +22,9 @@ const STEPS = [
   { id: "4", label: "Financial analysis" },
   { id: "5", label: "Final plan approval" },
 ];
-const BUILT = ["1", "2", "3"]; // steps 4–5 are being rebuilt
+const BUILT = ["1", "2", "3", "4"]; // step 5 is being rebuilt
 
-/** Planning (rebuild): steps 1–3 are live; 2–3 open once the plan is generated; 4–5 come next. */
+/** Planning (rebuild): steps 1–4 are live; 2–4 open once the plan is generated; 5 comes next. */
 export function PlanningPage() {
   const { can } = useAuth();
   const plan = usePlan();
@@ -92,6 +93,8 @@ export function PlanningPage() {
             <SequenceStep plan={p} go={go} />
           ) : step === "3" && generated ? (
             <ScheduleStep plan={p} go={go} />
+          ) : step === "4" && generated ? (
+            <FinanceStep plan={p} go={go} />
           ) : (
             <LockedStep plan={p} step={step} go={go} />
           )}
@@ -131,12 +134,12 @@ function LockedStep({ plan, step, go }: { plan: Plan; step: string; go: (id: str
       </h2>
       <p className="m-0 max-w-[460px] text-[15px] text-muted">
         {generated
-          ? "This step is being rebuilt. Selected orders, the proposed sequence and the production schedule are ready to use."
+          ? "This step is being rebuilt. Steps 1–4 are ready to use."
           : `Generate a plan from your ${plural(n, "selected order")} to see this step.`}
       </p>
       <div className="flex gap-2.5">
-        <Button variant="pill" onClick={() => go(generated ? "3" : "1")}>
-          {generated ? "← Production schedule" : "Review selected orders"}
+        <Button variant="pill" onClick={() => go(generated ? "4" : "1")}>
+          {generated ? "← Financial analysis" : "Review selected orders"}
         </Button>
         {!generated && can("planning.write") && (
           <Button

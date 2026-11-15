@@ -97,11 +97,11 @@ test("Selected orders: sent from Orders, on the timeline, synced back, options s
     ).toContainText("Current");
   }
 
-  // Steps 4–5 are locked for now.
+  // Step 5 is locked for now.
   await expect(
-    page.getByRole("tab", { name: /Financial analysis/ }),
+    page.getByRole("tab", { name: /Final plan approval/ }),
   ).toHaveAttribute("aria-disabled", "true");
-  await page.goto("/planning?step=4");
+  await page.goto("/planning?step=5");
   await expect(
     page.getByText(/no plan generated yet|coming next/i).first(),
   ).toBeVisible();
@@ -227,4 +227,52 @@ test("Production schedule: chart, reorder warning (cancel / continue), undo, sav
   await page.getByRole("button", { name: "Save schedule" }).click();
   await expect(page.getByText("Schedule saved").first()).toBeVisible();
   await expect(page.getByRole("button", { name: "↶ Undo" })).toBeDisabled();
+});
+
+test("Financial analysis: before / with fixes, a fix changes the whole plan", async ({
+  page,
+}) => {
+  await signIn(page, "owner@demo.example");
+  await page.goto("/planning");
+  await page
+    .getByRole("button", { name: /Generate plan →|Recalculate plan →/ })
+    .click();
+  await expect(page.getByText("Plan overview")).toBeVisible();
+  await page.goto("/planning?step=3");
+  await page
+    .getByRole("button", { name: "Next: Financial analysis →" })
+    .click();
+  await expect(page).toHaveURL(/step=4/);
+  await expect(
+    page.getByRole("heading", { name: "Cost breakdown" }),
+  ).toBeVisible();
+  await expect(page.getByText("Profit by order")).toBeVisible();
+  for (const label of [
+    "Total sales value",
+    "Manufacturing cost",
+    "Expected contribution",
+    "Contribution margin",
+  ])
+    await expect(page.getByText(label, { exact: true }).first()).toBeVisible();
+
+  const fixes = page.getByLabel(/^Apply /);
+  if ((await fixes.count()) === 0) return; // nothing to fix in this data
+  // make sure we start without fixes (rerunnable)
+  for (const box of await fixes.all())
+    if (await box.isChecked()) await box.uncheck();
+  await expect(page.getByText("With selected fixes (0)")).toBeVisible();
+  const first = fixes.first();
+  await first.check();
+  await expect(page.getByText("With selected fixes (1)")).toBeVisible();
+  await expect(
+    page.getByRole("tab", { name: /With selected fixes/ }),
+  ).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByText(/The fixes cost/)).toBeVisible();
+  // undo the fix so reruns start from the same plan
+  await first.uncheck();
+  await expect(page.getByText("With selected fixes (0)")).toBeVisible();
+  await expect(page.getByRole("tab", { name: "Before fixes" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
 });

@@ -124,7 +124,8 @@ isolation). One company per website: no company picker or switcher in the UI.
   Categorical series colours `s1..s5` (validated); machine colours `in/bl/te/ai/lo` by machine order.
 - Planning UI v1 is archived in `archive/planning-v1/`. Rebuild: `modules/planning/` has step 1
   (`SelectedOrders`: `OrderTimeline`, `OrdersInPlan`, `OptionsTable`), step 2 (`SequenceStep`) and
-  step 3 (`ScheduleStep`, warning popup in `reorder.tsx`); 2–3 open after Generate plan; 4–5 locked. Engine: `constraints()` sizes machine competition,
+  step 3 (`ScheduleStep`, warning popup in `reorder.tsx`), step 4 (`FinanceStep`, company rules via
+  `RuleButton`); 2–4 open after Generate plan; 5 locked. Engine: `constraints()` sizes machine competition,
   `feasibility()` writes the lines, `keep_locked()` holds locked slots under any rule.
   Old notes: routes `/planning?step=1..5`, `/planning/factory`. Every planning number comes from the
   plan result; after any edit the response says which tabs changed (dots + banner + `Flash`).

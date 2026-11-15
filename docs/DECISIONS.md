@@ -138,3 +138,8 @@ Short records of choices and the reason for each. Newest at the bottom.
     from a forced finish date (bar edge = set the finish date, earlier squeezes the hours = overtime).
     A step forced into fewer clock hours than its day has (it can't start before the previous step
     ends) counts that overflow as machine load.
+43. **Step 4 (owner's choices)**: each fix (night shift on a machine for given days, express material)
+    is ticked on its own and applies to the whole plan (steps 2-3 change with it); the Before / With
+    switch only changes which numbers are shown. Night-shift cost = the machine's clock time past its
+    normal hours (a step that waits for the previous route step runs later in the day) x the night
+    premium. Margin bars: red below the company minimum, blue above it, green from minimum + 5 points.

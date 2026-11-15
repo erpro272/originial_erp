@@ -73,6 +73,13 @@
     start or before material arrival are refused), ↶ Undo (multi-step), Save schedule (history
     checkpoint). Steps 4–5 locked. Tests: 255 pytest, 39 Vitest, 15 Playwright (invoice upload test
     left aside for now at the owner's request).
+  - Step 4 Financial analysis (2026-11-15) · awaiting owner review: Before fixes | With selected fixes
+    (N) switch, 4 KPIs (sales value, manufacturing cost incl. fixes, expected contribution after
+    penalties, margin), cost breakdown (materials, labour, machine, overheads, packaging, plan fixes),
+    plan adjustments (base contribution, late penalty per late order "1 day × ₹20,000", each suggested
+    fix with a tick box that applies it to the whole plan, expected contribution, insight: fix cost
+    vs penalty avoided), profit by order (column picker, margin bar vs the company minimum), comment
+    icons for the company rules. Step 5 locked. Tests: 256 pytest, 42 Vitest, 16 Playwright.
 
 ## Next
 - Planning v1 archived in `archive/planning-v1/` (owner request). Rebuild in progress:
