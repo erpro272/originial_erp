@@ -7,6 +7,8 @@ export type SelectionOption = Schemas["SelectionOption"];
 export type PlanPatch = Schemas["PlanPatch"];
 export type SeqRow = Schemas["SeqRow"];
 export type Sequence = Schemas["Sequence"];
+export type GanttRow = Schemas["GanttRow"];
+export type Preview = Schemas["PreviewOut"];
 export type OptKey = "own" | "part" | "full";
 
 export const PLAN_KEY = ["planning", "plan"] as const;
@@ -69,3 +71,40 @@ export const OPT_LABEL: Record<OptKey, string> = {
   part: "Partly optimized",
   full: "Fully optimized",
 };
+
+/** Simulate an edit without saving it (the reorder / finish-date warning). */
+export async function previewPatch(planId: string, body: PlanPatch): Promise<Preview> {
+  return unwrap(
+    await api.PATCH("/api/planning/plans/{plan_id}", {
+      params: { path: { plan_id: planId }, query: { preview: true } },
+      body,
+    }),
+  );
+}
+
+/** Step 3 "Save schedule": a checkpoint in the plan history. */
+export function useSaveSchedule(planId: string | undefined) {
+  const set = useSetPlan();
+  return useMutation({
+    mutationFn: async () =>
+      unwrap(
+        await api.POST("/api/planning/plans/{plan_id}/save-schedule", {
+          params: { path: { plan_id: planId! } },
+        }),
+      ),
+    onSuccess: set,
+  });
+}
+
+/** Machine colours on the schedule, by machine order in Factory setup. */
+const PALETTE = [
+  "bg-ai-bg border-ai-line text-ai", // purple (mockup: Press 01)
+  "bg-bl-bg border-bl-line text-bl", // blue (CNC 01)
+  "bg-te-bg border-te-line text-te", // teal
+  "bg-in-bg border-in-line text-in", // indigo
+  "bg-surface-2 border-faint text-ink-3", // grey
+];
+export function machineTone(machineId: string, order: string[]): string {
+  const i = order.indexOf(machineId);
+  return PALETTE[(i < 0 ? 0 : i) % PALETTE.length]!;
+}

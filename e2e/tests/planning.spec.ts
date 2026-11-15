@@ -97,11 +97,11 @@ test("Selected orders: sent from Orders, on the timeline, synced back, options s
     ).toContainText("Current");
   }
 
-  // Steps 3–5 are locked for now.
+  // Steps 4–5 are locked for now.
   await expect(
-    page.getByRole("tab", { name: /Production schedule/ }),
+    page.getByRole("tab", { name: /Financial analysis/ }),
   ).toHaveAttribute("aria-disabled", "true");
-  await page.goto("/planning?step=3");
+  await page.goto("/planning?step=4");
   await expect(
     page.getByText(/no plan generated yet|coming next/i).first(),
   ).toBeVisible();
@@ -170,4 +170,61 @@ test("Proposed manufacturing sequence: generate, hint with undo, lock keeps its 
   await expect(
     page.getByRole("button", { name: `Lock ${last}` }),
   ).toBeVisible();
+});
+
+test("Production schedule: chart, reorder warning (cancel / continue), undo, save", async ({
+  page,
+}) => {
+  await signIn(page, "owner@demo.example");
+  await page.goto("/planning");
+  await page
+    .getByRole("button", { name: /Generate plan →|Recalculate plan →/ })
+    .click();
+  await page
+    .getByRole("button", { name: "Next: Production schedule →" })
+    .click();
+  await expect(page).toHaveURL(/step=3/);
+  await expect(page.getByText("Machine load")).toBeVisible();
+  await expect(page.getByText("In production · locked")).toBeVisible();
+  const rows = page.locator('[data-testid^="gantt-"]');
+  const order = async () =>
+    rows.evaluateAll((els) =>
+      els.map((e) => (e as HTMLElement).dataset.testid!.slice(6)),
+    );
+  await expect(rows.first()).toBeVisible();
+  const was = await order();
+
+  // move the first order to the bottom with the keyboard
+  const handle = page.getByRole("button", {
+    name: `Drag to reorder ${was[0]}`,
+  });
+  const move = async () => {
+    await handle.focus();
+    await page.keyboard.press("Space");
+    await page.waitForTimeout(150); // let dnd-kit pick the row up
+    for (let i = 1; i < was.length; i++) {
+      await page.keyboard.press("ArrowDown");
+      await page.waitForTimeout(120);
+    }
+    await page.keyboard.press("Space");
+  };
+  await move();
+  const dialog = page.getByRole("dialog");
+  const toast = page.getByText(/Reordered|Schedule updated/).first();
+  await expect(dialog.or(toast)).toBeVisible();
+  if (await dialog.isVisible()) {
+    await expect(dialog).toContainText(`Moving ${was[0]}`);
+    await page.getByRole("button", { name: "Cancel, keep old order" }).click();
+    await expect.poll(order).toEqual(was);
+    await move();
+    await page.getByRole("button", { name: "Continue anyway" }).click();
+  }
+  await expect.poll(async () => (await order()).at(-1)).toBe(was[0]);
+
+  // undo puts it back; save clears the undo list
+  await page.getByRole("button", { name: "↶ Undo" }).click();
+  await expect.poll(order).toEqual(was);
+  await page.getByRole("button", { name: "Save schedule" }).click();
+  await expect(page.getByText("Schedule saved").first()).toBeVisible();
+  await expect(page.getByRole("button", { name: "↶ Undo" })).toBeDisabled();
 });

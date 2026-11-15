@@ -123,8 +123,8 @@ isolation). One company per website: no company picker or switcher in the UI.
 - Charts: hand-rolled SVG, one validated hue, hover tooltip + sr-only table (see dataviz rules).
   Categorical series colours `s1..s5` (validated); machine colours `in/bl/te/ai/lo` by machine order.
 - Planning UI v1 is archived in `archive/planning-v1/`. Rebuild: `modules/planning/` has step 1
-  (`SelectedOrders`: `OrderTimeline`, `OrdersInPlan`, `OptionsTable`) and step 2 (`SequenceStep`,
-  opens after Generate plan); steps 3–5 locked. Engine: `constraints()` sizes machine competition,
+  (`SelectedOrders`: `OrderTimeline`, `OrdersInPlan`, `OptionsTable`), step 2 (`SequenceStep`) and
+  step 3 (`ScheduleStep`, warning popup in `reorder.tsx`); 2–3 open after Generate plan; 4–5 locked. Engine: `constraints()` sizes machine competition,
   `feasibility()` writes the lines, `keep_locked()` holds locked slots under any rule.
   Old notes: routes `/planning?step=1..5`, `/planning/factory`. Every planning number comes from the
   plan result; after any edit the response says which tabs changed (dots + banner + `Flash`).

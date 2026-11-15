@@ -33,6 +33,7 @@ export function range(a?: string | null, b?: string | null): string {
   const da = new Date(`${a}T00:00:00`);
   const db = new Date(`${b}T00:00:00`);
   const m = (d: Date) => d.toLocaleDateString("en-GB", { month: "short" });
+  if (a === b) return `${da.getDate()} ${m(da)}`;
   return m(da) === m(db)
     ? `${da.getDate()}–${db.getDate()} ${m(db)}`
     : `${da.getDate()} ${m(da)} – ${db.getDate()} ${m(db)}`;
@@ -66,4 +67,10 @@ export function groupReason(
   return g.conflict.length
     ? `${who} ${m}, which causes the overload`
     : `${who} ${m}, one after the other`;
+}
+
+/** "1 hr", "2.3 hrs", "15 hrs" (same as the engine). */
+export function hrs(h: number): string {
+  const v = h >= 10 ? h.toFixed(0) : String(Number(h.toFixed(1)));
+  return v === "1" ? "1 hr" : `${v} hrs`;
 }

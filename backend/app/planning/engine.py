@@ -1237,8 +1237,15 @@ def bottleneck_diff(old: dict[str, Any], new: dict[str, Any]) -> dict[str, Any]:
         return {f"{b['kind']}:{b['resource']}": b for b in [*sch.get("constraints", []), *sch["bottlenecks"]]}
 
     o, n = idx(old), idx(new)
+
+    def was(b: dict[str, Any]) -> str:
+        if b["kind"] in ("machine", "constraint"):
+            a, z = (d if isinstance(d, date) else date.fromisoformat(d) for d in (b["from"], b["to"]))
+            return f"+{hrs(b['size'])} on {_fmt_range(a, z)}"
+        return str(b["text"])
+
     worse = [
-        b | {"was": o[k]["text"] if k in o else None}
+        b | {"was": was(o[k]) if k in o else None}
         for k, b in n.items()
         if k not in o or b["size"] > o[k]["size"] + EPS
     ]

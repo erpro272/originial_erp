@@ -442,9 +442,13 @@ export function SequenceStep({ plan, go }: { plan: Plan; go: (step: string) => v
               </span>
             )}
           </span>
-          <span className="text-subtle" title="Production schedule is being rebuilt">
-            Day-by-day view in Production schedule · coming next
-          </span>
+          <button
+            type="button"
+            onClick={() => go("3")}
+            className="cursor-pointer border-0 bg-transparent p-0 text-[13px] text-link"
+          >
+            Day-by-day view in Production schedule →
+          </button>
         </div>
       </section>
 
@@ -452,8 +456,8 @@ export function SequenceStep({ plan, go }: { plan: Plan; go: (step: string) => v
         <Button variant="pill" onClick={() => go("1")}>
           ← Selected orders
         </Button>
-        <Button variant="dark" disabled title="Production schedule is being rebuilt">
-          Next: Production schedule → <span className="font-normal">(coming next)</span>
+        <Button variant="dark" onClick={() => go("3")}>
+          Next: Production schedule →
         </Button>
       </div>
     </section>

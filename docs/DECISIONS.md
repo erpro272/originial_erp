@@ -131,3 +131,10 @@ Short records of choices and the reason for each. Newest at the bottom.
     change recalculates automatically, ↻ Recalculate = Generate again (latest data + new timestamp).
     Locked orders keep their slot under every rule; a dismissed suggestion stays hidden until the
     suggestion changes.
+42. **Step 3 (owner's choices)**: reorder / finish-date moves warn first (popup, as the mockup); step 2
+    keeps apply + Undo. Edits are live (all steps update); ↶ Undo walks back the last changes;
+    "Save schedule" is a checkpoint in the history (Final approval will compare against it). A queued
+    late order is drawn as hatched waiting days + ringed machine-load cells; real >100% loads only come
+    from a forced finish date (bar edge = set the finish date, earlier squeezes the hours = overtime).
+    A step forced into fewer clock hours than its day has (it can't start before the previous step
+    ends) counts that overflow as machine load.

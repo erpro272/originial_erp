@@ -64,6 +64,15 @@
     custom) with locks keeping their slot, start date, drag with Undo banner, parallel groups with the
     machine that causes the overload, ↻ Recalculate. Using a step-1 option runs it in its scored order.
     Steps 3–5 locked ("coming next"). Tests: 252 pytest, 36 Vitest, 14 Playwright.
+  - Step 3 Production schedule (2026-11-15) · awaiting owner review: day-by-day chart (running orders
+    locked, each route step a coloured bar on its machine's days, half days at hand-overs, setup
+    stripe, deadline markers, material "!", hover details), problem chips, machine load grid (over
+    100% red, "Over"; days a late order queued are ringed, "Full"), ‹ › week range, drag ⋮⋮ to
+    reorder and drag a bar's edge to set its finish date, both checked first (warning popup: Cancel /
+    Continue; better-only changes apply with a "bottleneck cleared" toast; locked slot, before plan
+    start or before material arrival are refused), ↶ Undo (multi-step), Save schedule (history
+    checkpoint). Steps 4–5 locked. Tests: 255 pytest, 39 Vitest, 15 Playwright (invoice upload test
+    left aside for now at the owner's request).
 
 ## Next
 - Planning v1 archived in `archive/planning-v1/` (owner request). Rebuild in progress:
