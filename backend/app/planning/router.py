@@ -50,6 +50,11 @@ async def generate(db: TenantDB, p: Writer, plan_id: uuid.UUID) -> PlanOut:
     return await service.generate(db, p.user_id, plan_id)
 
 
+@router.post("/plans/{plan_id}/save-schedule")
+async def save_schedule(db: TenantDB, p: Writer, plan_id: uuid.UUID) -> PlanOut:
+    return await service.save_schedule(db, p.user_id, plan_id)
+
+
 @router.post("/plans/{plan_id}/purchase-requests")
 async def raise_po(db: TenantDB, p: Writer, plan_id: uuid.UUID, body: RaisePoIn) -> PlanOut:
     return await service.raise_po(db, p.user_id, plan_id, body.material_id)

@@ -146,7 +146,7 @@ class Sequence(BaseModel):
 
 
 class Bottleneck(BaseModel):
-    kind: Literal["machine", "labour", "material", "material_wait", "late"]
+    kind: Literal["constraint", "machine", "labour", "material", "material_wait", "late"]
     resource: str
     title: str
     text: str
@@ -168,6 +168,19 @@ class GanttStep(BaseModel):
     setup: float
 
 
+class WaitSpan(BaseModel):
+    machine: str
+    from_: date = Field(alias="from")
+    to: date
+
+
+class Chip(BaseModel):
+    kind: str
+    tone: Literal["bad", "warn"]
+    title: str
+    text: str
+
+
 class GanttRow(BaseModel):
     id: str
     running: bool
@@ -177,6 +190,7 @@ class GanttRow(BaseModel):
     deadline: date | None
     over_days: list[date]
     short: bool
+    wait: list[WaitSpan] = []  # days a late order queued for a full machine (step 2 "over capacity")
 
 
 class LoadRow(BaseModel):
@@ -192,6 +206,8 @@ class Schedule(BaseModel):
     rows: list[GanttRow]
     load: list[LoadRow]
     bottlenecks: list[Bottleneck]
+    constraints: list[Bottleneck] = []
+    chips: list[Chip] = []
 
 
 class FinRow(BaseModel):
@@ -304,6 +320,7 @@ class PlanOut(BaseModel):
     approval_note: str | None
     result: PlanResult
     last_change: LastChange | None
+    schedule_saved_at: datetime | None = None  # last "Save schedule" checkpoint (step 3)
 
 
 class Diff(BaseModel):

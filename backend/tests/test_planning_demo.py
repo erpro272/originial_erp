@@ -139,3 +139,57 @@ async def test_step2_sequence_on_the_demo(client: AsyncClient) -> None:
     # start date: not in the past
     past = await client.patch(f"/planning/plans/{pid}", json={"start_date": "2020-01-06"}, headers=h)
     assert past.status_code == 400
+
+
+async def test_step3_schedule_on_the_demo(client: AsyncClient) -> None:
+    """Production schedule: chips, queue days, preview warning, finish-date pins, hard blocks, save."""
+    h = await _demo(client, "demo-sch")
+    plan = (await client.get("/planning/plan", headers=h)).json()
+    pid, r = plan["id"], plan["result"]
+    num = {k: v["number"] for k, v in r["selection"]["orders"].items()}
+    by_num = {v: k for k, v in num.items()}
+    sch = r["schedule"]
+    assert [c["title"] for c in sch["chips"]] == ["CNC 01 over capacity", "Steel wire rod short 2.4 t"]
+    late = next(x for x in sch["rows"] if x["id"] == by_num["ORD-1044"])
+    assert late["wait"][0]["machine"] == "CNC 01"
+    assert sum(1 for x in sch["rows"] if x["running"]) == 5
+    assert all(st["setup"] == 0 for x in sch["rows"] if x["running"] for st in x["steps"])
+
+    # preview a reorder that makes things worse: nothing is saved
+    ids = [x["id"] for x in r["sequence"]["rows"]]
+    worse = [by_num["ORD-1044"], *[i for i in ids if i != by_num["ORD-1044"]]][::-1]
+    pv = (
+        await client.patch(f"/planning/plans/{pid}?preview=true", json={"sequence": worse}, headers=h)
+    ).json()
+    assert "warn" in pv["diff"]
+    again = (await client.get("/planning/plan", headers=h)).json()
+    assert [x["id"] for x in again["result"]["sequence"]["rows"]] == ids  # preview saved nothing
+
+    # pin ORD-1044 to its deadline: on time, CNC 01 really overloaded (red), the warning lists it
+    dl = r["selection"]["orders"][by_num["ORD-1044"]]["deadline"]
+    pv = (await client.patch(f"/planning/plans/{pid}?preview=true", json={"pin": {by_num["ORD-1044"]: dl}},
+                             headers=h)).json()  # fmt: skip
+    assert pv["diff"]["warn"] and any(b["kind"] == "machine" for b in pv["diff"]["worse"])
+    out = (
+        await client.patch(f"/planning/plans/{pid}", json={"pin": {by_num["ORD-1044"]: dl}}, headers=h)
+    ).json()
+    rows = {x["id"]: x for x in out["plan"]["result"]["sequence"]["rows"]}
+    assert rows[by_num["ORD-1044"]]["pinned"] == dl and rows[by_num["ORD-1044"]]["late_days"] == 0
+    assert any(lr["over"] for lr in out["plan"]["result"]["schedule"]["load"])
+    # release the pin
+    out = (
+        await client.patch(f"/planning/plans/{pid}", json={"pin": {by_num["ORD-1044"]: None}}, headers=h)
+    ).json()
+    assert out["plan"]["result"]["sequence"]["rows"][2]["pinned"] is None
+
+    # hard blocks: before the plan starts, before the material arrives
+    bad = await client.patch(
+        f"/planning/plans/{pid}", json={"pin": {by_num["ORD-1044"]: "2020-01-01"}}, headers=h
+    )
+    assert bad.status_code == 400
+
+    # save schedule: a checkpoint in the history (needs a generated plan)
+    assert (await client.post(f"/planning/plans/{pid}/save-schedule", headers=h)).status_code == 400
+    await client.post(f"/planning/plans/{pid}/generate", headers=h)
+    saved = (await client.post(f"/planning/plans/{pid}/save-schedule", headers=h)).json()
+    assert saved["schedule_saved_at"] and saved["last_change"]["summary"] == "Schedule saved"

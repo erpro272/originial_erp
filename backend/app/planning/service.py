@@ -308,6 +308,7 @@ async def _out(session: AsyncSession, plan: Plan) -> PlanOut:
         approved_at=plan.approved_at, approval_note=plan.approval_note,
         result=PlanResult.model_validate(result),
         last_change=LastChange(summary=ev.summary, tabs=ev.tabs, at=ev.created_at) if ev else None,
+        schedule_saved_at=(plan.inputs or {}).get("schedule_saved_at"),
     )  # fmt: skip
 
 
@@ -442,6 +443,8 @@ def _apply(plan: Plan, p: PlanPatch, result: dict[str, Any]) -> tuple[list[str],
             if d is None:
                 inp.pins.pop(jid, None)
             else:
+                if d < inp.start:
+                    raise DomainError("A finish date can't be before the plan starts.")
                 inp.pins[jid] = d
             summary = f"{num.get(jid, '')} finish date " + (f"set to {d.isoformat()}" if d else "released")
     if p.fixes is not None:
@@ -514,6 +517,20 @@ async def generate(session: AsyncSession, actor: uuid.UUID, plan_id: uuid.UUID) 
                           tabs=[2, 3, 4, 5], actor_id=actor))  # fmt: skip
     await audit.record(session, actor_id=actor, action="update", entity_type="plan", entity_id=plan.id,
                        summary=f"{plan.number} generated")  # fmt: skip
+    await session.flush()
+    return await _out(session, plan)
+
+
+async def save_schedule(session: AsyncSession, actor: uuid.UUID, plan_id: uuid.UUID) -> PlanOut:
+    """Step 3 "Save schedule": a checkpoint in the plan history (every edit is already live)."""
+    plan = await _get(session, plan_id)
+    await _refresh(session, plan, clock.today())
+    if not plan.generated_at:
+        raise DomainError("Generate the plan first.")
+    plan.inputs = {**(plan.inputs or {}), "schedule_saved_at": datetime.now(UTC).isoformat()}
+    session.add(PlanEvent(plan_id=plan.id, kind="saved", summary="Schedule saved", tabs=[], actor_id=actor))
+    await audit.record(session, actor_id=actor, action="update", entity_type="plan", entity_id=plan.id,
+                       summary=f"{plan.number}: schedule saved")  # fmt: skip
     await session.flush()
     return await _out(session, plan)
 

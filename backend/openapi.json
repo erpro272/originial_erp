@@ -391,6 +391,7 @@
           },
           "kind": {
             "enum": [
+              "constraint",
               "machine",
               "labour",
               "material",
@@ -586,6 +587,38 @@
           "duplicate"
         ],
         "title": "CheckResult",
+        "type": "object"
+      },
+      "Chip": {
+        "properties": {
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "tone": {
+            "enum": [
+              "bad",
+              "warn"
+            ],
+            "title": "Tone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "tone",
+          "title",
+          "text"
+        ],
+        "title": "Chip",
         "type": "object"
       },
       "CompanyOut": {
@@ -2680,6 +2713,14 @@
             },
             "title": "Steps",
             "type": "array"
+          },
+          "wait": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/WaitSpan"
+            },
+            "title": "Wait",
+            "type": "array"
           }
         },
         "required": [
@@ -4479,6 +4520,18 @@
             "title": "Rule",
             "type": "string"
           },
+          "schedule_saved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Schedule Saved At"
+          },
           "start_date": {
             "format": "date",
             "title": "Start Date",
@@ -5411,6 +5464,22 @@
             "title": "Bottlenecks",
             "type": "array"
           },
+          "chips": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Chip"
+            },
+            "title": "Chips",
+            "type": "array"
+          },
+          "constraints": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Bottleneck"
+            },
+            "title": "Constraints",
+            "type": "array"
+          },
           "days": {
             "items": {
               "format": "date",
@@ -6245,6 +6314,31 @@
           "type"
         ],
         "title": "ValidationError",
+        "type": "object"
+      },
+      "WaitSpan": {
+        "properties": {
+          "from": {
+            "format": "date",
+            "title": "From",
+            "type": "string"
+          },
+          "machine": {
+            "title": "Machine",
+            "type": "string"
+          },
+          "to": {
+            "format": "date",
+            "title": "To",
+            "type": "string"
+          }
+        },
+        "required": [
+          "machine",
+          "from",
+          "to"
+        ],
+        "title": "WaitSpan",
         "type": "object"
       },
       "app__customers__schemas__Overview": {
@@ -9356,6 +9450,54 @@
           }
         ],
         "summary": "Raise Po",
+        "tags": [
+          "planning"
+        ]
+      }
+    },
+    "/api/planning/plans/{plan_id}/save-schedule": {
+      "post": {
+        "operationId": "save_schedule_api_planning_plans__plan_id__save_schedule_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plan_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plan Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Save Schedule",
         "tags": [
           "planning"
         ]

@@ -19,7 +19,7 @@ from typing import Any
 
 EPS = 1e-6
 # Bump when the engine's logic changes, so saved plan results are recalculated (part of the fingerprint).
-ENGINE_VERSION = 6
+ENGINE_VERSION = 8
 FULL_POOL = 10  # orders the fully optimized option searches exhaustively (2^N subsets)
 FULL_REFINE = 8  # best subsets whose sequence is then improved by pairwise swaps
 HORIZON_DAYS = 400
@@ -245,9 +245,14 @@ def schedule(f: Factory, running: list[Job], jobs: list[Job], inp: Inputs, today
                         if need <= EPS:
                             break
                 d += timedelta(1)
+        squeezed = finish_by is not None and need > EPS
         for d, h in alloc.items():
             used[(step.machine, d)] += h
             capacity(step.machine, d)
+        if squeezed and earliest in alloc and after > EPS:
+            # forced into fewer clock hours than the day has: it can't start before the previous step ends
+            key = (step.machine, earliest)
+            used[key] = max(used[key], after + alloc[earliest])
         return alloc, end
 
     def run_job(job: Job, earliest: date, ready: date, finish_by: date | None) -> Placed:
@@ -798,6 +803,34 @@ def feasibility(f: Factory, bottlenecks: list[dict[str, Any]], num: dict[str, st
     return lines
 
 
+def chips(f: Factory, problems: list[dict[str, Any]], num: dict[str, str]) -> list[dict[str, Any]]:
+    """Problem chips above the production schedule (red = machine/labour, amber = material)."""
+    out = []
+    for b in problems:
+        k = b["kind"]
+        nums = [num.get(i, "") for i in b["orders"]]
+        who = " & ".join(nums)
+        if k == "constraint":
+            title = f"{b['resource']} over capacity"
+            text = f"{_fmt_range(b['from'], b['to'])} · +{hrs(b['size'])} · {who} {'waits' if len(nums) == 1 else 'wait'}"
+        elif k == "machine":
+            title = f"{b['resource']} overloaded"
+            text = f"{_fmt_range(b['from'], b['to'])} · +{hrs(b['size'])}" + (
+                f" · {who} overlap" if len(nums) > 1 else f" · {who}" if nums else "")  # fmt: skip
+        elif k == "material":
+            unit = f.materials[b["material"]].unit
+            title = f"{b['resource'][:1].upper()}{b['resource'][1:]} short {_qty(b['size'], unit)}"
+            text = f"needed {_fmt_day(b['from'])} for {who}"
+        elif k == "late":
+            continue
+        else:
+            title, text = b["title"], b["text"]
+        out.append(
+            {"kind": k, "tone": "warn" if k.startswith("material") else "bad", "title": title, "text": text}
+        )
+    return out
+
+
 def _cap(f: Factory, s: Sched, m: str, d: date) -> float:
     if (m, d) in s.cap:
         return s.cap[(m, d)]
@@ -1098,10 +1131,14 @@ def compute(f: Factory, rules: Rules, running: list[Job], cands: list[Job], sele
                 continue
             steps.append({"machine": st.machine, "name": f.machines[st.machine].name, "start": min(alloc),
                           "finish": max(alloc), "hours": {d: round(h, 2) for d, h in sorted(alloc.items())},
-                          "setup": st.setup})  # fmt: skip
+                          "setup": 0.0 if j.running else st.setup})  # fmt: skip
         over_days = sorted({d for st in steps for d in st["hours"]
                             if cur.sched.used[(st["machine"], d)] > cur.sched.cap[(st["machine"], d)] + EPS})  # fmt: skip
+        wait = [
+            {"machine": c["resource"], "from": c["from"], "to": c["to"]} for c in cons if j.id in c["orders"]
+        ]
         gantt.append({"id": j.id, "running": j.running, "steps": steps, "start": p.start, "finish": p.finish,
+                      "wait": wait,
                       "deadline": None if j.running else j.deadline, "over_days": over_days,
                       "short": any(b["kind"] == "material" and j.id in b["orders"] for b in a["bottlenecks"])})  # fmt: skip
     load = []
@@ -1166,7 +1203,8 @@ def compute(f: Factory, rules: Rules, running: list[Job], cands: list[Job], sele
                                   "late": len(jobs) - on_time},
                      "feasibility": {"ok": not problems, "lines": lines}},
         "schedule": {"days": days, "today": today, "rows": gantt, "load": load,
-                     "bottlenecks": [b for b in problems if b["kind"] not in ("late", "constraint")]},
+                     "bottlenecks": [b for b in problems if b["kind"] not in ("late", "constraint")],
+                     "constraints": cons, "chips": chips(f, problems, num)},
         "finance": {"before": fin_before, "with": fin_with, "fixes": fixes},
         "approval": {"checks": checks, "ready": sum(1 for ck in checks if ck["ok"]), "total": len(checks)},
         "purchase_needs": list(needs.values()),
@@ -1195,7 +1233,8 @@ def bottleneck_diff(old: dict[str, Any], new: dict[str, Any]) -> dict[str, Any]:
     """For the reorder warning: what gets worse, what gets better, delivery changes."""
 
     def idx(r: dict[str, Any]) -> dict[str, dict[str, Any]]:
-        return {f"{b['kind']}:{b['resource']}": b for b in r["schedule"]["bottlenecks"]}
+        sch = r["schedule"]
+        return {f"{b['kind']}:{b['resource']}": b for b in [*sch.get("constraints", []), *sch["bottlenecks"]]}
 
     o, n = idx(old), idx(new)
     worse = [

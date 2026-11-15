@@ -77,3 +77,37 @@ def test_parallel_group_names_the_shared_machine_that_causes_the_overload() -> N
         {"orders": ["long"], "shared": [], "conflict": []},
         {"orders": ["urgent"], "shared": [], "conflict": []},
     ]
+
+
+def test_schedule_chips_and_the_days_a_late_order_queued() -> None:
+    jobs, inp = _competing()
+    sch = eng.compute(F, R, [], jobs, ["long", "urgent"], "custom", inp, MON, set())["schedule"]
+    assert sch["chips"] == [
+        {"kind": "constraint", "tone": "bad", "title": "CNC 01 over capacity",
+         "text": "16–18 Nov · +8 hrs · ORD-urgent waits"},
+    ]  # fmt: skip
+    urgent = next(r for r in sch["rows"] if r["id"] == "urgent")
+    assert urgent["wait"] == [
+        {"machine": "CNC 01", "from": MON.isoformat(), "to": (MON + timedelta(2)).isoformat()}
+    ]
+    assert [c["resource"] for c in sch["constraints"]] == ["CNC 01"]
+
+
+def test_forced_finish_date_overloads_and_the_diff_warns() -> None:
+    """Dragging the urgent order's finish to its deadline books CNC 01 over its hours (a real overload)."""
+    jobs, inp = _competing()
+    before = eng.compute(F, R, [], jobs, ["long", "urgent"], "custom", inp, MON, set())
+    pinned = eng.Inputs(MON, ["long", "urgent"], pins={"urgent": MON + timedelta(1)})
+    after = eng.compute(F, R, [], jobs, ["long", "urgent"], "custom", pinned, MON, set())
+    [over] = after["schedule"]["bottlenecks"]
+    assert over["kind"] == "machine" and over["resource"] == "CNC 01" and round(over["size"]) == 8
+    load = next(lr for lr in after["schedule"]["load"] if lr["name"] == "CNC 01")
+    assert load["over"] and max(v for v in load["days"].values() if v) == 150
+    urgent = next(r for r in after["schedule"]["rows"] if r["id"] == "urgent")
+    assert urgent["over_days"] and urgent["finish"] == (MON + timedelta(1)).isoformat()
+    diff = eng.bottleneck_diff(before, after)
+    assert diff["warn"] and [b["kind"] for b in diff["worse"]] == ["machine"]
+    assert [b["kind"] for b in diff["better"]] == ["constraint"]  # the queue is gone: it's on time now
+    assert diff["deliveries"] == [
+        {"id": "urgent", "was": 2, "now": 0, "finish": (MON + timedelta(1)).isoformat()}
+    ]

@@ -775,6 +775,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/planning/plans/{plan_id}/save-schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Save Schedule */
+        post: operations["save_schedule_api_planning_plans__plan_id__save_schedule_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/planning/purchase-requests": {
         parameters: {
             query?: never;
@@ -962,7 +979,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "machine" | "labour" | "material" | "material_wait" | "late";
+            kind: "constraint" | "machine" | "labour" | "material" | "material_wait" | "late";
             /** Machine */
             machine?: string | null;
             /** Material */
@@ -1029,6 +1046,20 @@ export interface components {
             match: {
                 [key: string]: unknown;
             };
+        };
+        /** Chip */
+        Chip: {
+            /** Kind */
+            kind: string;
+            /** Text */
+            text: string;
+            /** Title */
+            title: string;
+            /**
+             * Tone
+             * @enum {string}
+             */
+            tone: "bad" | "warn";
         };
         /** CompanyOut */
         CompanyOut: {
@@ -1611,6 +1642,11 @@ export interface components {
             start: string;
             /** Steps */
             steps: components["schemas"]["GanttStep"][];
+            /**
+             * Wait
+             * @default []
+             */
+            wait: components["schemas"]["WaitSpan"][];
         };
         /** GanttStep */
         GanttStep: {
@@ -2272,6 +2308,8 @@ export interface components {
             result: components["schemas"]["PlanResult"];
             /** Rule */
             rule: string;
+            /** Schedule Saved At */
+            schedule_saved_at?: string | null;
             /**
              * Start Date
              * Format: date
@@ -2666,6 +2704,16 @@ export interface components {
         Schedule: {
             /** Bottlenecks */
             bottlenecks: components["schemas"]["Bottleneck"][];
+            /**
+             * Chips
+             * @default []
+             */
+            chips: components["schemas"]["Chip"][];
+            /**
+             * Constraints
+             * @default []
+             */
+            constraints: components["schemas"]["Bottleneck"][];
             /** Days */
             days: string[];
             /** Load */
@@ -2953,6 +3001,21 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /** WaitSpan */
+        WaitSpan: {
+            /**
+             * From
+             * Format: date
+             */
+            from: string;
+            /** Machine */
+            machine: string;
+            /**
+             * To
+             * Format: date
+             */
+            to: string;
         };
         /** Overview */
         app__customers__schemas__Overview: {
@@ -4571,6 +4634,37 @@ export interface operations {
                 "application/json": components["schemas"]["RaisePoIn"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_schedule_api_planning_plans__plan_id__save_schedule_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
