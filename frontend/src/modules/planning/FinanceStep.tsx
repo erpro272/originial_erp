@@ -101,35 +101,42 @@ export function FinanceStep({ plan, go }: { plan: Plan; go: (step: string) => vo
   const columns = [
     col.accessor((r) => num(r.id), {
       id: "order",
+      header: "Order",
       meta: { label: "Order", mono: true, alwaysVisible: true },
       cell: (c) => <b className="font-mono font-semibold">{c.getValue()}</b>,
     }),
     col.accessor((r) => orders[r.id]?.customer ?? "", {
       id: "customer",
+      header: "Customer",
       meta: { label: "Customer" },
     }),
     col.accessor("value", {
       id: "value",
+      header: "Value",
       meta: { label: "Value", align: "right" },
       cell: (c) => rupeesCompact(c.getValue()),
     }),
     col.accessor("cost", {
       id: "cost",
+      header: "Mfg. cost",
       meta: { label: "Mfg. cost", align: "right" },
       cell: (c) => money(c.getValue()),
     }),
     col.accessor("penalty", {
       id: "penalty",
+      header: "Penalty risk",
       meta: { label: "Penalty risk", align: "right" },
       cell: (c) => (c.getValue() ? <Flash value={c.getValue()}>{money(c.getValue())}</Flash> : "–"),
     }),
     col.accessor("fix_cost", {
       id: "fix_cost",
+      header: "Fix cost",
       meta: { label: "Fix cost", align: "right" },
       cell: (c) => (c.getValue() ? <Flash value={c.getValue()}>{money(c.getValue())}</Flash> : "–"),
     }),
     col.accessor("contribution", {
       id: "contribution",
+      header: "Contribution",
       meta: { label: "Contribution", align: "right" },
       cell: (c) => (
         <b>
@@ -139,6 +146,7 @@ export function FinanceStep({ plan, go }: { plan: Plan; go: (step: string) => vo
     }),
     col.accessor("margin", {
       id: "margin",
+      header: "Margin",
       meta: { label: "Margin" },
       cell: (c) => {
         const m = c.getValue();
