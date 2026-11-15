@@ -61,7 +61,7 @@ function snapshot(p: Plan): Snapshot {
 /** Step 2: the order the selected orders will be made in, and whether that plan holds up. */
 export function SequenceStep({ plan, go }: { plan: Plan; go: (step: string) => void }) {
   const { can } = useAuth();
-  const edit = can("planning.write");
+  const edit = can("planning.write") && plan.status !== "approved";
   const seq = plan.result.sequence;
   const orders = plan.result.selection.orders;
   const num = (id: string) => orders[id]?.number ?? id;

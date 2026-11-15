@@ -38,7 +38,7 @@ function money(paise: number): string {
 /** Step 4: what this plan earns, what it costs, and what the planned fixes change. */
 export function FinanceStep({ plan, go }: { plan: Plan; go: (step: string) => void }) {
   const { can } = useAuth();
-  const edit = can("planning.write");
+  const edit = can("planning.write") && plan.status !== "approved";
   const fin = plan.result.finance;
   const orders = plan.result.selection.orders;
   const num = (id: string) => orders[id]?.number ?? id;
@@ -388,8 +388,8 @@ export function FinanceStep({ plan, go }: { plan: Plan; go: (step: string) => vo
         <Button variant="pill" onClick={() => go("3")}>
           ← Production schedule
         </Button>
-        <Button variant="dark" disabled title="Final plan approval is being rebuilt">
-          Next: Final plan approval → <span className="font-normal">(coming next)</span>
+        <Button variant="dark" onClick={() => go("5")}>
+          Next: Final plan approval →
         </Button>
       </div>
     </section>

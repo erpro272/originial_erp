@@ -7,10 +7,12 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { LoadingState } from "@/components/ui/Skeleton";
 import { StepTabs } from "@/components/ui/Tabs";
+import { PageActions } from "@/components/layout/PageActions";
 import { useToast } from "@/components/ui/Toast";
 import { useCreatePlan, useGenerate, usePlan, type Plan } from "./api";
 import { plural } from "./format";
 import { SelectedOrders } from "./SelectedOrders";
+import { ApprovalStep } from "./ApprovalStep";
 import { FinanceStep } from "./FinanceStep";
 import { ScheduleStep } from "./ScheduleStep";
 import { SequenceStep } from "./SequenceStep";
@@ -22,9 +24,9 @@ const STEPS = [
   { id: "4", label: "Financial analysis" },
   { id: "5", label: "Final plan approval" },
 ];
-const BUILT = ["1", "2", "3", "4"]; // step 5 is being rebuilt
+const BUILT = ["1", "2", "3", "4", "5"];
 
-/** Planning (rebuild): steps 1–4 are live; 2–4 open once the plan is generated; 5 comes next. */
+/** Planning: 5 steps on one plan; 2–5 open once the plan is generated; an approved plan is read-only. */
 export function PlanningPage() {
   const { can } = useAuth();
   const plan = usePlan();
@@ -76,6 +78,38 @@ export function PlanningPage() {
         />
       ) : (
         <>
+          {p.status === "approved" && (
+            <>
+              <PageActions>
+                {can("planning.write") && !p.needs_reapproval && (
+                  <Button onClick={start} disabled={create.isPending}>
+                    + New plan
+                  </Button>
+                )}
+              </PageActions>
+              {step !== "5" && (
+                <div
+                  role="status"
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-ok-line bg-ok-bg px-5 py-3 text-sm"
+                >
+                  <span>
+                    <b>
+                      {p.number} is{" "}
+                      {p.needs_reapproval ? "approved but needs re-approval" : "approved"}.
+                    </b>{" "}
+                    It's read-only; start a new plan for the next orders.
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => go("5")}
+                    className="cursor-pointer border-0 bg-transparent p-0 text-[13px] text-link"
+                  >
+                    See approval →
+                  </button>
+                </div>
+              )}
+            </>
+          )}
           <StepTabs
             label="Plan steps"
             active={step}
@@ -95,6 +129,8 @@ export function PlanningPage() {
             <ScheduleStep plan={p} go={go} />
           ) : step === "4" && generated ? (
             <FinanceStep plan={p} go={go} />
+          ) : step === "5" && generated ? (
+            <ApprovalStep plan={p} go={go} />
           ) : (
             <LockedStep plan={p} step={step} go={go} />
           )}

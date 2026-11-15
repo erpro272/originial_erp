@@ -97,15 +97,6 @@ test("Selected orders: sent from Orders, on the timeline, synced back, options s
     ).toContainText("Current");
   }
 
-  // Step 5 is locked for now.
-  await expect(
-    page.getByRole("tab", { name: /Final plan approval/ }),
-  ).toHaveAttribute("aria-disabled", "true");
-  await page.goto("/planning?step=5");
-  await expect(
-    page.getByText(/no plan generated yet|coming next/i).first(),
-  ).toBeVisible();
-
   // Clean up: cancel the test order so reruns keep the planning pool small.
   await request.post(`/api/orders/${order.id}/cancel`, {
     headers: await auth(request),
@@ -275,4 +266,46 @@ test("Financial analysis: before / with fixes, a fix changes the whole plan", as
     "aria-selected",
     "true",
   );
+});
+
+test("Final plan approval: checklist, send back to edit, approve popup (not approved: reruns stay possible)", async ({
+  page,
+}) => {
+  await signIn(page, "owner@demo.example");
+  await page.goto("/planning");
+  await page
+    .getByRole("button", { name: /Generate plan →|Recalculate plan →/ })
+    .click();
+  await expect(page.getByText("Plan overview")).toBeVisible();
+  await page.goto("/planning?step=4");
+  await page
+    .getByRole("button", { name: "Next: Final plan approval →" })
+    .click();
+  await expect(page).toHaveURL(/step=5/);
+  await expect(page.getByText("Readiness checklist")).toBeVisible();
+  await expect(page.getByText(/\d of \d ready/)).toBeVisible();
+  await expect(page.getByText("History", { exact: true })).toBeVisible();
+
+  // send back with a note: lands on step 2, step 5 says "Changes requested"
+  await page
+    .getByPlaceholder(/Confirm night-shift/)
+    .fill("e2e: please check the sequence");
+  await page.getByRole("button", { name: "Send back to edit" }).click();
+  await expect(page).toHaveURL(/step=2/);
+  await page.goto("/planning?step=5");
+  await expect(page.getByText("Changes requested")).toBeVisible();
+  await expect(
+    page.getByText("e2e: please check the sequence").first(),
+  ).toBeVisible();
+
+  // the approve popup lists the open items; Go back leaves the plan as it is
+  const open = await page.getByText("!", { exact: true }).count();
+  await page.getByRole("button", { name: "Approve plan" }).click();
+  if (open) {
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toContainText(/Approve with \d open items?/);
+    await dialog.getByRole("button", { name: "Go back" }).click();
+    await expect(dialog).toBeHidden();
+    await expect(page.getByText("Changes requested")).toBeVisible();
+  }
 });

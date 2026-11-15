@@ -52,7 +52,7 @@ interface UndoItem {
 /** Step 3: which machine runs which order, day by day. */
 export function ScheduleStep({ plan, go }: { plan: Plan; go: (step: string) => void }) {
   const { can } = useAuth();
-  const edit = can("planning.write");
+  const edit = can("planning.write") && plan.status !== "approved";
   const sch = plan.result.schedule;
   const seq = plan.result.sequence;
   const orders = plan.result.selection.orders;

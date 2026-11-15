@@ -551,7 +551,7 @@ async def _request_po(
                                 express=bool(need["express"]), order_numbers=need["orders"], source=source,
                                 requested_by=actor))  # fmt: skip
     session.add(PlanEvent(plan_id=plan.id, kind="po", tabs=[5], actor_id=actor,
-                          summary=f"PO requested · {need['qty']:g} {need['unit']} {need['name']} by {need['needed_by']}"))  # fmt: skip
+                          summary=f"PO requested · {need['qty']:g} {need['unit']} {need['name']} by {eng._fmt_day(date.fromisoformat(need['needed_by']))}"))  # fmt: skip
     await session.flush()
 
 
@@ -595,7 +595,10 @@ async def approve(session: AsyncSession, actor: uuid.UUID, plan_id: uuid.UUID, b
     plan.approved_at = datetime.now(UTC)
     plan.approval_note = body.note
     plan.inputs = {k: v for k, v in (plan.inputs or {}).items() if k != "changes_requested"}
-    await _refresh(session, plan, clock.today())
+    # recalculate as approved (other accepted orders are no longer candidates): not a "change" event
+    result, fp, ofp = await _compute(session, plan, clock.today())
+    plan.result, plan.fingerprint, plan.options_fingerprint = result, fp, ofp
+    plan.version += 1
     plan.needs_reapproval = False  # the approval itself (POs, planned orders) is the new baseline
     extra = ([f"{len(open_needs)} PO{'s' * (len(open_needs) != 1)} sent to Purchasing"] if open_needs else []) + (
         [f"approved with open items: {'; '.join(open_items)}"] if open_items else [])  # fmt: skip

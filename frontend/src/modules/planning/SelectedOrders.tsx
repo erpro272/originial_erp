@@ -20,7 +20,7 @@ import { OrderTimeline } from "./OrderTimeline";
 /** Step 1: Selected orders. Timeline, the orders, and the 3 selection options all read one plan. */
 export function SelectedOrders({ plan, go }: { plan: Plan; go: (step: string) => void }) {
   const { can } = useAuth();
-  const editable = can("planning.write");
+  const editable = can("planning.write") && plan.status !== "approved";
   const sel = plan.result.selection;
   const patch = usePatchPlan(plan.id);
   const generate = useGenerate(plan.id);

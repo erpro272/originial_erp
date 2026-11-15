@@ -143,3 +143,9 @@ Short records of choices and the reason for each. Newest at the bottom.
     switch only changes which numbers are shown. Night-shift cost = the machine's clock time past its
     normal hours (a step that waits for the previous route step runs later in the day) x the night
     premium. Margin bars: red below the company minimum, blue above it, green from minimum + 5 points.
+44. **Step 5 (owner's choices)**: open checklist items warn but don't block (popup; the open items are
+    saved in the approval's history entry; un-raised POs are raised on approval). "Send back to edit"
+    is recorded with its note and shows "Changes requested" until the next edit. An approved plan is
+    read-only (edits, generate, save, send back refused by the API); data changes later still mark it
+    "Needs re-approval" and the owner can approve again; "+ New plan" starts the next one. Only the
+    owner role has `planning.approve`. Approval stores its time and note.

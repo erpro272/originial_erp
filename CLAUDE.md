@@ -125,7 +125,9 @@ isolation). One company per website: no company picker or switcher in the UI.
 - Planning UI v1 is archived in `archive/planning-v1/`. Rebuild: `modules/planning/` has step 1
   (`SelectedOrders`: `OrderTimeline`, `OrdersInPlan`, `OptionsTable`), step 2 (`SequenceStep`) and
   step 3 (`ScheduleStep`, warning popup in `reorder.tsx`), step 4 (`FinanceStep`, company rules via
-  `RuleButton`); 2–4 open after Generate plan; 5 locked. Engine: `constraints()` sizes machine competition,
+  `RuleButton`), step 5 (`ApprovalStep`, status tag in `status.ts`); 2–5 open after Generate plan.
+  An approved plan is read-only (API refuses edits); "+ New plan" via `PageActions`. E2E never
+  approves the demo plan (approval can't be undone; tests must stay rerunnable). Engine: `constraints()` sizes machine competition,
   `feasibility()` writes the lines, `keep_locked()` holds locked slots under any rule.
   Old notes: routes `/planning?step=1..5`, `/planning/factory`. Every planning number comes from the
   plan result; after any edit the response says which tabs changed (dots + banner + `Flash`).

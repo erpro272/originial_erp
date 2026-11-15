@@ -129,3 +129,67 @@ export function usePutRules() {
     },
   });
 }
+
+export type HistoryItem = Schemas["HistoryItem"];
+
+/** The plan's history (newest first): every change, generate, save, send back, approval. */
+export function useHistory(planId: string | undefined, version: number | undefined) {
+  return useQuery({
+    queryKey: ["planning", "history", planId, version],
+    queryFn: async () =>
+      unwrap(
+        await api.GET("/api/planning/plans/{plan_id}/history", {
+          params: { path: { plan_id: planId! } },
+        }),
+      ),
+    enabled: !!planId,
+  });
+}
+
+function usePlanAction<B>(call: (body: B) => Promise<Plan>) {
+  const set = useSetPlan();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: call,
+    onSuccess: (p) => {
+      set(p);
+      void qc.invalidateQueries({ queryKey: ["planning", "history"] });
+    },
+  });
+}
+
+/** Owner: approve (POs to Purchasing, promised dates to Orders). */
+export function useApprove(planId: string | undefined) {
+  return usePlanAction(async (body: Schemas["ApproveIn"]) =>
+    unwrap(
+      await api.POST("/api/planning/plans/{plan_id}/approve", {
+        params: { path: { plan_id: planId! } },
+        body,
+      }),
+    ),
+  );
+}
+
+/** Owner: send back to edit, with a note. */
+export function useSendBack(planId: string | undefined) {
+  return usePlanAction(async (body: Schemas["SendBackIn"]) =>
+    unwrap(
+      await api.POST("/api/planning/plans/{plan_id}/send-back", {
+        params: { path: { plan_id: planId! } },
+        body,
+      }),
+    ),
+  );
+}
+
+/** Raise one material PO now (before approval). */
+export function useRaisePo(planId: string | undefined) {
+  return usePlanAction(async (material_id: string) =>
+    unwrap(
+      await api.POST("/api/planning/plans/{plan_id}/purchase-requests", {
+        params: { path: { plan_id: planId! } },
+        body: { material_id },
+      }),
+    ),
+  );
+}

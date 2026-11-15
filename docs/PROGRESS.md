@@ -80,6 +80,13 @@
     fix with a tick box that applies it to the whole plan, expected contribution, insight: fix cost
     vs penalty avoided), profit by order (column picker, margin bar vs the company minimum), comment
     icons for the company rules. Step 5 locked. Tests: 256 pytest, 42 Vitest, 16 Playwright.
+  - Step 5 Final plan approval (2026-11-15) · awaiting owner review: status tag (Awaiting owner
+    approval / Changes requested / Approved / Needs re-approval), plan summary (orders, production
+    days, value, contribution, margin, deliveries, fixes applied), readiness checklist (Raise PO now),
+    owner approval with note: open items -> "Approve with N open items?" popup, un-raised POs go to
+    Purchasing; Send back to edit (recorded with the note, opens step 2); history. Approved plan =
+    read-only on all steps, "+ New plan". All 5 planning steps are now live.
+    Tests: 257 pytest, 47 Vitest, 17 Playwright (invoice upload test still left aside).
 
 ## Next
 - Planning v1 archived in `archive/planning-v1/` (owner request). Rebuild in progress:
