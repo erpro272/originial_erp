@@ -218,6 +218,12 @@ class FinRow(BaseModel):
     fix_cost: int
     contribution: int
     margin: float
+    late_days: int = 0
+
+
+class PenaltyRule(BaseModel):
+    mode: Literal["fixed", "percent"]
+    value: float  # paise per late day, or % of the order value per late day
 
 
 class Breakdown(BaseModel):
@@ -247,6 +253,8 @@ class Finance(BaseModel):
     margin: float
     per_day: int
     fixes: list[FixCost]
+    min_margin: float = 18.0
+    penalty_rule: PenaltyRule | None = None
 
 
 class Fix(BaseModel):

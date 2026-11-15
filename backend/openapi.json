@@ -2339,6 +2339,11 @@
             "title": "Id",
             "type": "string"
           },
+          "late_days": {
+            "default": 0,
+            "title": "Late Days",
+            "type": "integer"
+          },
           "margin": {
             "title": "Margin",
             "type": "number"
@@ -2400,9 +2405,24 @@
             "title": "Mfg Cost",
             "type": "integer"
           },
+          "min_margin": {
+            "default": 18.0,
+            "title": "Min Margin",
+            "type": "number"
+          },
           "penalty": {
             "title": "Penalty",
             "type": "integer"
+          },
+          "penalty_rule": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PenaltyRule"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "per_day": {
             "title": "Per Day",
@@ -4386,6 +4406,28 @@
           "offset"
         ],
         "title": "Page[AuditEntryOut]",
+        "type": "object"
+      },
+      "PenaltyRule": {
+        "properties": {
+          "mode": {
+            "enum": [
+              "fixed",
+              "percent"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "mode",
+          "value"
+        ],
+        "title": "PenaltyRule",
         "type": "object"
       },
       "Period": {

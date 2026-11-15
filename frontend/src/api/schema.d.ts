@@ -1514,6 +1514,11 @@ export interface components {
             fix_cost: number;
             /** Id */
             id: string;
+            /**
+             * Late Days
+             * @default 0
+             */
+            late_days: number;
             /** Margin */
             margin: number;
             /** Penalty */
@@ -1538,8 +1543,14 @@ export interface components {
             margin: number;
             /** Mfg Cost */
             mfg_cost: number;
+            /**
+             * Min Margin
+             * @default 18
+             */
+            min_margin: number;
             /** Penalty */
             penalty: number;
+            penalty_rule?: components["schemas"]["PenaltyRule"] | null;
             /** Per Day */
             per_day: number;
             /** Rows */
@@ -2253,6 +2264,16 @@ export interface components {
             offset: number;
             /** Total */
             total: number;
+        };
+        /** PenaltyRule */
+        PenaltyRule: {
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "fixed" | "percent";
+            /** Value */
+            value: number;
         };
         /** Period */
         Period: {

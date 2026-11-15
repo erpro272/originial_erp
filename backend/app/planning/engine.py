@@ -19,7 +19,7 @@ from typing import Any
 
 EPS = 1e-6
 # Bump when the engine's logic changes, so saved plan results are recalculated (part of the fingerprint).
-ENGINE_VERSION = 8
+ENGINE_VERSION = 9
 FULL_POOL = 10  # orders the fully optimized option searches exhaustively (2^N subsets)
 FULL_REFINE = 8  # best subsets whose sequence is then improved by pairwise swaps
 HORIZON_DAYS = 400
@@ -172,6 +172,9 @@ class Sched:
     blocked: dict[str, str]
     # hours an order forced to finish by a date (pin) could not fit in its machines' working time
     overflow: dict[str, float] = field(default_factory=dict)
+    # time of day (hours) each machine finishes on each day: a step that waits for the previous route
+    # step ends later than its hours alone say (that later end is what a night shift pays for)
+    clock: dict[tuple[str, date], float] = field(default_factory=dict)
 
 
 def _night(fixes: set[str]) -> set[tuple[str, date]]:
@@ -195,6 +198,7 @@ def schedule(f: Factory, running: list[Job], jobs: list[Job], inp: Inputs, today
     cap: dict[tuple[str, date], float] = {}
     normal: dict[tuple[str, date], float] = {}
     overflow: dict[str, float] = defaultdict(float)
+    clock: dict[tuple[str, date], float] = defaultdict(float)  # time of day each machine finishes its work
     current: list[str] = [""]  # the job being placed
 
     def capacity(m: str, d: date) -> float:
@@ -227,6 +231,7 @@ def schedule(f: Factory, running: list[Job], jobs: list[Job], inp: Inputs, today
                     alloc[d] = take
                     need -= take
                     end = begin + take
+                    clock[(step.machine, d)] = max(clock[(step.machine, d)], end)
             if need > EPS:  # squeeze the rest in: this is a forced overload
                 overflow[current[0]] += need
                 share = need / len(window)
@@ -242,6 +247,7 @@ def schedule(f: Factory, running: list[Job], jobs: list[Job], inp: Inputs, today
                         alloc[d] = take
                         need -= take
                         end = begin + take
+                        clock[(step.machine, d)] = max(clock[(step.machine, d)], end)
                         if need <= EPS:
                             break
                 d += timedelta(1)
@@ -321,7 +327,7 @@ def schedule(f: Factory, running: list[Job], jobs: list[Job], inp: Inputs, today
     for s in shortages:
         p = placed[s["job"]]
         s["needed_by"] = p.start
-    return Sched(placed, used, cap, normal, shortages, blocked, dict(overflow))
+    return Sched(placed, used, cap, normal, shortages, blocked, dict(overflow), dict(clock))
 
 
 # ---- analysis -------------------------------------------------------------------------------
@@ -518,8 +524,9 @@ def fix_costs(f: Factory, s: Sched, fixes: set[str], jobs: list[Job]) -> dict[st
             if m is None:
                 continue
             hrs, days = 0.0, []
-            for (mm, d), h in s.used.items():
+            for (mm, d), used_h in s.used.items():
                 if mm == p[1] and (mm, d) in _night({fx}):
+                    h = max(used_h, s.clock.get((mm, d), 0.0))
                     extra = max(0.0, h - s.normal_cap.get((mm, d), 0.0))
                     if extra > EPS:
                         hrs += extra
@@ -558,6 +565,7 @@ def finance(
         fx = sum(x["split"].get(j.id, 0) for x in fixes.values())
         contrib = j.value - c["total"] - pen - fx
         rows.append({"id": j.id, "value": j.value, "cost": c["total"], "penalty": pen, "fix_cost": fx,
+                     "late_days": a["rows"][j.id]["late_days"],
                      "contribution": contrib, "margin": round(100 * contrib / j.value, 1) if j.value else 0.0})  # fmt: skip
         for k, v in c.items():
             tot[k] += v
@@ -580,6 +588,8 @@ def finance(
         "margin": round(100 * contrib / tot["value"], 1) if tot["value"] else 0.0,
         "per_day": round(contrib / days) if jobs else 0,
         "fixes": [{"id": k, **{x: v[x] for x in ("label", "cost")}} for k, v in fixes.items()],
+        "min_margin": rules.min_margin_pct,
+        "penalty_rule": {"mode": rules.penalty_mode, "value": rules.penalty_value},
     }
 
 

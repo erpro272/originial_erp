@@ -193,3 +193,36 @@ async def test_step3_schedule_on_the_demo(client: AsyncClient) -> None:
     await client.post(f"/planning/plans/{pid}/generate", headers=h)
     saved = (await client.post(f"/planning/plans/{pid}/save-schedule", headers=h)).json()
     assert saved["schedule_saved_at"] and saved["last_change"]["summary"] == "Schedule saved"
+
+
+async def test_step4_finance_and_fixes_on_the_demo(client: AsyncClient) -> None:
+    """Financial analysis: before / with fixes, penalty rule, minimum margin, a fix changes the plan."""
+    h = await _demo(client, "demo-fin")
+    plan = (await client.get("/planning/plan", headers=h)).json()
+    pid, r = plan["id"], plan["result"]
+    num = {k: v["number"] for k, v in r["selection"]["orders"].items()}
+    fin = r["finance"]
+    before = fin["before"]
+    assert before["min_margin"] == 18 and before["penalty_rule"] == {"mode": "fixed", "value": 2000000}
+    assert before["penalty"] == 2000000 and before["fix_cost"] == 0
+    late = [x for x in before["rows"] if x["penalty"]]
+    assert [(num[x["id"]], x["late_days"]) for x in late] == [("ORD-1044", 1)]
+    assert sum(before["breakdown"].values()) == before["mfg_cost"]
+    assert before["contribution"] == before["value"] - before["mfg_cost"] - before["penalty"]
+    assert fin["with"] == fin["before"]  # nothing ticked yet
+
+    # the night shift on Press 01 pays for the 2.25 h ORD-1044's last step runs past the day shift
+    press = next(x for x in fin["fixes"] if x["label"].startswith("Night shift on Press 01"))
+    assert press["cost"] == round(2.25 * 115000) and press["penalty_avoided"] == 2000000
+    assert press["solves"] == ["ORD-1044 ships 1 day late"]
+    out = (await client.patch(f"/planning/plans/{pid}", json={"fixes": [press["id"]]}, headers=h)).json()
+    assert out["tabs"] == [2, 3, 4, 5]
+    f2 = out["plan"]["result"]["finance"]
+    w = f2["with"]
+    assert w["penalty"] == 0 and w["fix_cost"] == press["cost"]
+    assert w["contribution"] == f2["before"]["contribution"] + 2000000 - press["cost"]
+    assert next(x for x in f2["fixes"] if x["id"] == press["id"])["selected"]
+    assert out["plan"]["result"]["sequence"]["overview"]["late"] == 0  # step 2 follows
+    # untick: back to the plan without fixes
+    out = (await client.patch(f"/planning/plans/{pid}", json={"fixes": []}, headers=h)).json()
+    assert out["plan"]["result"]["finance"]["with"]["penalty"] == 2000000
