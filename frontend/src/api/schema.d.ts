@@ -792,6 +792,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/planning/plans/{plan_id}/send-back": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send Back */
+        post: operations["send_back_api_planning_plans__plan_id__send_back_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/planning/purchase-requests": {
         parameters: {
             query?: never;
@@ -1014,6 +1031,16 @@ export interface components {
             overheads: number;
             /** Packaging */
             packaging: number;
+        };
+        /** ChangesRequested */
+        ChangesRequested: {
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Note */
+            note: string;
         };
         /** Check */
         Check: {
@@ -2314,6 +2341,7 @@ export interface components {
             approval_note: string | null;
             /** Approved At */
             approved_at: string | null;
+            changes_requested?: components["schemas"]["ChangesRequested"] | null;
             /** Generated At */
             generated_at: string | null;
             /**
@@ -2808,6 +2836,11 @@ export interface components {
             utilisation: number;
             /** Value */
             value: number;
+        };
+        /** SendBackIn */
+        SendBackIn: {
+            /** Note */
+            note?: string | null;
         };
         /** SeqRow */
         SeqRow: {
@@ -4686,6 +4719,41 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    send_back_api_planning_plans__plan_id__send_back_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendBackIn"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {

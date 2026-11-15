@@ -226,3 +226,54 @@ async def test_step4_finance_and_fixes_on_the_demo(client: AsyncClient) -> None:
     # untick: back to the plan without fixes
     out = (await client.patch(f"/planning/plans/{pid}", json={"fixes": []}, headers=h)).json()
     assert out["plan"]["result"]["finance"]["with"]["penalty"] == 2000000
+
+
+async def test_step5_approval_on_the_demo(client: AsyncClient) -> None:
+    """Final plan approval: checklist, send back, approve with open items, then read-only."""
+    h = await _demo(client, "demo-appr")
+    plan = (await client.get("/planning/plan", headers=h)).json()
+    pid = plan["id"]
+    num = {k: v["number"] for k, v in plan["result"]["selection"]["orders"].items()}
+    assert (await client.post(f"/planning/plans/{pid}/approve", json={}, headers=h)).status_code == 400  # not generated
+    await client.post(f"/planning/plans/{pid}/generate", headers=h)
+
+    checks = plan["result"]["approval"]["checks"]
+    assert [c["ok"] for c in checks] == [False, True, False, True, True]  # 1 late, steel PO open
+    assert checks[2]["action"] == "raise_po" and "Steel wire rod" in checks[2]["text"]
+
+    # send back to edit: recorded with the note, flag until the next edit
+    sb = (await client.post(f"/planning/plans/{pid}/send-back", json={"note": "Fix ORD-1044"}, headers=h)).json()
+    assert sb["changes_requested"]["note"] == "Fix ORD-1044"
+    hist = (await client.get(f"/planning/plans/{pid}/history", headers=h)).json()
+    assert hist[0]["kind"] == "sent_back" and hist[0]["summary"] == "Sent back to edit · Fix ORD-1044"
+    out = (await client.patch(f"/planning/plans/{pid}", json={"rule": "deadline"}, headers=h)).json()
+    assert out["plan"]["changes_requested"] is None
+    await client.patch(f"/planning/plans/{pid}", json={"rule": "value"}, headers=h)
+
+    # approving with an un-raised PO needs the owner's confirmation (raise_open_pos)
+    bad = await client.post(f"/planning/plans/{pid}/approve", json={}, headers=h)
+    assert bad.status_code == 400 and bad.json()["error"]["details"]["open"] == ["Steel wire rod"]
+    ok = (await client.post(f"/planning/plans/{pid}/approve", json={"note": "Night crew confirmed", "raise_open_pos": True},
+                            headers=h)).json()  # fmt: skip
+    assert ok["status"] == "approved" and ok["approved_at"] and ok["approval_note"] == "Night crew confirmed"
+    hist = (await client.get(f"/planning/plans/{pid}/history", headers=h)).json()
+    assert hist[0]["kind"] == "approved"
+    assert hist[0]["summary"].startswith("Plan approved · Night crew confirmed · 1 PO sent to Purchasing")
+    assert "approved with open items: 1 order ships late" in hist[0]["summary"]
+    prs = (await client.get("/planning/purchase-requests", headers=h)).json()
+    assert [p["material"] for p in prs] == ["Steel wire rod"]
+    # the orders are planned with promised dates
+    orders = (await client.get("/orders?limit=100", headers=h)).json()
+    items = orders["items"] if isinstance(orders, dict) else orders
+    planned = {o["number"] for o in items if o["status"] == "planned"}
+    assert {num[i] for i in plan["result"]["selection"]["selected"]} <= planned
+
+    # read-only from now on
+    for call in (
+        client.patch(f"/planning/plans/{pid}", json={"rule": "deadline"}, headers=h),
+        client.post(f"/planning/plans/{pid}/generate", headers=h),
+        client.post(f"/planning/plans/{pid}/save-schedule", headers=h),
+        client.post(f"/planning/plans/{pid}/send-back", json={}, headers=h),
+    ):
+        r = await call
+        assert r.status_code == 400 and "approved" in r.json()["error"]["message"]

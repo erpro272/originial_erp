@@ -17,6 +17,7 @@ from app.planning.schemas import (
     PreviewOut,
     PurchaseRequestOut,
     RaisePoIn,
+    SendBackIn,
 )
 
 router = APIRouter(prefix="/planning", tags=["planning"])
@@ -63,6 +64,11 @@ async def raise_po(db: TenantDB, p: Writer, plan_id: uuid.UUID, body: RaisePoIn)
 @router.post("/plans/{plan_id}/approve")
 async def approve(db: TenantDB, p: Approver, plan_id: uuid.UUID, body: ApproveIn) -> PlanOut:
     return await service.approve(db, p.user_id, plan_id, body)
+
+
+@router.post("/plans/{plan_id}/send-back")
+async def send_back(db: TenantDB, p: Approver, plan_id: uuid.UUID, body: SendBackIn) -> PlanOut:
+    return await service.send_back(db, p.user_id, plan_id, body.note)
 
 
 @router.get("/plans/{plan_id}/history")

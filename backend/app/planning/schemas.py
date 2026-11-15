@@ -315,6 +315,15 @@ class LastChange(BaseModel):
     at: datetime
 
 
+class ChangesRequested(BaseModel):
+    note: str
+    at: datetime
+
+
+class SendBackIn(BaseModel):
+    note: str | None = Field(default=None, max_length=2000)
+
+
 class PlanOut(BaseModel):
     id: uuid.UUID
     number: str
@@ -329,6 +338,7 @@ class PlanOut(BaseModel):
     result: PlanResult
     last_change: LastChange | None
     schedule_saved_at: datetime | None = None  # last "Save schedule" checkpoint (step 3)
+    changes_requested: ChangesRequested | None = None  # owner sent it back to edit (until the next edit)
 
 
 class Diff(BaseModel):

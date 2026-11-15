@@ -309,6 +309,7 @@ async def _out(session: AsyncSession, plan: Plan) -> PlanOut:
         result=PlanResult.model_validate(result),
         last_change=LastChange(summary=ev.summary, tabs=ev.tabs, at=ev.created_at) if ev else None,
         schedule_saved_at=(plan.inputs or {}).get("schedule_saved_at"),
+        changes_requested=(plan.inputs or {}).get("changes_requested"),
     )  # fmt: skip
 
 
@@ -463,6 +464,8 @@ def _apply(plan: Plan, p: PlanPatch, result: dict[str, Any]) -> tuple[list[str],
 async def update_plan(session: AsyncSession, actor: uuid.UUID, plan_id: uuid.UUID, p: PlanPatch,
                       preview: bool) -> PreviewOut:  # fmt: skip
     plan = await _get(session, plan_id)
+    if plan.status == "approved":
+        raise DomainError("This plan is approved and read-only. Start a new plan to make changes.")
     today = clock.today()
     await _refresh(session, plan, today)
     assert plan.result is not None
@@ -485,6 +488,7 @@ async def update_plan(session: AsyncSession, actor: uuid.UUID, plan_id: uuid.UUI
         summary += " · needs re-approval"
     if plan.status in WORKING:
         await _write_ticks_to_orders(session, actor, snapshot[0], list(plan.selected))
+    plan.inputs = {k: v for k, v in (plan.inputs or {}).items() if k != "changes_requested"}
     tabs = await _save(session, plan, result, fp, ofp, actor, "change", summary)
     await audit.record(session, actor_id=actor, action="update", entity_type="plan", entity_id=plan.id,
                        summary=f"{plan.number}: {summary}")  # fmt: skip
@@ -505,6 +509,8 @@ async def _write_ticks_to_orders(
 
 async def generate(session: AsyncSession, actor: uuid.UUID, plan_id: uuid.UUID) -> PlanOut:
     plan = await _get(session, plan_id)
+    if plan.status == "approved":
+        raise DomainError("This plan is approved and read-only. Start a new plan to make changes.")
     await _refresh(session, plan, clock.today())
     assert plan.result is not None
     n = len(plan.result["sequence"]["rows"])
@@ -524,6 +530,8 @@ async def generate(session: AsyncSession, actor: uuid.UUID, plan_id: uuid.UUID) 
 async def save_schedule(session: AsyncSession, actor: uuid.UUID, plan_id: uuid.UUID) -> PlanOut:
     """Step 3 "Save schedule": a checkpoint in the plan history (every edit is already live)."""
     plan = await _get(session, plan_id)
+    if plan.status == "approved":
+        raise DomainError("This plan is approved and read-only. Start a new plan to make changes.")
     await _refresh(session, plan, clock.today())
     if not plan.generated_at:
         raise DomainError("Generate the plan first.")
@@ -571,6 +579,10 @@ async def approve(session: AsyncSession, actor: uuid.UUID, plan_id: uuid.UUID, b
     if plan.status == "approved" and not plan.needs_reapproval:
         raise DomainError("This plan is already approved.")
     open_needs = [n for n in r["purchase_needs"] if not n["requested"]]
+    # the owner may approve with open items (after the warning); they are kept in the history
+    open_items = [
+        c["title"] for c in r["approval"]["checks"] if not c["ok"] and c.get("action") != "raise_po"
+    ]
     if open_needs and not body.raise_open_pos:
         raise DomainError(
             "Some material POs are not raised yet.", details={"open": [n["name"] for n in open_needs]}
@@ -580,16 +592,40 @@ async def approve(session: AsyncSession, actor: uuid.UUID, plan_id: uuid.UUID, b
     promised = {uuid.UUID(row["id"]): date.fromisoformat(row["finish"]) for row in r["sequence"]["rows"]}
     await orders_service.set_planned(session, actor, promised)
     plan.status = "approved"
+    plan.approved_at = datetime.now(UTC)
+    plan.approval_note = body.note
+    plan.inputs = {k: v for k, v in (plan.inputs or {}).items() if k != "changes_requested"}
     await _refresh(session, plan, clock.today())
     plan.needs_reapproval = False  # the approval itself (POs, planned orders) is the new baseline
-    session.add(PlanEvent(plan_id=plan.id, kind="approved", tabs=[], actor_id=actor,
-                          summary="Plan approved" + (f" · {body.note}" if body.note else "")))  # fmt: skip
+    extra = ([f"{len(open_needs)} PO{'s' * (len(open_needs) != 1)} sent to Purchasing"] if open_needs else []) + (
+        [f"approved with open items: {'; '.join(open_items)}"] if open_items else [])  # fmt: skip
+    # exact time (not the transaction's start) so it lists after the PO requests it just made
+    session.add(PlanEvent(plan_id=plan.id, kind="approved", tabs=[], actor_id=actor, created_at=datetime.now(UTC),
+                          summary="Plan approved" + "".join(f" · {x}" for x in [body.note, *extra] if x)))  # fmt: skip
     await events.emit(session, "plan.approved", {
         "plan_id": str(plan.id), "number": plan.number,
         "schedule": [{"order_id": row["id"], "steps": row["steps"]} for row in r["schedule"]["rows"] if not row["running"]],
     })  # fmt: skip
     await audit.record(session, actor_id=actor, action="update", entity_type="plan", entity_id=plan.id,
                        summary=f"{plan.number} approved")  # fmt: skip
+    await session.flush()
+    return await _out(session, plan)
+
+
+async def send_back(session: AsyncSession, actor: uuid.UUID, plan_id: uuid.UUID, note: str | None) -> PlanOut:
+    """Owner: "Send back to edit". Recorded with the note; the plan shows "Changes requested"."""
+    plan = await _get(session, plan_id)
+    if plan.status == "approved":
+        raise DomainError("This plan is already approved. Start a new plan to make changes.")
+    await _refresh(session, plan, clock.today())
+    plan.inputs = {
+        **(plan.inputs or {}),
+        "changes_requested": {"note": note or "", "at": datetime.now(UTC).isoformat()},
+    }
+    session.add(PlanEvent(plan_id=plan.id, kind="sent_back", tabs=[], actor_id=actor,
+                          summary="Sent back to edit" + (f" · {note}" if note else "")))  # fmt: skip
+    await audit.record(session, actor_id=actor, action="update", entity_type="plan", entity_id=plan.id,
+                       summary=f"{plan.number} sent back to edit")  # fmt: skip
     await session.flush()
     return await _out(session, plan)
 

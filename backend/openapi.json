@@ -509,6 +509,25 @@
         "title": "Breakdown",
         "type": "object"
       },
+      "ChangesRequested": {
+        "properties": {
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "note",
+          "at"
+        ],
+        "title": "ChangesRequested",
+        "type": "object"
+      },
       "Check": {
         "properties": {
           "action": {
@@ -4520,6 +4539,16 @@
             ],
             "title": "Approved At"
           },
+          "changes_requested": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChangesRequested"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "generated_at": {
             "anyOf": [
               {
@@ -5754,6 +5783,24 @@
           "dropped"
         ],
         "title": "SelectionOption",
+        "type": "object"
+      },
+      "SendBackIn": {
+        "properties": {
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "title": "SendBackIn",
         "type": "object"
       },
       "SeqRow": {
@@ -9540,6 +9587,64 @@
           }
         ],
         "summary": "Save Schedule",
+        "tags": [
+          "planning"
+        ]
+      }
+    },
+    "/api/planning/plans/{plan_id}/send-back": {
+      "post": {
+        "operationId": "send_back_api_planning_plans__plan_id__send_back_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plan_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plan Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendBackIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Send Back",
         "tags": [
           "planning"
         ]
