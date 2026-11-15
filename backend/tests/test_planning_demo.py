@@ -234,7 +234,9 @@ async def test_step5_approval_on_the_demo(client: AsyncClient) -> None:
     plan = (await client.get("/planning/plan", headers=h)).json()
     pid = plan["id"]
     num = {k: v["number"] for k, v in plan["result"]["selection"]["orders"].items()}
-    assert (await client.post(f"/planning/plans/{pid}/approve", json={}, headers=h)).status_code == 400  # not generated
+    assert (
+        await client.post(f"/planning/plans/{pid}/approve", json={}, headers=h)
+    ).status_code == 400  # not generated
     await client.post(f"/planning/plans/{pid}/generate", headers=h)
 
     checks = plan["result"]["approval"]["checks"]
@@ -242,7 +244,9 @@ async def test_step5_approval_on_the_demo(client: AsyncClient) -> None:
     assert checks[2]["action"] == "raise_po" and "Steel wire rod" in checks[2]["text"]
 
     # send back to edit: recorded with the note, flag until the next edit
-    sb = (await client.post(f"/planning/plans/{pid}/send-back", json={"note": "Fix ORD-1044"}, headers=h)).json()
+    sb = (
+        await client.post(f"/planning/plans/{pid}/send-back", json={"note": "Fix ORD-1044"}, headers=h)
+    ).json()
     assert sb["changes_requested"]["note"] == "Fix ORD-1044"
     hist = (await client.get(f"/planning/plans/{pid}/history", headers=h)).json()
     assert hist[0]["kind"] == "sent_back" and hist[0]["summary"] == "Sent back to edit · Fix ORD-1044"
@@ -277,3 +281,40 @@ async def test_step5_approval_on_the_demo(client: AsyncClient) -> None:
     ):
         r = await call
         assert r.status_code == 400 and "approved" in r.json()["error"]["message"]
+
+
+async def test_express_fix_then_po_on_the_demo(client: AsyncClient) -> None:
+    """The owner's report: Express steel wire rod applied, popup still said "PO not raised". Correct, because
+    the fix is a plan assumption; after Raise PO now the check shows the actual request and its status."""
+    h = await _demo(client, "demo-po")
+    plan = (await client.get("/planning/plan", headers=h)).json()
+    pid = plan["id"]
+    express = next(f for f in plan["result"]["finance"]["fixes"] if f["label"] == "Express steel wire rod")
+    out = (await client.patch(f"/planning/plans/{pid}", json={"fixes": [express["id"]]}, headers=h)).json()[
+        "plan"
+    ]
+    r = out["result"]
+    [need] = [n for n in r["purchase_needs"] if n["name"] == "Steel wire rod"]
+    assert need["action"] == "express_po" and not need["requested"] and need["supplier"] == "Shree Steels"
+    check = next(c for c in r["approval"]["checks"] if c.get("items"))
+    assert not check["ok"] and "planned fix, not ordered" in check["items"][0]["text"]
+    # ORD-1041 now starts only when the express steel can be there
+    num = {k: v["number"] for k, v in r["selection"]["orders"].items()}
+    row = next(x for x in r["sequence"]["rows"] if num[x["id"]] == "ORD-1041")
+    assert row["start"] >= need["arrives"]
+
+    # raise it now: an actual purchase request; the check is ready and shows status + expected arrival
+    await client.post(f"/planning/plans/{pid}/generate", headers=h)
+    out = (await client.post(f"/planning/plans/{pid}/purchase-requests", json={"material_id": need["material"]},
+                             headers=h)).json()  # fmt: skip
+    check = next(c for c in out["result"]["approval"]["checks"] if c.get("items"))
+    assert check["ok"] and check["title"] == "Material POs raised · not received yet"
+    assert "status: requested, not received yet · expected" in check["items"][0]["text"]
+    prs = (await client.get("/planning/purchase-requests", headers=h)).json()
+    assert [(p["material"], p["express"], p["status"]) for p in prs] == [
+        ("Steel wire rod", True, "requested")
+    ]
+    # approving no longer needs to raise anything (and raises no second PO)
+    ok = await client.post(f"/planning/plans/{pid}/approve", json={}, headers=h)
+    assert ok.status_code == 200, ok.text
+    assert len((await client.get("/planning/purchase-requests", headers=h)).json()) == 1

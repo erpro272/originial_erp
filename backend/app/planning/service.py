@@ -104,7 +104,7 @@ async def load_factory(session: AsyncSession) -> eng.Factory:
         materials[str(mat.id)] = eng.MaterialInfo(
             str(mat.id), mat.code, mat.name, mat.unit, float(st.on_hand) if st else 0.0,
             st.next_arrival_date if st else None, float(st.next_arrival_qty or 0) if st else 0.0,
-            mat.price_per_unit_paise, mat.express_cost_paise, mat.express_days,
+            mat.price_per_unit_paise, mat.express_cost_paise, mat.express_days, mat.express_supplier or "",
         )  # fmt: skip
     closed: set[date] = set()
     down: dict[tuple[str, date], float] = {}
@@ -158,11 +158,17 @@ async def _jobs(
     return cands, running, by_id
 
 
-async def _requested(session: AsyncSession, plan: Plan) -> set[str]:
+async def _requested(session: AsyncSession, plan: Plan) -> dict[str, dict[str, Any]]:
+    """Actual purchase requests for this plan (the latest per material): what Purchasing has been asked."""
     rows = (
-        await session.execute(select(PurchaseRequest.material_id).where(PurchaseRequest.plan_id == plan.id))
+        await session.execute(
+            select(PurchaseRequest)
+            .where(PurchaseRequest.plan_id == plan.id)
+            .order_by(PurchaseRequest.created_at)
+        )
     ).scalars()
-    return {str(m) for m in rows}
+    return {str(p.material_id): {"status": p.status, "at": p.created_at.date(), "express": p.express,
+                                 "qty": float(p.quantity)} for p in rows}  # fmt: skip
 
 
 def _fp(*parts: Any) -> str:
@@ -211,7 +217,7 @@ async def _compute(session: AsyncSession, plan: Plan, today: date) -> tuple[dict
                          today, requested, opts, base)  # fmt: skip
     # Fingerprint the inputs as the engine tidied them (sequence by rule etc.), so a re-read is stable.
     fp = _fp(f, rules.model_dump(), objective.model_dump(), cands, running, plan.selected, plan.rule,
-             result["inputs"], plan.start_date, today, sorted(requested))  # fmt: skip
+             result["inputs"], plan.start_date, today, sorted(requested.items()))  # fmt: skip
     return result, fp, ofp
 
 
@@ -548,7 +554,7 @@ async def _request_po(
 ) -> None:
     session.add(PurchaseRequest(plan_id=plan.id, material_id=uuid.UUID(need["material"]), quantity=Decimal(str(need["qty"])),
                                 unit=need["unit"], needed_by=date.fromisoformat(need["needed_by"]),
-                                express=bool(need["express"]), order_numbers=need["orders"], source=source,
+                                express=need.get("action") in ("express_po", "expedite"), order_numbers=need["orders"], source=source,
                                 requested_by=actor))  # fmt: skip
     session.add(PlanEvent(plan_id=plan.id, kind="po", tabs=[5], actor_id=actor,
                           summary=f"PO requested · {need['qty']:g} {need['unit']} {need['name']} by {eng._fmt_day(date.fromisoformat(need['needed_by']))}"))  # fmt: skip
@@ -564,6 +570,8 @@ async def raise_po(session: AsyncSession, actor: uuid.UUID, plan_id: uuid.UUID, 
         raise DomainError("This plan doesn't need that material.")
     if need["requested"]:
         raise DomainError("A PO for this material was already requested.")
+    if not need.get("action"):
+        raise DomainError(f"{need['name']} is already on order; there is nothing to raise.")
     await _request_po(session, plan, actor, need, "raise_now")
     await _refresh(session, plan, clock.today())
     return await _out(session, plan)
@@ -578,7 +586,7 @@ async def approve(session: AsyncSession, actor: uuid.UUID, plan_id: uuid.UUID, b
         raise DomainError("Generate the plan before approving it.")
     if plan.status == "approved" and not plan.needs_reapproval:
         raise DomainError("This plan is already approved.")
-    open_needs = [n for n in r["purchase_needs"] if not n["requested"]]
+    open_needs = [n for n in r["purchase_needs"] if n.get("action") and not n["requested"]]
     # the owner may approve with open items (after the warning); they are kept in the history
     open_items = [
         c["title"] for c in r["approval"]["checks"] if not c["ok"] and c.get("action") != "raise_po"

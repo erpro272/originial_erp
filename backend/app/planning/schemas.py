@@ -272,10 +272,17 @@ class Finances(BaseModel):
     fixes: list[Fix]
 
 
+class CheckItem(BaseModel):
+    material: str
+    open: bool
+    text: str
+
+
 class Check(BaseModel):
     ok: bool
     title: str
     text: str
+    items: list[CheckItem] = []
     action: str | None = None
     setting: str | None = None
 
@@ -284,6 +291,13 @@ class Approval(BaseModel):
     checks: list[Check]
     ready: int
     total: int
+
+
+class PurchaseRecord(BaseModel):
+    status: str
+    at: date
+    express: bool
+    qty: float
 
 
 class PurchaseNeed(BaseModel):
@@ -297,6 +311,12 @@ class PurchaseNeed(BaseModel):
     express: bool
     kind: str
     requested: bool
+    # po | express_po | expedite | None (already on order: nothing to raise)
+    action: Literal["po", "express_po", "expedite"] | None = None
+    arrives: date | None = None  # express: if ordered today (or on the request day); on order: delivery day
+    on_order: date | None = None  # the delivery on order (before any expediting)
+    supplier: str = ""
+    request: PurchaseRecord | None = None  # the actual purchase request, if raised
 
 
 class PlanResult(BaseModel):

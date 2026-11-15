@@ -541,6 +541,14 @@
             ],
             "title": "Action"
           },
+          "items": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/CheckItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
           "ok": {
             "title": "Ok",
             "type": "boolean"
@@ -571,6 +579,29 @@
           "text"
         ],
         "title": "Check",
+        "type": "object"
+      },
+      "CheckItem": {
+        "properties": {
+          "material": {
+            "title": "Material",
+            "type": "string"
+          },
+          "open": {
+            "title": "Open",
+            "type": "boolean"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "material",
+          "open",
+          "text"
+        ],
+        "title": "CheckItem",
         "type": "object"
       },
       "CheckResult": {
@@ -5060,6 +5091,34 @@
       },
       "PurchaseNeed": {
         "properties": {
+          "action": {
+            "anyOf": [
+              {
+                "enum": [
+                  "po",
+                  "express_po",
+                  "expedite"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Action"
+          },
+          "arrives": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Arrives"
+          },
           "code": {
             "title": "Code",
             "type": "string"
@@ -5085,6 +5144,18 @@
             "title": "Needed By",
             "type": "string"
           },
+          "on_order": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "On Order"
+          },
           "orders": {
             "items": {
               "type": "string"
@@ -5096,9 +5167,24 @@
             "title": "Qty",
             "type": "number"
           },
+          "request": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PurchaseRecord"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "requested": {
             "title": "Requested",
             "type": "boolean"
+          },
+          "supplier": {
+            "default": "",
+            "title": "Supplier",
+            "type": "string"
           },
           "unit": {
             "title": "Unit",
@@ -5118,6 +5204,35 @@
           "requested"
         ],
         "title": "PurchaseNeed",
+        "type": "object"
+      },
+      "PurchaseRecord": {
+        "properties": {
+          "at": {
+            "format": "date",
+            "title": "At",
+            "type": "string"
+          },
+          "express": {
+            "title": "Express",
+            "type": "boolean"
+          },
+          "qty": {
+            "title": "Qty",
+            "type": "number"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "at",
+          "express",
+          "qty"
+        ],
+        "title": "PurchaseRecord",
         "type": "object"
       },
       "PurchaseRequestOut": {

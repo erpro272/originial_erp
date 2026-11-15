@@ -149,3 +149,13 @@ Short records of choices and the reason for each. Newest at the bottom.
     read-only (edits, generate, save, send back refused by the API); data changes later still mark it
     "Needs re-approval" and the owner can approve again; "+ New plan" starts the next one. Only the
     owner role has `planning.approve`. Approval stores its time and note.
+45. **Material readiness (owner's report: express fix applied, popup still said "PO not raised")**.
+    Three separate states, never mixed: actual stock + the delivery on order (`material_stock`), the
+    plan's fixes (simulated: an express fix assumes an express PO arriving `express_days` after it is
+    ordered — the actual request day, else today — and the order can't start before), and purchasing
+    records (`purchase_requests`: status, request day). Each need has an action: `po`, `express_po`,
+    `expedite` (bring a delivery on order forward) or none (already on order: nothing to raise; before
+    this fix it wrongly asked for a PO). The readiness check carries one line per material (`items`);
+    the checklist and the approval popup render the same lines. Until Purchasing is built a request
+    stays "requested, not received yet"; stock only changes when Purchasing records a receipt. Known
+    gap: open requests from another plan are not yet counted as incoming supply for the next plan.

@@ -59,8 +59,15 @@ function makePlan(over: Partial<Plan> = {}): Plan {
           {
             ok: false,
             title: "1 material PO not raised yet",
-            text: "0.5 t Steel by 17 Nov",
+            text: "Express PO for 0.5 t Steel from Shree Steels not raised yet · planned fix, not ordered: arrives 19 Nov if ordered today · needed 19 Nov for ORD-2",
             action: "raise_po",
+            items: [
+              {
+                material: "m1",
+                open: true,
+                text: "Express PO for 0.5 t Steel from Shree Steels not raised yet · planned fix, not ordered: arrives 19 Nov if ordered today · needed 19 Nov for ORD-2",
+              },
+            ],
           },
           { ok: true, title: "Labour and shifts covered", text: "" },
           {
@@ -75,6 +82,7 @@ function makePlan(over: Partial<Plan> = {}): Plan {
         {
           material: "m1",
           name: "Steel",
+          action: "express_po",
           unit: "t",
           qty: 0.5,
           needed_by: "2026-11-17",
@@ -189,4 +197,37 @@ test("planner sees approval disabled; approved plan is read-only", async () => {
   );
   expect(await screen.findByText(/This plan is read-only/)).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Approve plan" })).toBeNull();
+});
+
+test("checklist and approval popup show the same material line (one source)", async () => {
+  mockApi(...signedIn(OWNER));
+  renderApp(<ApprovalStep plan={makePlan()} go={vi.fn()} />);
+  const line =
+    /Express PO for 0\.5 t Steel from Shree Steels not raised yet · planned fix, not ordered/;
+  const list = await screen.findByLabelText("Readiness checklist");
+  expect(within(list).getByText(line)).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Approve plan" }));
+  const dialog = await screen.findByRole("dialog");
+  expect(within(dialog).getByText(line)).toBeInTheDocument();
+  expect(within(dialog).getByRole("button", { name: "Approve and raise PO" })).toBeInTheDocument();
+});
+
+test("a material already on order is not a PO to raise", async () => {
+  mockApi(...signedIn(OWNER));
+  const p = makePlan();
+  const r = p.result as unknown as {
+    purchase_needs: { action: string | null; requested: boolean }[];
+    approval: { checks: { ok: boolean; action?: string | null }[] };
+  };
+  r.purchase_needs[0]!.action = null; // on order: nothing to raise
+  r.approval.checks[2] = { ...r.approval.checks[2]!, ok: true, action: null };
+  renderApp(<ApprovalStep plan={p} go={vi.fn()} />);
+  expect(await screen.findByText("Readiness checklist")).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Raise PO now" })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Approve plan" }));
+  expect(
+    await within(await screen.findByRole("dialog")).findByRole("button", {
+      name: "Approve anyway",
+    }),
+  ).toBeInTheDocument();
 });

@@ -87,6 +87,10 @@
     Purchasing; Send back to edit (recorded with the note, opens step 2); history. Approved plan =
     read-only on all steps, "+ New plan". All 5 planning steps are now live.
     Tests: 257 pytest, 47 Vitest, 17 Playwright (invoice upload test still left aside).
+  - Fix (owner feedback): material readiness distinguishes stock / deliveries on order, the plan's
+    express fix (a simulated express PO with a real delivery time) and actual purchase requests (status,
+    expected arrival); materials on order no longer ask for a PO; checklist and popup share one source.
+    Tests: 264 pytest, 49 Vitest, 16 Playwright.
 
 ## Next
 - Planning v1 archived in `archive/planning-v1/` (owner request). Rebuild in progress:

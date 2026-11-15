@@ -19,7 +19,7 @@ from typing import Any
 
 EPS = 1e-6
 # Bump when the engine's logic changes, so saved plan results are recalculated (part of the fingerprint).
-ENGINE_VERSION = 9
+ENGINE_VERSION = 10
 FULL_POOL = 10  # orders the fully optimized option searches exhaustively (2^N subsets)
 FULL_REFINE = 8  # best subsets whose sequence is then improved by pairwise swaps
 HORIZON_DAYS = 400
@@ -60,7 +60,9 @@ class MaterialInfo:
     arrival_qty: float
     price: int  # paise per unit
     express_cost: int  # paise, flat per express delivery
-    express_days: int  # how many days earlier express arrives
+    express_days: int  # express delivery time (days after ordering); also how much an incoming delivery
+    # can be brought forward
+    supplier: str = ""  # express supplier
 
 
 @dataclass(frozen=True)
@@ -117,6 +119,8 @@ class Inputs:
     locks: dict[str, date] = field(default_factory=dict)  # job id -> kept start date
     pins: dict[str, date] = field(default_factory=dict)  # job id -> forced finish date
     fixes: set[str] = field(default_factory=set)
+    # material id -> the day a PO for it was actually requested (purchasing records, not a plan choice)
+    ordered: dict[str, date] = field(default_factory=dict)
 
 
 # ---- calendar -------------------------------------------------------------------------------
@@ -308,10 +312,18 @@ def schedule(f: Factory, running: list[Job], jobs: list[Job], inp: Inputs, today
                     r = arrives
                 if arrives > inp.start:
                     shortages.append({"kind": "wait", "material": mid, "qty": from_arrival, "job": j.id,
-                                      "until": arrives, "express": mid in express})  # fmt: skip
+                                      "until": arrives, "express": mid in express,
+                                      "on_order": m.arrival_date})  # fmt: skip
             if rest > EPS:
+                # Not in stock and nothing on order. With the express fix the plan assumes an express PO:
+                # it arrives express_days after it is ordered (the actual request day, else today), and
+                # the order can't start before. Without it the shortfall stays a bottleneck.
+                due = None
+                if mid in express:
+                    due = next_working(inp.ordered.get(mid, today) + timedelta(m.express_days), f)
+                    r = max(r, due)
                 shortages.append({"kind": "short", "material": mid, "qty": rest, "job": j.id,
-                                  "express": mid in express})  # fmt: skip
+                                  "express": mid in express, "arrives": due})  # fmt: skip
         ready[j.id] = r
 
     blocked: dict[str, str] = {}
@@ -1056,6 +1068,31 @@ def _why_left_out(f: Factory, rules: Rules, j: Job, own: Eval) -> str:
 # ---- the one result every tab reads ---------------------------------------------------------
 
 
+def _need_text(n: dict[str, Any], today: date) -> str:
+    """One line per material for the readiness checklist and the approval popup (one source of truth).
+    Says plainly what is a plan assumption (a fix) and what is an actual purchasing record."""
+    qty = f"{_qty(n['qty'], n['unit'])} {n['name']}"
+    who = ", ".join(n["orders"])
+    need = f"needed {_fmt_day(n['needed_by'])} for {who}"
+    sup = f" from {n['supplier']}" if n["supplier"] else ""
+    req = n["request"]
+    act = n["action"]
+    if act is None:
+        return f"{qty} already on order, arriving {_fmt_day(n['arrives'])} · {who} can't start before"
+    kind = {"express_po": "Express PO", "po": "PO", "expedite": "Expedite request"}[act]
+    if req:
+        eta = f"expected {_fmt_day(n['arrives'])}" if n["arrives"] else "arrival date not confirmed yet"
+        return (f"{kind} for {qty} requested {_fmt_day(req['at'])} · status: {req['status']}, not received yet · "
+                f"{eta} · {need}")  # fmt: skip
+    if act == "express_po":
+        return (f"{kind} for {qty}{sup} not raised yet · planned fix, not ordered: arrives "
+                f"{_fmt_day(n['arrives'])} if ordered today · {need}")  # fmt: skip
+    if act == "expedite":
+        return (f"{kind}{sup} not sent yet · {qty} is on order for {_fmt_day(n['on_order'])}; planned fix: "
+                f"brought forward to {_fmt_day(n['arrives'])} · {need}")  # fmt: skip
+    return f"{kind} for {qty} not raised yet · not in stock and nothing on order · {need}"
+
+
 def _iso(v: Any) -> Any:
     if isinstance(v, date):
         return v.isoformat()
@@ -1067,13 +1104,17 @@ def _iso(v: Any) -> Any:
 
 
 def compute(f: Factory, rules: Rules, running: list[Job], cands: list[Job], selected: list[str], rule: str,
-            inp: Inputs, today: date, requested: set[str], opts: dict[str, Any] | None = None,
-            base: list[str] | None = None) -> dict[str, Any]:  # fmt: skip
+            inp: Inputs, today: date, requested: dict[str, dict[str, Any]] | set[str],
+            opts: dict[str, Any] | None = None, base: list[str] | None = None) -> dict[str, Any]:  # fmt: skip
     """Everything the 5 tabs show, from one set of inputs.
 
     `selected` = the ticked orders the plan is built from; `base` = the owner's own picks the optimizer
     starts from (differs from `selected` after "Use this selection"); `opts` reuses unchanged options.
     """
+    # purchasing records for this plan: material id -> {status, at (request day), express, qty}
+    if isinstance(requested, set):
+        requested = {m: {"status": "requested", "at": today, "express": False, "qty": 0.0} for m in requested}
+    inp.ordered = {m: r["at"] for m, r in requested.items()}
     by = {j.id: j for j in cands}
     jobs = [by[i] for i in selected if i in by]
     inp.sequence = keep_locked(by_rule(rule, jobs, f, rules, inp.sequence), inp.sequence, inp.locks)
@@ -1164,14 +1205,33 @@ def compute(f: Factory, rules: Rules, running: list[Job], cands: list[Job], sele
                      "over": any(v is not None and v > 100 for v in per.values())})  # fmt: skip
 
     # Purchase needs + Tab 5 -----------------------------------------------------------------
+    # What purchasing has to do for this plan, per material, against actual stock and deliveries on order:
+    #   po         not in stock, nothing on order            -> raise a PO
+    #   express_po same, and the plan chose the express fix  -> raise an express PO (a plan assumption until raised)
+    #   expedite   on order but arrives late, express fix    -> ask the supplier to bring the delivery forward
+    #   None       on order, the order just waits for it     -> nothing to raise
+    need_rank = {None: 0, "expedite": 1, "po": 2, "express_po": 3}
     needs: dict[str, dict[str, Any]] = {}
     for sh in cur.sched.shortages:
         if sh["job"] not in a["rows"]:
             continue
         mat = f.materials[sh["material"]]
+        action: str | None
+        if sh["kind"] == "short":
+            action = "express_po" if sh["express"] else "po"
+        else:
+            action = "expedite" if sh["express"] else None
+        req = requested.get(mat.id)
         n = needs.setdefault(mat.id, {"material": mat.id, "code": mat.code, "name": mat.name, "unit": mat.unit, "qty": 0.0,
                                     "needed_by": sh["needed_by"], "orders": [], "express": sh["express"],
-                                    "kind": sh["kind"], "requested": mat.id in requested})  # fmt: skip
+                                    "kind": sh["kind"], "action": action, "arrives": None, "on_order": None,
+                                    "supplier": mat.supplier, "requested": req is not None, "request": req})  # fmt: skip
+        if need_rank[action] > need_rank[n["action"]]:
+            n["action"], n["kind"] = action, sh["kind"]
+        due = sh.get("arrives") or sh.get("until")
+        if due and (n["arrives"] is None or due > n["arrives"]):
+            n["arrives"] = due
+        n["on_order"] = n["on_order"] or sh.get("on_order")
         n["qty"] = round(n["qty"] + sh["qty"], 3)
         n["needed_by"] = min(n["needed_by"], sh["needed_by"])
         n["orders"].append(num[sh["job"]])
@@ -1179,7 +1239,15 @@ def compute(f: Factory, rules: Rules, running: list[Job], cands: list[Job], sele
     min_buf = min(seq, key=lambda x: x["buffer"]) if seq else None
     machine_b = [b for b in a["bottlenecks"] if b["kind"] == "machine"]
     labour_b = [b for b in a["bottlenecks"] if b["kind"] == "labour"]
-    open_po = [n for n in needs.values() if not n["requested"]]
+    to_raise = [n for n in needs.values() if n["action"]]
+    open_po = [n for n in to_raise if not n["requested"]]
+    on_order = [n for n in needs.values() if not n["action"]]
+    mat_items = [{"material": n["material"], "open": n["action"] is not None and not n["requested"],
+                  "text": _need_text(n, today)} for n in needs.values()]  # fmt: skip
+    mat_title = (f"{len(open_po)} material PO{'s' * (len(open_po) != 1)} not raised yet" if open_po
+                 else "Material POs raised · not received yet" if to_raise
+                 else "Materials covered by stock and deliveries on order" if on_order
+                 else "All materials in stock")  # fmt: skip
     checks: list[dict[str, Any]] = [
         {"ok": not cur.late, "title": f"All {len(jobs)} orders ship on time" if not cur.late
          else f"{cur.late} order{'s ship' if cur.late != 1 else ' ships'} late",
@@ -1188,10 +1256,8 @@ def compute(f: Factory, rules: Rules, running: list[Job], cands: list[Job], sele
          else (f"Smallest buffer: {num[min_buf['id']]}, {min_buf['buffer']} days" if min_buf else "")},
         {"ok": not machine_b, "title": "Machine capacity within limits" if not machine_b
          else "Machines over capacity", "text": "; ".join(f"{b['resource']} {b['text']}" for b in machine_b)},
-        {"ok": not open_po, "title": "Material POs raised" if not open_po
-         else f"{len(open_po)} material PO{'s' * (len(open_po) != 1)} not raised yet",
-         "text": "; ".join(f"{_qty(n['qty'], n['unit'])} {n['name']} by {_fmt_day(n['needed_by'])}" for n in open_po),
-         "action": "raise_po" if open_po else None},
+        {"ok": not open_po, "title": mat_title, "text": "; ".join(i["text"] for i in mat_items),
+         "items": mat_items, "action": "raise_po" if open_po else None},
         {"ok": not labour_b, "title": "Labour and shifts covered" if not labour_b else "Labour short",
          "text": "; ".join(f"{b['resource']} {b['text']}" for b in labour_b)},
         {"ok": fin_with["margin"] >= rules.min_margin_pct,

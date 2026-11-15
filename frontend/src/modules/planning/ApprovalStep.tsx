@@ -29,7 +29,8 @@ export function ApprovalStep({ plan, go }: { plan: Plan; go: (step: string) => v
   const fin = r.finance.with;
   const orders = r.selection.orders;
   const checks = r.approval.checks;
-  const openPos = r.purchase_needs.filter((n) => !n.requested);
+  // materials Purchasing still has to be asked for (stock and deliveries already on order excluded)
+  const openPos = r.purchase_needs.filter((n) => n.action && !n.requested);
   const openChecks = checks.filter((c) => !c.ok);
   const fixes = r.finance.fixes.filter((f) => f.selected);
   const pins = seq.rows.filter((x) => x.pinned);
@@ -164,11 +165,17 @@ export function ApprovalStep({ plan, go }: { plan: Plan; go: (step: string) => v
             {(fixes.length > 0 || pins.length > 0 || plan.rule === "custom") && (
               <div className="flex flex-wrap items-center gap-2 border-t border-divider px-5 py-3.5 text-[13px] text-muted">
                 <span>Fixes applied:</span>
-                {fixes.map((f) => (
-                  <Chip key={f.id}>
-                    {f.label} · {money(f.cost)}
-                  </Chip>
-                ))}
+                {fixes.map((f) => {
+                  // an express fix is a plan assumption until its PO is actually raised
+                  const need = r.purchase_needs.find((n) => f.id === `express:${n.material}`);
+                  return (
+                    <Chip key={f.id}>
+                      {f.label} · {money(f.cost)}
+                      {need?.action &&
+                        (need.requested ? " · PO requested" : " · PO not raised yet")}
+                    </Chip>
+                  );
+                })}
                 {pins.map((p) => (
                   <Chip key={p.id}>
                     {orders[p.id]?.number} finishes {shortDate(p.pinned!)}
@@ -209,12 +216,12 @@ export function ApprovalStep({ plan, go }: { plan: Plan; go: (step: string) => v
                     {c.title}
                     {c.setting === "min_margin_pct" && <RuleButton rule="min_margin" />}
                   </b>
-                  <small className="text-[13px] text-muted">
-                    {c.text}
-                    {c.action === "raise_po" &&
-                      !c.ok &&
-                      ". The PO goes to Purchasing when you approve, or raise it now."}
-                  </small>
+                  <CheckText check={c} />
+                  {c.action === "raise_po" && !c.ok && (
+                    <small className="text-xs text-subtle">
+                      The PO goes to Purchasing when you approve, or raise it now.
+                    </small>
+                  )}
                 </div>
                 {c.action === "raise_po" && !c.ok && can("planning.write") && !approved && (
                   <Button
@@ -345,7 +352,7 @@ export function ApprovalStep({ plan, go }: { plan: Plan; go: (step: string) => v
           title={`Approve with ${plural(openChecks.length, "open item")}?`}
           description={
             openPos.length
-              ? `Un-raised POs go to Purchasing straight away. ${openPos.map((n) => `${n.name} must arrive by ${shortDate(n.needed_by)}`).join("; ")}.`
+              ? "Approving sends the un-raised POs to Purchasing straight away. The rest stays open and is saved in the history."
               : "These stay open after approval and are saved in the history."
           }
           footer={
@@ -365,7 +372,7 @@ export function ApprovalStep({ plan, go }: { plan: Plan; go: (step: string) => v
                 <span className="mt-1.5 size-2 flex-none rounded-full bg-md-accent" />
                 <div>
                   <b className="block">{c.title}</b>
-                  <small className="text-[13px] text-muted">{c.text}</small>
+                  <CheckText check={c} />
                 </div>
               </div>
             ))}
@@ -410,5 +417,20 @@ function Chip({ children }: { children: ReactNode }) {
     <span className="rounded-md border border-line-input bg-surface-2 px-2 py-1 text-xs text-ink-2">
       {children}
     </span>
+  );
+}
+
+/** A check's detail: one line per material when it has items (same lines in the popup). */
+function CheckText({ check }: { check: Plan["result"]["approval"]["checks"][number] }) {
+  if (!check.items?.length)
+    return check.text ? <small className="text-[13px] text-muted">{check.text}</small> : null;
+  return (
+    <ul className="m-0 flex list-none flex-col gap-1 p-0">
+      {check.items.map((i) => (
+        <li key={i.material} className={cn("text-[13px]", i.open ? "text-ink-2" : "text-muted")}>
+          {i.text}
+        </li>
+      ))}
+    </ul>
   );
 }

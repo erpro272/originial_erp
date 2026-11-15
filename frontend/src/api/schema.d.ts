@@ -1046,6 +1046,11 @@ export interface components {
         Check: {
             /** Action */
             action?: string | null;
+            /**
+             * Items
+             * @default []
+             */
+            items: components["schemas"]["CheckItem"][];
             /** Ok */
             ok: boolean;
             /** Setting */
@@ -1054,6 +1059,15 @@ export interface components {
             text: string;
             /** Title */
             title: string;
+        };
+        /** CheckItem */
+        CheckItem: {
+            /** Material */
+            material: string;
+            /** Open */
+            open: boolean;
+            /** Text */
+            text: string;
         };
         /** CheckResult */
         CheckResult: {
@@ -2522,6 +2536,10 @@ export interface components {
         };
         /** PurchaseNeed */
         PurchaseNeed: {
+            /** Action */
+            action?: ("po" | "express_po" | "expedite") | null;
+            /** Arrives */
+            arrives?: string | null;
             /** Code */
             code: string;
             /** Express */
@@ -2537,14 +2555,36 @@ export interface components {
              * Format: date
              */
             needed_by: string;
+            /** On Order */
+            on_order?: string | null;
             /** Orders */
             orders: string[];
             /** Qty */
             qty: number;
+            request?: components["schemas"]["PurchaseRecord"] | null;
             /** Requested */
             requested: boolean;
+            /**
+             * Supplier
+             * @default
+             */
+            supplier: string;
             /** Unit */
             unit: string;
+        };
+        /** PurchaseRecord */
+        PurchaseRecord: {
+            /**
+             * At
+             * Format: date
+             */
+            at: string;
+            /** Express */
+            express: boolean;
+            /** Qty */
+            qty: number;
+            /** Status */
+            status: string;
         };
         /** PurchaseRequestOut */
         PurchaseRequestOut: {
