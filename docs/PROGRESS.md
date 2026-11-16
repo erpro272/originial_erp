@@ -110,6 +110,10 @@
   Orders show the plan each order is in. Tests: 289 pytest, 57 Vitest, 18 Playwright.
   Then: with no active plan, Planning shows the plan in force (read-only) instead of an empty page.
   Tests: 289 pytest, 60 Vitest, 18 Playwright.
+- Purchasing, Raw Material Purchase tab (2026-11-16, awaiting owner review): KPIs (open POs, pending approval,
+  in transit, open spend), needs-attention cards (approve, follow up vendor, gate entry / QC), all POs table
+  with filters, PO window with timeline and next steps, + New PO with linked orders and priority; gate entry
+  -> QC -> stock; event for Production. Tests: 293 pytest, 63 Vitest, 19 Playwright.
 
 ## Next
 - Planning v1 archived in `archive/planning-v1/` (owner request). Rebuild in progress:
@@ -118,7 +122,7 @@
   table synced both ways with Orders received, options comparison with "Use this selection",
   swappable "Best score" rule (`planning-objective` setting). Steps 2–5 locked (coming soon).
 - Owner review of Feature 2 (Planning).
-- Purchasing: Raw Material Purchase and Supplier Comparison tabs.
+- Purchasing: Supplier Comparison tab.
 - Later: Dashboard tab (owner will specify), Production, Billing, Finance,
   AI assistant panel.
 

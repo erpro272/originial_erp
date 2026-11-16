@@ -1,7 +1,6 @@
 import { createColumnHelper } from "@tanstack/react-table";
 import { useState } from "react";
-import { useLocation } from "react-router-dom";
-import { ApiError } from "@/api/client";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/auth/AuthContext";
 import { DataTable } from "@/components/data-table/DataTable";
 import { PageActions } from "@/components/layout/PageActions";
@@ -12,20 +11,21 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { LoadingState } from "@/components/ui/Skeleton";
 import { UnderlineTabs } from "@/components/ui/Tabs";
 import { Tag } from "@/components/ui/Tag";
-import { useToast } from "@/components/ui/Toast";
 import { cn } from "@/lib/cn";
 import { rupeesCompact, shortDate } from "@/lib/format";
 import {
-  PO_STATUS,
+  PRIORITY,
+  STAGE,
   STATUS,
   qtyText,
   useInventory,
-  usePoAction,
+  usePurchases,
   type Inventory,
   type MaterialRow,
   type Po,
 } from "./api";
 import { PoActionDialog, RaisePoDialog } from "./PoDialogs";
+import { ApproveButton, PurchaseTab } from "./PurchaseTab";
 
 type StatusKey = keyof typeof STATUS;
 const select =
@@ -46,20 +46,48 @@ export function PurchasingPage() {
     : pathname.endsWith("/suppliers")
       ? "suppliers"
       : "inventory";
+  const buying = section === "purchase";
+  const pur = usePurchases();
+  const pd = pur.data;
+  const [params, setParams] = useSearchParams();
+  const openPo = params.get("po");
+  const setOpenPo = (id: string | null) => setParams(id ? { po: id } : {});
+  const [supplier, setSupplier] = useState("all");
+  const [priority, setPriority] = useState("all");
+  const [stage, setStage] = useState("all");
+  const [pq, setPq] = useState("");
 
   return (
     <div className="flex flex-col gap-6">
       {can("purchasing.write") && d && (
         <PageActions>
-          <Button onClick={() => setRaising("new")}>+ Raise PO</Button>
+          <Button onClick={() => setRaising("new")}>{buying ? "+ New PO" : "+ Raise PO"}</Button>
         </PageActions>
       )}
       <div className="flex flex-wrap items-start justify-between gap-5">
         <PageHeader
           title="Purchasing"
-          subtitle="Track raw material stock levels, shortage alerts, and open purchase orders."
+          subtitle={
+            buying
+              ? "Manage raw material purchase orders, approvals, and incoming deliveries."
+              : "Track raw material stock levels, shortage alerts, and open purchase orders."
+          }
         />
-        {d && (
+        {buying && pd && (
+          <KpiStrip
+            items={[
+              { label: "Open POs", value: pd.kpis.open },
+              {
+                label: "Pending approval",
+                value: pd.kpis.pending_approval,
+                tone: pd.kpis.pending_approval ? "hi" : "ink",
+              },
+              { label: "In transit", value: pd.kpis.in_transit, tone: "bl" },
+              { label: "Open spend", value: rupeesCompact(pd.kpis.open_spend_paise), tone: "md" },
+            ]}
+          />
+        )}
+        {!buying && d && (
           <KpiStrip
             items={[
               { label: "Total SKUs", value: d.kpis.skus },
@@ -78,7 +106,7 @@ export function PurchasingPage() {
         label="Purchasing sections"
         tabs={[
           { to: "/purchasing", label: "Inventory", count: d?.kpis.skus, end: true },
-          { to: "/purchasing/purchase", label: "Raw Material Purchase" },
+          { to: "/purchasing/purchase", label: "Raw Material Purchase", count: pd?.kpis.open },
           { to: "/purchasing/suppliers", label: "Supplier Comparison" },
         ]}
         right={
@@ -118,14 +146,81 @@ export function PurchasingPage() {
                 width={170}
               />
             </>
+          ) : buying && pd ? (
+            <>
+              <select
+                aria-label="Supplier"
+                className={select}
+                value={supplier}
+                onChange={(e) => setSupplier(e.target.value)}
+              >
+                <option value="all">All suppliers</option>
+                {pd.suppliers.map((x) => (
+                  <option key={x} value={x}>
+                    {x}
+                  </option>
+                ))}
+              </select>
+              <select
+                aria-label="Priority"
+                className={select}
+                value={priority}
+                onChange={(e) => setPriority(e.target.value)}
+              >
+                <option value="all">Priority: all</option>
+                {(Object.keys(PRIORITY) as (keyof typeof PRIORITY)[]).map((x) => (
+                  <option key={x} value={x}>
+                    {PRIORITY[x].label}
+                  </option>
+                ))}
+              </select>
+              <select
+                aria-label="Status"
+                className={select}
+                value={stage}
+                onChange={(e) => setStage(e.target.value)}
+              >
+                <option value="all">Status: all</option>
+                {(Object.keys(STAGE) as Po["stage"][]).map((x) => (
+                  <option key={x} value={x}>
+                    {STAGE[x].label}
+                  </option>
+                ))}
+              </select>
+              <SearchBox
+                label="Search POs"
+                placeholder="Search POs"
+                value={pq}
+                onChange={setPq}
+                width={160}
+              />
+            </>
           ) : undefined
         }
       />
-      {section !== "inventory" ? (
+      {buying ? (
+        pur.isLoading || !pd ? (
+          <LoadingState label="Loading purchase orders" />
+        ) : (
+          <PurchaseTab
+            d={pd}
+            open={openPo}
+            onOpen={setOpenPo}
+            rows={pd.purchase_orders.filter(
+              (r) =>
+                (supplier === "all" || r.supplier === supplier) &&
+                (priority === "all" || r.priority === priority) &&
+                (stage === "all" || r.stage === stage) &&
+                (!pq.trim() ||
+                  `${r.number} ${r.supplier} ${r.lines[0]?.material ?? ""} ${r.orders.join(" ")}`
+                    .toLowerCase()
+                    .includes(pq.trim().toLowerCase())),
+            )}
+          />
+        )
+      ) : section !== "inventory" ? (
         <section className="flex flex-col items-center gap-3 rounded-card border border-dashed border-faint bg-surface px-6 py-16 text-center">
-          <h2 className="m-0 text-xl font-semibold">
-            {section === "purchase" ? "Raw Material Purchase" : "Supplier Comparison"} · coming next
-          </h2>
+          <h2 className="m-0 text-xl font-semibold">Supplier Comparison · coming next</h2>
           <p className="m-0 max-w-[460px] text-[15px] text-muted">
             Inventory and purchase orders are ready to use. This section is the next part of
             Purchasing.
@@ -342,13 +437,8 @@ function AttentionCard({
 
 function OpenPurchaseOrders({ pos }: { pos: Po[] }) {
   const { can } = useAuth();
-  const act = usePoAction();
-  const { toast } = useToast();
-  const [dialog, setDialog] = useState<{ po: Po; action: "confirm" | "receive" | "cancel" } | null>(
-    null,
-  );
+  const [cancelling, setCancelling] = useState<Po | null>(null);
   const write = can("purchasing.write");
-  const owner = can("purchasing.approve");
   const btn = "cursor-pointer border-0 bg-transparent p-0 text-[13px] text-link hover:underline";
   return (
     <section
@@ -358,7 +448,7 @@ function OpenPurchaseOrders({ pos }: { pos: Po[] }) {
       <div className="flex items-center justify-between px-5 py-4">
         <h3 className="m-0 text-[17px] font-semibold">Open purchase orders</h3>
         <span className="text-[13px] text-muted">
-          Raised → owner approves → ordered → supplier confirms → received
+          Raised → owner approves → sent → dispatched → gate entry → QC → in stock
         </span>
       </div>
       {pos.length === 0 ? (
@@ -382,7 +472,7 @@ function OpenPurchaseOrders({ pos }: { pos: Po[] }) {
             <tbody>
               {pos.map((po) => {
                 const ln = po.lines[0];
-                const st = PO_STATUS[po.status] ?? { label: po.status, tone: "lo" as const };
+                const st = STAGE[po.stage];
                 return (
                   <tr key={po.id} data-testid={`po-${po.number}`}>
                     <td className="border-t border-divider px-5 py-3 font-mono font-semibold">
@@ -414,60 +504,22 @@ function OpenPurchaseOrders({ pos }: { pos: Po[] }) {
                       </Tag>
                     </td>
                     <td className="border-t border-divider px-5 py-3">
-                      <span className="flex justify-end gap-4">
-                        {po.status === "awaiting_approval" && owner && (
-                          <button
-                            type="button"
-                            className={btn}
-                            disabled={act.isPending}
-                            onClick={async () => {
-                              try {
-                                await act.mutateAsync({ id: po.id, action: "approve" });
-                                toast({
-                                  title: `${po.number} approved · ordered`,
-                                  tone: "success",
-                                });
-                              } catch (e) {
-                                toast({
-                                  title: e instanceof ApiError ? e.message : "Couldn't approve.",
-                                  tone: "error",
-                                });
-                              }
-                            }}
-                          >
-                            Approve
-                          </button>
-                        )}
-                        {po.status === "awaiting_approval" && !owner && (
-                          <span className="text-[13px] text-subtle">Owner approves</span>
-                        )}
-                        {(po.status === "ordered" || po.status === "confirmed") && write && (
-                          <>
+                      <span className="flex items-center justify-end gap-4">
+                        {po.status === "awaiting_approval" && <ApproveButton po={po} />}
+                        <Link to={`/purchasing/purchase?po=${po.id}`} className={btn}>
+                          Manage →
+                        </Link>
+                        {write &&
+                          po.status !== "at_gate" &&
+                          Number(ln?.received_qty ?? 0) === 0 && (
                             <button
                               type="button"
-                              className={btn}
-                              onClick={() => setDialog({ po, action: "confirm" })}
+                              className={cn(btn, "text-hi")}
+                              onClick={() => setCancelling(po)}
                             >
-                              {po.confirmed ? "Change date" : "Confirm date"}
+                              Cancel
                             </button>
-                            <button
-                              type="button"
-                              className={btn}
-                              onClick={() => setDialog({ po, action: "receive" })}
-                            >
-                              Receive
-                            </button>
-                          </>
-                        )}
-                        {write && Number(ln?.received_qty ?? 0) === 0 && (
-                          <button
-                            type="button"
-                            className={cn(btn, "text-hi")}
-                            onClick={() => setDialog({ po, action: "cancel" })}
-                          >
-                            Cancel
-                          </button>
-                        )}
+                          )}
                       </span>
                     </td>
                   </tr>
@@ -477,8 +529,8 @@ function OpenPurchaseOrders({ pos }: { pos: Po[] }) {
           </table>
         </div>
       )}
-      {dialog && (
-        <PoActionDialog po={dialog.po} action={dialog.action} onClose={() => setDialog(null)} />
+      {cancelling && (
+        <PoActionDialog po={cancelling} action="cancel" onClose={() => setCancelling(null)} />
       )}
     </section>
   );

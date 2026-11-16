@@ -5,6 +5,8 @@ export type Inventory = Schemas["InventoryOut"];
 export type MaterialRow = Schemas["MaterialRow"];
 export type Po = Schemas["PoOut"];
 export type RaisePo = Schemas["PoRaiseIn"];
+export type PoDetail = Schemas["PoDetail"];
+export type Purchases = Schemas["PurchasesOut"];
 
 const KEY = ["purchasing"] as const;
 
@@ -33,38 +35,77 @@ export function useRaisePo() {
   });
 }
 
-type Action = "approve" | "confirm" | "receive" | "cancel";
+export type PoAction =
+  "approve" | "confirm" | "dispatch" | "gate-entry" | "qc" | "follow-up" | "cancel" | "edit";
 
-/** approve (owner) / confirm (supplier's date) / receive (qty) / cancel (reason) */
+/** One step on a PO: approve (owner), confirm (supplier's date), dispatch, gate entry, QC, follow-up, cancel,
+ * edit (while awaiting approval). The response is the PO with its timeline. */
 export function usePoAction() {
   const done = useDone();
   return useMutation({
-    mutationFn: async ({ id, action, body }: { id: string; action: Action; body?: unknown }) => {
+    mutationFn: async ({
+      id,
+      action,
+      body,
+    }: {
+      id: string;
+      action: PoAction;
+      body?: unknown;
+    }): Promise<PoDetail> => {
       const path = { params: { path: { po_id: id } } };
-      if (action === "approve")
-        return unwrap(await api.POST("/api/purchasing/purchase-orders/{po_id}/approve", path));
-      if (action === "confirm")
-        return unwrap(
-          await api.POST("/api/purchasing/purchase-orders/{po_id}/confirm", {
-            ...path,
-            body: body as Schemas["ConfirmIn"],
-          }),
-        );
-      if (action === "receive")
-        return unwrap(
-          await api.POST("/api/purchasing/purchase-orders/{po_id}/receive", {
-            ...path,
-            body: body as Schemas["ReceiveIn"],
-          }),
-        );
-      return unwrap(
-        await api.POST("/api/purchasing/purchase-orders/{po_id}/cancel", {
-          ...path,
-          body: body as Schemas["CancelPoIn"],
-        }),
-      );
+      const P = "/api/purchasing/purchase-orders/{po_id}";
+      switch (action) {
+        case "approve":
+          return unwrap(await api.POST(`${P}/approve`, path));
+        case "confirm":
+          return unwrap(
+            await api.POST(`${P}/confirm`, { ...path, body: body as Schemas["ConfirmIn"] }),
+          );
+        case "dispatch":
+          return unwrap(
+            await api.POST(`${P}/dispatch`, { ...path, body: body as Schemas["DispatchIn"] }),
+          );
+        case "gate-entry":
+          return unwrap(
+            await api.POST(`${P}/gate-entry`, { ...path, body: body as Schemas["GateEntryIn"] }),
+          );
+        case "qc":
+          return unwrap(await api.POST(`${P}/qc`, { ...path, body: body as Schemas["QcIn"] }));
+        case "follow-up":
+          return unwrap(
+            await api.POST(`${P}/follow-up`, { ...path, body: body as Schemas["FollowUpIn"] }),
+          );
+        case "edit":
+          return unwrap(await api.PATCH(P, { ...path, body: body as Schemas["PoEditIn"] }));
+        default:
+          return unwrap(
+            await api.POST(`${P}/cancel`, { ...path, body: body as Schemas["CancelPoIn"] }),
+          );
+      }
     },
     onSuccess: done,
+  });
+}
+
+/** Raw Material Purchase: every PO with its stage, KPIs and the POs that need attention. */
+export function usePurchases() {
+  return useQuery({
+    queryKey: [...KEY, "purchases"],
+    queryFn: async () => unwrap(await api.GET("/api/purchasing/purchases")),
+  });
+}
+
+/** One PO with its timeline. */
+export function usePo(id: string | null) {
+  return useQuery({
+    queryKey: [...KEY, "po", id],
+    enabled: !!id,
+    queryFn: async () =>
+      unwrap(
+        await api.GET("/api/purchasing/purchase-orders/{po_id}", {
+          params: { path: { po_id: id! } },
+        }),
+      ),
   });
 }
 
@@ -81,11 +122,23 @@ export const STATUS = {
   adequate: { label: "Adequate", tone: "ok" },
 } as const;
 
-export const PO_STATUS: Record<string, { label: string; tone: "md" | "bl" | "ok" | "lo" | "hi" }> =
-  {
-    awaiting_approval: { label: "Awaiting approval", tone: "md" },
-    ordered: { label: "Ordered", tone: "bl" },
-    confirmed: { label: "Confirmed", tone: "ok" },
-    received: { label: "Received", tone: "lo" },
-    cancelled: { label: "Cancelled", tone: "lo" },
-  };
+type Tone = "md" | "bl" | "ok" | "lo" | "hi";
+
+/** How a PO's stage reads on screen (worked out by the API from its status and dates). */
+export const STAGE: Record<Po["stage"], { label: string; tone: Tone }> = {
+  pending_approval: { label: "Pending approval", tone: "hi" },
+  sent: { label: "PO sent", tone: "lo" },
+  confirmed: { label: "Confirmed", tone: "ok" },
+  in_transit: { label: "In transit", tone: "bl" },
+  delayed: { label: "Delayed", tone: "hi" },
+  arriving_today: { label: "Arriving today", tone: "bl" },
+  at_gate: { label: "Ready for QC", tone: "md" },
+  received: { label: "Received", tone: "ok" },
+  cancelled: { label: "Cancelled", tone: "lo" },
+};
+
+export const PRIORITY = {
+  high: { label: "High", tone: "hi" },
+  medium: { label: "Medium", tone: "md" },
+  low: { label: "Low", tone: "lo" },
+} as const;

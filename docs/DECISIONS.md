@@ -222,4 +222,16 @@ Short records of choices and the reason for each. Newest at the bottom.
     to any other plans in force; the empty "No active plan" page only when nothing is active or in force.
     "In force" = approved (incl. needs re-approval) and not completed. A brand-new plan is tagged
     "Draft · not generated yet" (it used to say "Awaiting owner approval").
+52. **Raw Material Purchase (owner's choices)**: PO lifecycle raised (awaiting approval) -> owner approves
+    ("PO sent", every PO) -> supplier's date (confirmed) -> dispatched (in transit) -> **gate entry** (quantity +
+    challan / vehicle no.; not in stock yet) -> **QC**: accepted quantity goes into stock through the ledger,
+    rejected quantity is recorded with a reason and stays owed -> received when everything is accepted (a
+    partial QC sends the PO back to confirmed / ordered for the rest). Cancel: open POs, not at the gate,
+    nothing received. Edit only while awaiting approval. Screen stages are worked out, not stored:
+    **Delayed** = past its expected date and not arrived, or the supplier's date is later than a linked order
+    needs the material ("N days behind schedule"); Arriving today; Ready for QC (at the gate). **Priority** =
+    highest priority of the linked orders (from Planning's requests, or picked when raising), else the PO's own.
+    Every step goes into `po_events` (insert-only timeline) and the audit log. QC acceptance emits
+    `purchasing.material_received` (PO, material, quantity, orders) for Production. Demo POs at each stage come
+    from `seed/purchase_demo.py` (dev seed only; it doesn't change the demo plan's schedule).
 

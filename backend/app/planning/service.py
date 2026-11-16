@@ -378,9 +378,7 @@ async def _check_regenerate(session: AsyncSession, plan: Plan) -> None:
         ids = [uuid.UUID(i) for i in added + removed]
         num = {
             str(i): n
-            for i, n in (
-                await session.execute(select(Order.id, Order.number).where(Order.id.in_(ids)))
-            ).all()
+            for i, n in (await session.execute(select(Order.id, Order.number).where(Order.id.in_(ids)))).all()
         }
         plan.status = "draft"
         plan.inputs = {**(plan.inputs or {}), "regenerate": {

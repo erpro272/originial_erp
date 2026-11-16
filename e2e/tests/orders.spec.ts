@@ -90,7 +90,9 @@ test("create, edit and cancel an order", async ({ page }) => {
     .getByRole("dialog", { name: /Cancel ORD/ })
     .getByRole("button", { name: "Cancel order" })
     .click();
-  await expect(page.getByText(`${number} cancelled`)).toBeVisible();
+  await expect(
+    page.getByText(`${number} cancelled`, { exact: true }).first(),
+  ).toBeVisible();
   await expect(page.getByTestId("table-orders")).toContainText(
     "No open orders match",
   ); // gone from current orders
