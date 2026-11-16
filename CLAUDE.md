@@ -105,6 +105,15 @@ isolation). One company per website: no company picker or switcher in the UI.
   `scoring.py` is pure (weights = `supplier-scoring` setting); `preferred_for()` feeds Raise PO pre-fill.
   Permissions: `purchasing.read` (planner, purchaser, accountant, owner),
   `purchasing.write` (purchaser, owner), `purchasing.approve` (owner).
+- `billing/` receivables (`receivables.py`: outstanding = invoice total − `invoice_receipts`, never stored; receipts,
+  promises, follow-ups live with `invoices/ledger.py` + `billing.models`), payables (`payables.py`: supplier invoices,
+  `match()` three-way, `pending_verif -> pending_owner -> approved -> scheduled -> paid`, on_hold/rejected; only bank
+  confirmation = paid; approver can't execute unless the owner overrides with a logged reason), deals (`deals.py`:
+  `TXN-####` per order/PO via `ensure_deals`, derived status, provisional deals, sales invoice draft -> verified ->
+  issued -> sent; shipped order = fully dispatched). History tables (`invoice_receipts`, `payment_promises`,
+  `interactions`, `payable_events`, `deal_events`) are insert-only. Migration 0012. Permissions `billing.read`
+  (owner, accountant, purchaser), `billing.write` / `billing.issue` (accountant, owner), `billing.approve` (owner).
+  Demo: `seed/billing_demo.py`.
 - Seed: `seed/demo_data.py` (dates relative to today; mirrors the Orders mockup). Planning demo:
   `seed/planning_demo.py` (idempotent upsert; `python -m seed.planning_demo` fixes an old DB in place).
   Bump `engine.ENGINE_VERSION` whenever engine logic changes (saved results then recalculate). Startup
@@ -136,6 +145,8 @@ isolation). One company per website: no company picker or switcher in the UI.
 - Purchasing routes: `/purchasing` (Inventory), `/purchasing/purchase[?po=<id>]` (Raw Material Purchase, `PurchaseTab`:
   cards, all POs, PO window + timeline), `/purchasing/suppliers` (Supplier comparison, `SupplierTab`: top cards, scorecard,
   compare, supplier window, quotes, score rule). `PoDialogs`: Raise PO + one dialog per step.
+- Billing routes: `/billing` (Payments: `?mode=ar|ap`, `customer=`, `supplier=` open the drawers), `/billing/ebill`
+  (Invoice / E-bill, `?deal=`), `/billing/gst` (coming next). `DealChip` / `useDealRefs` show TXN chips elsewhere.
 - Planning UI v1 is archived in `archive/planning-v1/`. Rebuild: `modules/planning/` has step 1
   (`SelectedOrders`: `OrderTimeline`, `OrdersInPlan`, `OptionsTable`), step 2 (`SequenceStep`) and
   step 3 (`ScheduleStep`, warning popup in `reorder.tsx`), step 4 (`FinanceStep`, company rules via

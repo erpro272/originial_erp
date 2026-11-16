@@ -120,7 +120,12 @@ async def test_create_deal_duplicates_and_purchase_deals(client: AsyncClient) ->
     near = body | {"reference": None}
     w = await client.post(DEALS, json=near, headers=acc)
     assert w.status_code == 409 and w.json()["error"]["details"]["warning"]
-    assert (await client.post(DEALS, json=near | {"force": True}, headers=acc)).status_code == 201
+    forced = await client.post(DEALS, json=near | {"force": True}, headers=acc)
+    assert forced.status_code == 201
+    # archived deals are not duplicates: once both are archived, the same enquiry goes through without a warning
+    for x in (d["row"]["id"], forced.json()["row"]["id"]):
+        assert (await client.post(f"{DEALS}/{x}/archive", headers=acc)).status_code == 200
+    assert (await client.post(DEALS, json=near | {"item": body["item"]}, headers=acc)).status_code == 201
     # unknown company: never created on the fly
     assert (await client.post(DEALS, json=body | {"company": "Nobody Ltd"}, headers=acc)).status_code == 404
     # interactions on the deal

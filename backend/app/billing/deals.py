@@ -547,7 +547,8 @@ async def create(session: AsyncSession, actor: uuid.UUID, body: DealCreateIn) ->
             )
     if not body.force:
         soon = datetime.now(UTC) - timedelta(days=30)
-        near = next((d for d in existing if (d.item or "").lower() == body.item.strip().lower()
+        near = next((d for d in existing if d.archived_at is None  # an archived deal is no duplicate
+                     and (d.item or "").lower() == body.item.strip().lower()
                      and d.quantity == body.quantity and d.created_at >= soon), None)  # fmt: skip
         if near is not None:
             raise Conflict(f"{near.number} looks the same (same company, item and quantity in the last 30 days). "

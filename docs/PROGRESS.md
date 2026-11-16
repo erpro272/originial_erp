@@ -119,8 +119,16 @@
   lowest cost), scorecard & price benchmark, compare side by side, supplier history, quote requests and
   replies, Select vendor (preferred supplier pre-filled in Raise PO), the owner's score weights.
   Tests: 297 pytest, 66 Vitest, 20 Playwright.
+- Billing round 1 (2026-11-16, awaiting owner review): Payments tab with Accounts Receivables (cards, chips,
+  customer drawer with three dates, follow-ups, promises, receipts, communication, CSV export) and Accounts
+  Payables (supplier invoices, three-way match, verify -> approve -> schedule -> execute -> bank confirm,
+  hold / reject, separation of duties with logged owner override); Invoice / E-bill tab with deals (TXN chips
+  also on Orders and POs), deal drawer (overview, documents, interactions, activity), provisional deals,
+  sales invoice draft -> verify -> issue -> send. Tests: 304 pytest, 70 Vitest, 23 Playwright.
 
 ## Next
+- Billing round 2: document intake + review queue, quotation versions and compare, e-invoice / IRN,
+  credit notes and advances screens, GST filing tab, Gmail / WhatsApp / bank feeds.
 - Planning v1 archived in `archive/planning-v1/` (owner request). Rebuild in progress:
   **Step 1 Selected orders done (awaiting owner review)**: order timeline (running/planned orders +
   your selection / partly / fully optimized, from/to range, default today + 3 weeks), "In this plan"
@@ -129,7 +137,7 @@
 - Owner review of Feature 2 (Planning).
 - Purchasing: POs with several materials; "close short" for rejected material; quote requests are recorded
   (no e-mail to suppliers yet).
-- Later: Dashboard tab (owner will specify), Production, Billing, Finance,
+- Later: Dashboard tab (owner will specify), Production, Finance,
   AI assistant panel.
 
 ## Trial

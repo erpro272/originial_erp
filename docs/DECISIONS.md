@@ -248,3 +248,22 @@ Short records of choices and the reason for each. Newest at the bottom.
     material: Raise PO pre-fills it and its rate; the owner still approves every PO. The "Priority" filter of the
     mockup is a Rating filter (suppliers have no priority).
 
+54. **Billing round 1 (owner's choices)**: outstanding is never stored: invoice total − receipts
+    (`invoice_receipts`, owned by the invoices module, insert-only; kinds receipt / advance / credit_note /
+    opening). Migration 0012 turned every stored "amount paid" into an opening receipt, and an uploaded
+    invoice's printed paid amount becomes one too. Only issued invoices count (`billing_status` null / issued /
+    sent); drafts never do. Periods are IST. A receipt is refused when it would over-pay, is dated in the future
+    or repeats a reference. A promised date is a commitment, never a payment: the original due date, the latest
+    promise and the next follow-up are shown side by side and every older promise stays visible.
+    Deals (`TXN-####`): one per order and per PO (`ensure_deals`), plus provisional deals from an enquiry or a
+    purchase requirement; status is derived from the order / PO / invoices / receipts, never typed. Same company
+    + same reference = never two deals; same company + item + quantity in 30 days = a warning ("Create anyway");
+    archived deals don't count. Dispatch: an order marked shipped counts as fully dispatched (no dispatch
+    records yet), so a sales invoice can only be generated after shipping; draft -> verified -> issued (number
+    continues the company's existing series, `DMC/2026-27/####`) -> sent. Owner and accountant may issue.
+    Payables: supplier invoice -> three-way match (PO rate, QC-accepted qty, invoice) -> accounts verify ->
+    owner approves -> scheduled -> executed (UTR) -> bank confirmed = paid; on hold / rejected with a reason.
+    Scheduled or executed is never paid: only the bank confirmation counts. Separation of duties: whoever
+    approved can't execute; the owner may override with a written reason, which is logged. Round 2 (later):
+    document intake and review queue, quotation versions, e-invoice / IRN, credit notes and advances screens,
+    GST filing tab, Gmail / WhatsApp / bank feeds.

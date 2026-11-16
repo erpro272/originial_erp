@@ -132,7 +132,7 @@ async def test_money_history_is_insert_only_for_the_app(client: AsyncClient) -> 
     co = await _demo_co("bill-append")
     eng_ = create_async_engine(get_settings().database_url)  # the app's own role
     for t in ("invoice_receipts", "payment_promises", "interactions", "payable_events", "deal_events"):
-        for sql in (f"UPDATE {t} SET created_at = now()", f"DELETE FROM {t}"):
+        for sql in (f"UPDATE {t} SET created_at = now()", f"DELETE FROM {t}"):  # noqa: S608 (fixed table names)
             async with async_sessionmaker(eng_)() as s, s.begin():
                 await set_tenant(s, co.id)
                 with pytest.raises(DBAPIError, match="permission denied"):

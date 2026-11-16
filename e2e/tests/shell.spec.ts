@@ -35,6 +35,10 @@ test("sign in, visit every module, sign out", async ({ page }) => {
       await expect(
         page.getByRole("link", { name: "Plan history →" }),
       ).toBeVisible();
+    else if (name === "Billing")
+      await expect(
+        page.getByText("Customer receivables").first(),
+      ).toBeVisible();
     else
       await expect(
         page.getByRole("heading", { name: "Coming soon" }),
