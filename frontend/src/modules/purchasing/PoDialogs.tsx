@@ -36,7 +36,9 @@ export function RaisePoDialog({
   const [qty, setQty] = useState(
     material && Number(material.suggested_qty) > 0 ? String(Number(material.suggested_qty)) : "",
   );
-  const [price, setPrice] = useState(material ? String(material.price_per_unit_paise / 100) : "");
+  const [price, setPrice] = useState(
+    material ? String((material.preferred_rate_paise ?? material.price_per_unit_paise) / 100) : "",
+  );
   const [due, setDue] = useState(
     material?.shortfall ? material.shortfall.needed_by : addDays(today, 7),
   );
@@ -53,7 +55,7 @@ export function RaisePoDialog({
     if (x) {
       setSupplier(x.supplier ?? "");
       setQty(Number(x.suggested_qty) > 0 ? String(Number(x.suggested_qty)) : "");
-      setPrice(String(x.price_per_unit_paise / 100));
+      setPrice(String((x.preferred_rate_paise ?? x.price_per_unit_paise) / 100));
     }
   };
   const needs = m?.needs ?? [];

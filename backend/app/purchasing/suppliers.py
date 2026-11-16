@@ -218,14 +218,17 @@ async def comparison(session: AsyncSession) -> ComparisonOut:
                 defect_pct=round(100 * c.defect, 2) if c.defect is not None else None,
                 quality_score=round(10 * q_, 1) if (q_ := scoring.quality_of(c.defect)) is not None else None,
                 deliveries=c.deliveries, active_pos=open_pos.get(sid, 0), overall=c.overall,
-                stars=scoring.stars(c.overall), flags=c.flags, note=c.note, preferred=d.preferred.get(mid) == sid,
+                stars=scoring.stars(c.overall, c.flags), flags=c.flags, note=c.note, preferred=d.preferred.get(mid) == sid,
                 active=sid in active, quote_valid_until=qv.valid_until if qv else None,
             )  # fmt: skip
             rows.append(r)
             row_of[(c.supplier_id, mid)] = r
-        top[str(mid)] = [TopCard(badges=b, pct=p, row=row_of[(c.supplier_id, mid)])
-                         for b, c, p in scoring.pick_top(cands)]  # fmt: skip
+        top[str(mid)] = [
+            TopCard(badges=b, pct=p, note=scoring.card_note(b, c), row=row_of[(c.supplier_id, mid)])
+            for b, c, p in scoring.pick_top(cands)
+        ]
 
+    rows.sort(key=lambda r: (r.code, -(r.overall if r.overall is not None else -1), r.supplier))
     # KPIs
     recent = [(d.pos[pid], at) for pid, at in first_gate.items() if at >= now - timedelta(days=ACTIVE_DAYS)]
     ot_recent = [at.date() <= po.promised_date for po, at in recent if po.promised_date is not None]

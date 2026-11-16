@@ -100,7 +100,9 @@ isolation). One company per website: no company picker or switcher in the UI.
   `planning.service.material_demand()`; PO steps update the plan's requests via `planning.link_requests` /
   `update_requests`. PO lifecycle: awaiting_approval -> ordered -> confirmed -> dispatched -> at_gate (gate entry)
   -> received (QC accepts into stock; rejected stays owed); `_stage()` works out Delayed / Arriving today; every step
-  via `_log` (`po_events` insert-only + audit); QC emits `purchasing.material_received`. Demo POs: `seed/purchase_demo.py`.
+  via `_log` (`po_events` insert-only + audit); QC emits `purchasing.material_received`. Demo POs + supplier history: `seed/purchase_demo.py`.
+  Supplier comparison: `suppliers.py` loads deliveries (first gate entry vs `promised_date`), QC, quotes, preferred;
+  `scoring.py` is pure (weights = `supplier-scoring` setting); `preferred_for()` feeds Raise PO pre-fill.
   Permissions: `purchasing.read` (planner, purchaser, accountant, owner),
   `purchasing.write` (purchaser, owner), `purchasing.approve` (owner).
 - Seed: `seed/demo_data.py` (dates relative to today; mirrors the Orders mockup). Planning demo:
@@ -132,7 +134,8 @@ isolation). One company per website: no company picker or switcher in the UI.
 - Charts: hand-rolled SVG, one validated hue, hover tooltip + sr-only table (see dataviz rules).
   Categorical series colours `s1..s5` (validated); machine colours `in/bl/te/ai/lo` by machine order.
 - Purchasing routes: `/purchasing` (Inventory), `/purchasing/purchase[?po=<id>]` (Raw Material Purchase, `PurchaseTab`:
-  cards, all POs, PO window + timeline), `/purchasing/suppliers` (coming next). `PoDialogs`: Raise PO + one dialog per step.
+  cards, all POs, PO window + timeline), `/purchasing/suppliers` (Supplier comparison, `SupplierTab`: top cards, scorecard,
+  compare, supplier window, quotes, score rule). `PoDialogs`: Raise PO + one dialog per step.
 - Planning UI v1 is archived in `archive/planning-v1/`. Rebuild: `modules/planning/` has step 1
   (`SelectedOrders`: `OrderTimeline`, `OrdersInPlan`, `OptionsTable`), step 2 (`SequenceStep`) and
   step 3 (`ScheduleStep`, warning popup in `reorder.tsx`), step 4 (`FinanceStep`, company rules via

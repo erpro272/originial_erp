@@ -18,6 +18,7 @@ import {
   STAGE,
   STATUS,
   qtyText,
+  useComparison,
   useInventory,
   usePurchases,
   type Inventory,
@@ -26,6 +27,7 @@ import {
 } from "./api";
 import { PoActionDialog, RaisePoDialog } from "./PoDialogs";
 import { ApproveButton, PurchaseTab } from "./PurchaseTab";
+import { RequestQuoteDialog, SupplierTab } from "./SupplierTab";
 
 type StatusKey = keyof typeof STATUS;
 const select =
@@ -56,10 +58,23 @@ export function PurchasingPage() {
   const [priority, setPriority] = useState("all");
   const [stage, setStage] = useState("all");
   const [pq, setPq] = useState("");
+  const comparing = section === "suppliers";
+  const cmp = useComparison();
+  const cd = cmp.data;
+  const [material, setMaterial] = useState("all");
+  const [minStars, setMinStars] = useState("0");
+  const [supStatus, setSupStatus] = useState("all");
+  const [sq, setSq] = useState("");
+  const [quoting, setQuoting] = useState(false);
 
   return (
     <div className="flex flex-col gap-6">
-      {can("purchasing.write") && d && (
+      {can("purchasing.write") && comparing && cd && (
+        <PageActions>
+          <Button onClick={() => setQuoting(true)}>+ Request Quote</Button>
+        </PageActions>
+      )}
+      {can("purchasing.write") && !comparing && d && (
         <PageActions>
           <Button onClick={() => setRaising("new")}>{buying ? "+ New PO" : "+ Raise PO"}</Button>
         </PageActions>
@@ -68,9 +83,11 @@ export function PurchasingPage() {
         <PageHeader
           title="Purchasing"
           subtitle={
-            buying
-              ? "Manage raw material purchase orders, approvals, and incoming deliveries."
-              : "Track raw material stock levels, shortage alerts, and open purchase orders."
+            comparing
+              ? "Compare supplier pricing, lead times, on-time delivery, and quality ratings."
+              : buying
+                ? "Manage raw material purchase orders, approvals, and incoming deliveries."
+                : "Track raw material stock levels, shortage alerts, and open purchase orders."
           }
         />
         {buying && pd && (
@@ -87,7 +104,29 @@ export function PurchasingPage() {
             ]}
           />
         )}
-        {!buying && d && (
+        {comparing && cd && (
+          <KpiStrip
+            items={[
+              { label: "Open/Active vendors", value: cd.kpis.active_suppliers },
+              {
+                label: "Avg on-time",
+                value: cd.kpis.avg_on_time_pct == null ? "–" : `${cd.kpis.avg_on_time_pct}%`,
+                tone: "ok",
+              },
+              {
+                label: "Avg lead time",
+                value: cd.kpis.avg_lead_days == null ? "–" : `${cd.kpis.avg_lead_days} days`,
+                tone: "bl",
+              },
+              {
+                label: "Saved (30d)",
+                value: rupeesCompact(cd.kpis.saved_30d_paise),
+                tone: cd.kpis.saved_30d_paise < 0 ? "hi" : "md",
+              },
+            ]}
+          />
+        )}
+        {!buying && !comparing && d && (
           <KpiStrip
             items={[
               { label: "Total SKUs", value: d.kpis.skus },
@@ -107,7 +146,11 @@ export function PurchasingPage() {
         tabs={[
           { to: "/purchasing", label: "Inventory", count: d?.kpis.skus, end: true },
           { to: "/purchasing/purchase", label: "Raw Material Purchase", count: pd?.kpis.open },
-          { to: "/purchasing/suppliers", label: "Supplier Comparison" },
+          {
+            to: "/purchasing/suppliers",
+            label: "Supplier Comparison",
+            count: cd?.kpis.active_suppliers,
+          },
         ]}
         right={
           section === "inventory" && d ? (
@@ -144,6 +187,51 @@ export function PurchasingPage() {
                 value={q}
                 onChange={setQ}
                 width={170}
+              />
+            </>
+          ) : comparing && cd ? (
+            <>
+              <select
+                aria-label="Material"
+                className={select}
+                value={material}
+                onChange={(e) => setMaterial(e.target.value)}
+              >
+                <option value="all">All materials</option>
+                {cd.materials.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name}
+                  </option>
+                ))}
+              </select>
+              <select
+                aria-label="Rating"
+                className={select}
+                value={minStars}
+                onChange={(e) => setMinStars(e.target.value)}
+              >
+                <option value="0">Rating: all</option>
+                <option value="4">4★ and up</option>
+                <option value="3">3★ and up</option>
+              </select>
+              <select
+                aria-label="Status"
+                className={select}
+                value={supStatus}
+                onChange={(e) => setSupStatus(e.target.value)}
+              >
+                <option value="all">Status: all</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="risk">At risk</option>
+                <option value="new">No history yet</option>
+              </select>
+              <SearchBox
+                label="Search suppliers"
+                placeholder="Search suppliers"
+                value={sq}
+                onChange={setSq}
+                width={160}
               />
             </>
           ) : buying && pd ? (
@@ -218,14 +306,29 @@ export function PurchasingPage() {
             )}
           />
         )
-      ) : section !== "inventory" ? (
-        <section className="flex flex-col items-center gap-3 rounded-card border border-dashed border-faint bg-surface px-6 py-16 text-center">
-          <h2 className="m-0 text-xl font-semibold">Supplier Comparison · coming next</h2>
-          <p className="m-0 max-w-[460px] text-[15px] text-muted">
-            Inventory and purchase orders are ready to use. This section is the next part of
-            Purchasing.
-          </p>
-        </section>
+      ) : comparing ? (
+        cmp.isLoading || !cd ? (
+          <LoadingState label="Loading suppliers" />
+        ) : (
+          <SupplierTab
+            d={cd}
+            materialId={material === "all" ? null : material}
+            rows={cd.rows.filter(
+              (r) =>
+                (material === "all" || r.material_id === material) &&
+                r.stars >= Number(minStars) &&
+                (supStatus === "all" ||
+                  (supStatus === "active" && r.active) ||
+                  (supStatus === "inactive" && !r.active) ||
+                  (supStatus === "risk" && r.flags.some((f) => f.endsWith("risk"))) ||
+                  (supStatus === "new" && r.flags.includes("No history yet"))) &&
+                (!sq.trim() ||
+                  `${r.supplier} ${r.material} ${r.code}`
+                    .toLowerCase()
+                    .includes(sq.trim().toLowerCase())),
+            )}
+          />
+        )
       ) : inv.isLoading || !d ? (
         <LoadingState label="Loading inventory" />
       ) : (
@@ -243,6 +346,7 @@ export function PurchasingPage() {
           onRaise={(m) => setRaising(m)}
         />
       )}
+      {quoting && cd && <RequestQuoteDialog d={cd} onClose={() => setQuoting(false)} />}
       {raising && d && (
         <RaisePoDialog
           inventory={d}

@@ -85,7 +85,7 @@ def _note(c: Candidate) -> str:
     if "No history yet" in c.flags:
         return "No deliveries yet: rated on its quote only"
     weak = min(s, key=lambda k: s[k]) if s else None
-    if weak and s[weak] < 0.85:
+    if weak and s[weak] < 0.7:
         return {"price": "Higher rate than others", "lead": "Sub-optimal lead times",
                 "on_time": "Often late", "quality": "Quality issues at QC"}[weak]  # fmt: skip
     if s.get("quality", 0) >= 0.97 and s.get("on_time", 0) >= 0.95:
@@ -95,8 +95,26 @@ def _note(c: Candidate) -> str:
     return "Reliable all round"
 
 
-def stars(overall: float | None) -> int:
-    return 0 if overall is None else max(1, min(5, round(overall / 20)))
+def stars(overall: float | None, flags: list[str] | None = None) -> int:
+    """1-5 from the overall score; a supplier with a risk flag gets at most 4."""
+    if overall is None:
+        return 0
+    n = max(1, min(5, round(overall / 20)))
+    return min(n, 4) if any(f.endswith("risk") for f in flags or []) else n
+
+
+def card_note(badges: list[str], c: Candidate) -> str:
+    """The line on a recommended-vendor card: why it has its badge, or its weak point."""
+    q = c.scores.get("quality", 0)
+    if badges[0] == "Best overall":
+        return c.note
+    if badges[0] == "Highest quality":
+        return "Exceptional quality record" if q >= 0.97 else "Best quality record"
+    return (
+        c.note
+        if c.note not in ("Reliable all round", "Price & delivery score high")
+        else "Lowest rate for this material"
+    )
 
 
 def pick_top(cands: list[Candidate]) -> list[tuple[list[str], Candidate, float]]:

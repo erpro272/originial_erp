@@ -1,6 +1,6 @@
 """Supplier scoring rules (pure)."""
 
-from app.purchasing.scoring import Candidate, Weights, pick_top, quality_of, score, stars
+from app.purchasing.scoring import Candidate, Weights, card_note, pick_top, quality_of, score, stars
 
 
 def _c(sid: str, rate: int | None, lead: float | None, on_time: float | None, defect: float | None,
@@ -18,7 +18,12 @@ def test_components_overall_and_badges() -> None:
     assert jsw.overall is not None and tata.overall is not None and jind.overall is not None
     assert jsw.overall > tata.overall > jind.overall
     assert jind.flags == ["Late risk", "Quality risk"] and jsw.flags == []
-    assert jind.note == "Sub-optimal lead times"
+    assert (
+        jind.note == "Sub-optimal lead times" and tata.note != "Sub-optimal lead times"
+    )  # 4 vs 3 days is fine
+    assert card_note(["Highest quality"], tata) == "Exceptional quality record"
+    assert card_note(["Lowest cost"], jind) == "Sub-optimal lead times"
+    assert stars(97.0, ["Late risk"]) == 4 and stars(97.0, []) == 5
     top = pick_top([jsw, tata, jind])
     assert [(b, c.supplier_id) for b, c, _ in top] == [(["Best overall"], "jsw"), (["Highest quality"], "tata"),
                                                        (["Lowest cost"], "jind")]  # fmt: skip

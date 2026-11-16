@@ -7,6 +7,10 @@ export type Po = Schemas["PoOut"];
 export type RaisePo = Schemas["PoRaiseIn"];
 export type PoDetail = Schemas["PoDetail"];
 export type Purchases = Schemas["PurchasesOut"];
+export type Comparison = Schemas["ComparisonOut"];
+export type SupplierRow = Schemas["SupplierRow"];
+export type Quote = Schemas["QuoteOut"];
+export type ScoringRules = Schemas["ScoringRules"];
 
 const KEY = ["purchasing"] as const;
 
@@ -106,6 +110,70 @@ export function usePo(id: string | null) {
           params: { path: { po_id: id! } },
         }),
       ),
+  });
+}
+
+/** Supplier comparison: rates, lead times, on-time and quality per supplier; recommended suppliers; quotes. */
+export function useComparison() {
+  return useQuery({
+    queryKey: [...KEY, "comparison"],
+    queryFn: async () => unwrap(await api.GET("/api/purchasing/suppliers/comparison")),
+  });
+}
+
+/** One supplier's deliveries (on time or not, QC) and quotes. */
+export function useSupplier(id: string | null) {
+  return useQuery({
+    queryKey: [...KEY, "supplier", id],
+    enabled: !!id,
+    queryFn: async () =>
+      unwrap(
+        await api.GET("/api/purchasing/suppliers/{supplier_id}", {
+          params: { path: { supplier_id: id! } },
+        }),
+      ),
+  });
+}
+
+export function useRequestQuotes() {
+  const done = useDone();
+  return useMutation({
+    mutationFn: async (body: Schemas["QuoteRequestIn"]) =>
+      unwrap(await api.POST("/api/purchasing/quotes", { body })),
+    onSuccess: done,
+  });
+}
+
+export function useReplyQuote() {
+  const done = useDone();
+  return useMutation({
+    mutationFn: async ({ id, body }: { id: string; body: Schemas["QuoteReplyIn"] }) =>
+      unwrap(
+        await api.POST("/api/purchasing/quotes/{quote_id}/reply", {
+          params: { path: { quote_id: id } },
+          body,
+        }),
+      ),
+    onSuccess: done,
+  });
+}
+
+/** Select vendor: the preferred supplier for a material (Raise PO pre-fills it). */
+export function useSetPreferred() {
+  const done = useDone();
+  return useMutation({
+    mutationFn: async (body: Schemas["PreferredIn"]) =>
+      unwrap(await api.PUT("/api/purchasing/preferred", { body })),
+    onSuccess: done,
+  });
+}
+
+export function usePutScoring() {
+  const done = useDone();
+  return useMutation({
+    mutationFn: async (body: ScoringRules) =>
+      unwrap(await api.PUT("/api/purchasing/scoring-rules", { body })),
+    onSuccess: done,
   });
 }
 

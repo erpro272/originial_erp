@@ -234,4 +234,17 @@ Short records of choices and the reason for each. Newest at the bottom.
     Every step goes into `po_events` (insert-only timeline) and the audit log. QC acceptance emits
     `purchasing.material_received` (PO, material, quantity, orders) for Production. Demo POs at each stage come
     from `seed/purchase_demo.py` (dev seed only; it doesn't change the demo plan's schedule).
+53. **Supplier comparison (owner's choices)**: per supplier and material, rate = latest valid quote, else the
+    last price paid; lead time = average actual days from PO sent to first gate entry, else quoted. Per supplier:
+    on-time % = POs whose first gate entry was on or before `promised_date` (the date at approval, replaced by
+    the supplier's first confirmation; later follow-ups don't move it; a replacement for rejected goods isn't a
+    new delivery); defect rate = QC rejected / inspected; quality score = 10 x (1 - 10 x defect rate).
+    `scoring.py` (pure): components relative to the material's other suppliers, overall = the owner's weights
+    (company rule `supplier-scoring`, default price 40 / on-time 25 / quality 25 / lead 10, re-normalised over
+    what is known: no made-up history), risk flags (late < 90% on time, quality > 1% rejected), stars capped at 4
+    with a risk flag. Badges go to their real winners (one card can carry several). Saved (30d) = POs approved
+    in the last 30 days vs the material's average rate over 90 days (all quotes and prices). "+ Request Quote"
+    records requests; replies are entered by the purchaser (no e-mail). Select vendor = preferred supplier per
+    material: Raise PO pre-fills it and its rate; the owner still approves every PO. The "Priority" filter of the
+    mockup is a Rating filter (suppliers have no priority).
 

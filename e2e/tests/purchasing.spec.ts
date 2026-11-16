@@ -47,9 +47,11 @@ test("Purchasing inventory: statuses, raise a PO, owner approves, then cancel (r
     .click();
   await expect(page.getByTestId(`po-${number}`)).toHaveCount(0); // only open POs are listed
 
-  // the other sections come next
+  // the third tab is live too
   await page.getByRole("link", { name: "Supplier Comparison" }).click();
-  await expect(page.getByText(/coming next/)).toBeVisible();
+  await expect(
+    page.getByText("Supplier scorecard & price benchmark"),
+  ).toBeVisible();
 });
 
 test("Raw Material Purchase: new PO, approve, gate entry, QC, timeline, cancel (rerunnable)", async ({
@@ -113,4 +115,66 @@ test("Raw Material Purchase: new PO, approve, gate entry, QC, timeline, cancel (
   await expect(
     page.getByRole("dialog").getByText("Cancelled: e2e test PO"),
   ).toBeVisible();
+});
+
+test("Supplier comparison: recommended vendors, compare, supplier history, quote request and reply", async ({
+  page,
+}) => {
+  await signIn(page, "owner@demo.example");
+  await page.goto("/purchasing/suppliers");
+  for (const k of [
+    "Open/Active vendors",
+    "Avg on-time",
+    "Avg lead time",
+    "Saved (30d)",
+  ])
+    await expect(
+      page.locator("dl").getByText(k, { exact: true }),
+    ).toBeVisible();
+  await expect(
+    page.getByText("Supplier scorecard & price benchmark"),
+  ).toBeVisible();
+  const cards = page.getByRole("region", { name: "Top recommended vendors" });
+  await expect(cards.getByText(/Best overall · \d/)).toBeVisible();
+
+  // compare the suppliers of the recommended material side by side
+  await cards.getByRole("button", { name: "Compare" }).first().click();
+  const cmp = page.getByRole("dialog");
+  await expect(cmp.getByText("Overall score")).toBeVisible();
+  await expect(cmp.getByText("Defect rate")).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  // a supplier's history: deliveries on time or late, QC
+  await page.getByRole("table").getByText("Tata Steel BSL").first().click();
+  const sup = page.getByRole("dialog");
+  await expect(sup.getByRole("heading", { name: "Deliveries" })).toBeVisible();
+  await expect(sup.getByText(/On time|Late/).first()).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  // ask a supplier for a quote and record the reply (bought-out tie rod kits; one test supplier)
+  await page.getByRole("button", { name: "+ Request Quote" }).click();
+  const req = page.getByRole("dialog");
+  await req
+    .getByLabel("Material")
+    .selectOption({ label: "TRK · Tie rod kits (bought-out)" });
+  await req.getByLabel(/Other suppliers/).fill("E2E Quote Supplier");
+  await req.getByRole("button", { name: "Request quotes" }).click();
+  await expect(
+    page.getByText(/Quote requested from 1 supplier/).first(),
+  ).toBeVisible();
+  const quote = page.getByTestId("quote-E2E Quote Supplier-TRK").first();
+  await quote.getByRole("button", { name: "Record reply" }).click();
+  const reply = page.getByRole("dialog");
+  await reply.getByLabel(/Rate per sets/).fill("150");
+  await reply.getByLabel(/Lead time/).fill("6");
+  await reply.getByRole("button", { name: "Save quote" }).click();
+  await expect(
+    page.getByText("Quote from E2E Quote Supplier saved").first(),
+  ).toBeVisible();
+  await page
+    .getByLabel("Material")
+    .selectOption({ label: "Tie rod kits (bought-out)" });
+  await expect(
+    page.getByRole("table").getByRole("row", { name: /E2E Quote Supplier/ }),
+  ).toContainText("₹150 / sets");
 });

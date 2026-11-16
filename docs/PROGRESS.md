@@ -114,6 +114,11 @@
   in transit, open spend), needs-attention cards (approve, follow up vendor, gate entry / QC), all POs table
   with filters, PO window with timeline and next steps, + New PO with linked orders and priority; gate entry
   -> QC -> stock; event for Production. Tests: 293 pytest, 63 Vitest, 19 Playwright.
+- Purchasing, Supplier Comparison tab (2026-11-16, awaiting owner review): KPIs (active vendors, avg
+  on-time, avg lead time, saved 30d), top recommended vendors per material (best overall, highest quality,
+  lowest cost), scorecard & price benchmark, compare side by side, supplier history, quote requests and
+  replies, Select vendor (preferred supplier pre-filled in Raise PO), the owner's score weights.
+  Tests: 297 pytest, 66 Vitest, 20 Playwright.
 
 ## Next
 - Planning v1 archived in `archive/planning-v1/` (owner request). Rebuild in progress:
@@ -122,7 +127,8 @@
   table synced both ways with Orders received, options comparison with "Use this selection",
   swappable "Best score" rule (`planning-objective` setting). Steps 2–5 locked (coming soon).
 - Owner review of Feature 2 (Planning).
-- Purchasing: Supplier Comparison tab.
+- Purchasing: POs with several materials; "close short" for rejected material; quote requests are recorded
+  (no e-mail to suppliers yet).
 - Later: Dashboard tab (owner will specify), Production, Billing, Finance,
   AI assistant panel.
 

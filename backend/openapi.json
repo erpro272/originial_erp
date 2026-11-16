@@ -8791,6 +8791,11 @@
             "title": "Badges",
             "type": "array"
           },
+          "note": {
+            "default": "",
+            "title": "Note",
+            "type": "string"
+          },
           "pct": {
             "title": "Pct",
             "type": "number"

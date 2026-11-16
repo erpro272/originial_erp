@@ -4309,6 +4309,11 @@ export interface components {
         TopCard: {
             /** Badges */
             badges: ("Best overall" | "Highest quality" | "Lowest cost")[];
+            /**
+             * Note
+             * @default
+             */
+            note: string;
             /** Pct */
             pct: number;
             row: components["schemas"]["SupplierRow"];

@@ -250,11 +250,13 @@ class SupplierRow(BaseModel):
     quote_valid_until: date | None = None
 
 
+Badge = Literal["Best overall", "Highest quality", "Lowest cost"]
+
+
 class TopCard(BaseModel):
-    badges: list[
-        Literal["Best overall", "Highest quality", "Lowest cost"]
-    ]  # each badge goes to its real winner
+    badges: list[Badge]  # each badge goes to its real winner
     pct: float
+    note: str = ""  # why it has its badge, or its weak point
     row: SupplierRow
 
 

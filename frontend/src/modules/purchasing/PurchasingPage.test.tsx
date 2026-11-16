@@ -345,3 +345,209 @@ test("a PO opens with its timeline and next steps", async () => {
   expect(within(dialog).getByRole("button", { name: "Gate entry" })).toBeInTheDocument();
   expect(within(dialog).getByRole("button", { name: "Follow up vendor" })).toBeInTheDocument();
 });
+
+const srow = (supplier: string, extra: Record<string, unknown> = {}) => ({
+  supplier_id: supplier,
+  supplier,
+  material_id: "WR8",
+  material: "Steel wire rod",
+  code: "WR8",
+  category: "Wire rod",
+  unit: "t",
+  rate_paise: 68_500_00,
+  rate_source: "quote",
+  lead_days: 3,
+  lead_source: "actual",
+  on_time_pct: 97,
+  defect_pct: 0.4,
+  quality_score: 9.6,
+  deliveries: 8,
+  active_pos: 1,
+  overall: 96,
+  stars: 5,
+  flags: [] as string[],
+  note: "Price & delivery score high",
+  preferred: false,
+  active: true,
+  quote_valid_until: "2026-12-07",
+  ...extra,
+});
+const ROWS = [
+  srow("JSW Steel Distributors"),
+  srow("Tata Steel BSL", { rate_paise: 71_000_00, lead_days: 4, on_time_pct: 98, overall: 94 }),
+  srow("Jindal Stainless & Wire", {
+    rate_paise: 66_200_00,
+    lead_days: 6,
+    on_time_pct: 88,
+    overall: 89,
+    stars: 4,
+    flags: ["Late risk", "Quality risk"],
+    note: "Sub-optimal lead times",
+  }),
+  srow("Shree Steels", { material_id: "EN8", material: "EN8 steel", code: "EN8", active: false }),
+];
+const COMPARISON = {
+  kpis: {
+    active_suppliers: 14,
+    avg_on_time_pct: 94.2,
+    avg_lead_days: 4.6,
+    saved_30d_paise: 1_80_000_00,
+  },
+  materials: [
+    { id: "WR8", code: "WR8", name: "Steel wire rod", unit: "t", needed: true },
+    { id: "EN8", code: "EN8", name: "EN8 steel", unit: "t", needed: false },
+  ],
+  default_material_id: "WR8",
+  top: {
+    WR8: [
+      { badges: ["Best overall"], pct: 96, note: "Price & delivery score high", row: ROWS[0] },
+      { badges: ["Highest quality"], pct: 94, note: "Exceptional quality record", row: ROWS[1] },
+      { badges: ["Lowest cost"], pct: 89, note: "Sub-optimal lead times", row: ROWS[2] },
+    ],
+    EN8: [
+      {
+        badges: ["Best overall", "Lowest cost"],
+        pct: 90,
+        note: "Reliable all round",
+        row: ROWS[3],
+      },
+    ],
+  },
+  rows: ROWS,
+  quotes: [
+    {
+      id: "q1",
+      supplier_id: "Shyam Steel",
+      supplier: "Shyam Steel",
+      material_id: "WR8",
+      material: "Steel wire rod",
+      code: "WR8",
+      unit: "t",
+      status: "requested",
+      quantity: "2.000",
+      rate_paise: null,
+      lead_days: null,
+      valid_until: null,
+      note: null,
+      created_at: "2026-11-16T09:00:00Z",
+      replied_at: null,
+    },
+  ],
+  rules: {
+    price_weight: 40,
+    on_time_weight: 25,
+    quality_weight: 25,
+    lead_weight: 10,
+    late_risk_below: 90,
+    quality_risk_above: 1,
+  },
+  today: "2026-11-16",
+};
+const comparing = (perms: string[]) => [
+  ...signedIn(perms),
+  route("GET", "/api/purchasing/suppliers/comparison", () => json(COMPARISON)),
+  route("GET", "/api/me/preferences/table.purchasing-suppliers.columns", () =>
+    json({ key: "x", value: {} }),
+  ),
+];
+
+test("Supplier comparison: KPIs, recommended vendors, scorecard, filters", async () => {
+  mockApi(...comparing([...OWNER, "settings.write"]));
+  renderApp(
+    <WithTopBar>
+      <PurchasingPage />
+    </WithTopBar>,
+    { path: "/purchasing/suppliers" },
+  );
+  expect(await screen.findByText("Open/Active vendors")).toBeInTheDocument();
+  expect(screen.getByText("94.2%")).toBeInTheDocument();
+  expect(screen.getByText("4.6 days")).toBeInTheDocument();
+  expect(screen.getByText(/Top recommended vendors · Steel wire rod/i)).toBeInTheDocument();
+  const best = screen.getByTestId("top-JSW Steel Distributors");
+  expect(within(best).getByText("Best overall · 96%")).toBeInTheDocument();
+  expect(within(best).getByRole("button", { name: "Select vendor" })).toBeInTheDocument();
+  const quality = screen.getByTestId("top-Tata Steel BSL");
+  expect(within(quality).getByText("Exceptional quality record")).toBeInTheDocument();
+  expect(within(quality).getByRole("button", { name: "Compare" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Change" })).toBeInTheDocument(); // the owner's score rule
+  const table = screen.getByRole("table");
+  expect(within(table).getAllByRole("row")).toHaveLength(5);
+  fireEvent.change(screen.getByLabelText("Status"), { target: { value: "risk" } });
+  expect(within(screen.getByRole("table")).getAllByRole("row")).toHaveLength(2);
+  fireEvent.change(screen.getByLabelText("Status"), { target: { value: "all" } });
+  fireEvent.change(screen.getByLabelText("Material"), { target: { value: "EN8" } });
+  expect(screen.getByText(/Top recommended vendors · EN8 steel/i)).toBeInTheDocument();
+  expect(screen.getByText("Best overall · 90%")).toBeInTheDocument();
+  expect(screen.getByText("Lowest cost")).toBeInTheDocument(); // two badges on one card
+});
+
+test("Select vendor, request quotes and record a reply", async () => {
+  const { calls } = mockApi(
+    ...comparing(OWNER),
+    route("PUT", "/api/purchasing/preferred", () => json({ ...ROWS[0], preferred: true })),
+    route("POST", "/api/purchasing/quotes", () => json([COMPARISON.quotes[0]])),
+    route("POST", "/api/purchasing/quotes/q1/reply", () =>
+      json({ ...COMPARISON.quotes[0], status: "received" }),
+    ),
+  );
+  renderApp(
+    <WithTopBar>
+      <PurchasingPage />
+    </WithTopBar>,
+    { path: "/purchasing/suppliers" },
+  );
+  const best = await screen.findByTestId("top-JSW Steel Distributors");
+  fireEvent.click(within(best).getByRole("button", { name: "Select vendor" }));
+  await waitFor(() => expect(calls.some((c) => c.url.endsWith("/preferred"))).toBe(true));
+  expect(await calls.find((c) => c.url.endsWith("/preferred"))!.json()).toEqual({
+    material_id: "WR8",
+    supplier_id: "JSW Steel Distributors",
+  });
+
+  fireEvent.click(screen.getByRole("button", { name: "+ Request Quote" }));
+  let dialog = await screen.findByRole("dialog");
+  fireEvent.click(within(dialog).getByLabelText("Tata Steel BSL"));
+  fireEvent.change(within(dialog).getByLabelText(/Other suppliers/), {
+    target: { value: "Shyam Steel, Arcturus Steel" },
+  });
+  fireEvent.click(within(dialog).getByRole("button", { name: "Request quotes" }));
+  await waitFor(() =>
+    expect(calls.some((c) => c.method === "POST" && c.url.endsWith("/quotes"))).toBe(true),
+  );
+  const body = await calls.find((c) => c.method === "POST" && c.url.endsWith("/quotes"))!.json();
+  expect(body).toMatchObject({
+    material_id: "WR8",
+    suppliers: ["Tata Steel BSL", "Shyam Steel", "Arcturus Steel"],
+  });
+
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  fireEvent.click(
+    within(screen.getByTestId("quote-Shyam Steel-WR8")).getByRole("button", {
+      name: "Record reply",
+    }),
+  );
+  dialog = await screen.findByRole("dialog");
+  fireEvent.change(within(dialog).getByLabelText(/Rate per t/), { target: { value: "67000" } });
+  fireEvent.change(within(dialog).getByLabelText(/Lead time/), { target: { value: "5" } });
+  fireEvent.click(within(dialog).getByRole("button", { name: "Save quote" }));
+  await waitFor(() => expect(calls.some((c) => c.url.endsWith("/reply"))).toBe(true));
+  expect(await calls.find((c) => c.url.endsWith("/reply"))!.json()).toMatchObject({
+    rate_paise: 6_700_000,
+    lead_days: 5,
+  });
+});
+
+test("an accountant reads the comparison but can't select, request or change the score", async () => {
+  mockApi(...comparing(["purchasing.read"]));
+  renderApp(
+    <WithTopBar>
+      <PurchasingPage />
+    </WithTopBar>,
+    { path: "/purchasing/suppliers" },
+  );
+  expect(await screen.findByTestId("top-JSW Steel Distributors")).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Select vendor" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "+ Request Quote" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Change" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Record reply" })).toBeNull();
+});
