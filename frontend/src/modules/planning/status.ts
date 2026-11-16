@@ -1,4 +1,4 @@
-import type { Plan } from "./api";
+import type { Plan, PlanSummary } from "./api";
 import { generatedLabel } from "./format";
 
 /** "Awaiting owner approval" / "Changes requested" / "Approved" / "Needs re-approval". */
@@ -32,9 +32,17 @@ export function planStatus(plan: Plan): { tone: "md" | "ok" | "hi" | "lo" | "bl"
           text: `Approved${plan.approved_at ? ` · ${generatedLabel(plan.approved_at)}` : ""}`,
         };
   if (plan.regenerate) return { tone: "hi", text: "Orders changed · generate again" };
+  if (plan.status === "draft") return { tone: "lo", text: "Draft · not generated yet" };
   if (plan.changes_requested) return { tone: "hi", text: "Changes requested" };
   return { tone: "md", text: "Awaiting owner approval" };
 }
 
 /** Plans the owner may delete: never approved (draft, awaiting approval, cancelled). */
 export const DELETABLE_STATUSES = ["draft", "generated", "cancelled"];
+
+/** Approved plans the factory is working on (not completed yet), newest approval first. */
+export function plansInForce(plans: PlanSummary[]): PlanSummary[] {
+  return plans
+    .filter((p) => p.stage === "approved" || p.stage === "needs_reapproval")
+    .sort((a, b) => (b.approved_at ?? "").localeCompare(a.approved_at ?? ""));
+}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ApiError } from "@/api/client";
 import { useAuth } from "@/auth/AuthContext";
@@ -34,7 +34,7 @@ const BUILT = ["1", "2", "3", "4", "5"];
 /** One plan, in 5 steps. The active plan opens at `/planning` (PlanningHome); history plans at
  * `/planning/:planId?step=1..5`. Draft and awaiting plans can be edited; approved ones open on their frozen
  * approved version (`view=live` shows the recalculation); completed and cancelled plans are history. */
-export function PlanningPage({ planId: active }: { planId?: string } = {}) {
+export function PlanningPage({ planId: active, home }: { planId?: string; home?: ReactNode } = {}) {
   const { planId: routeId } = useParams();
   const planId = active ?? routeId;
   const [params, setParams] = useSearchParams();
@@ -67,14 +67,14 @@ export function PlanningPage({ planId: active }: { planId?: string } = {}) {
     <div className="flex flex-col gap-7">
       <div className="flex flex-col gap-3">
         <span className="flex justify-between gap-4 text-[13px]">
-          {p && isWorking(p) ? (
+          {home || (p && isWorking(p)) ? (
             <span />
           ) : (
             <Link to="/planning/history" className="no-underline">
               ← Plan history
             </Link>
           )}
-          {p && isWorking(p) && (
+          {(home || (p && isWorking(p))) && (
             <Link to="/planning/history" className="no-underline">
               Plan history →
             </Link>
@@ -92,6 +92,7 @@ export function PlanningPage({ planId: active }: { planId?: string } = {}) {
           }
           subtitle="Pick the accepted orders, set their priority, and check the plan is feasible before it goes to production."
         />
+        {home}
       </div>
       {plan.isLoading ? (
         <LoadingState label="Loading the plan" />

@@ -134,7 +134,8 @@ isolation). One company per website: no company picker or switcher in the UI.
   (`SelectedOrders`: `OrderTimeline`, `OrdersInPlan`, `OptionsTable`), step 2 (`SequenceStep`) and
   step 3 (`ScheduleStep`, warning popup in `reorder.tsx`), step 4 (`FinanceStep`, company rules via
   `RuleButton`), step 5 (`ApprovalStep`, status tag in `status.ts`); 2–5 open after Generate plan.
-  Routes: `/planning` = `PlanningHome` (the one active plan, or "No active plan" + "+ New plan"),
+  Routes: `/planning` = `PlanningHome` (the one active plan; else the newest plan in force read-only, `plansInForce`;
+  else "No active plan" + "+ New plan"),
   `/planning/history` = `PlanHistory`, `/planning/:planId?step=1..5[&view=live]` = `PlanningPage`.
   One active plan (draft/generated) per company: unique index + `_lock_drafts`; only "+ New plan" or Send to
   Planning (`planning.service.send_orders` / `place_in_draft`, called from the Orders router) start one.

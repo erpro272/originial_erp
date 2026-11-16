@@ -55,7 +55,7 @@ export function ApprovalStep({ plan, go }: { plan: Plan; go: (step: string) => v
     try {
       await approve.mutateAsync({ note: note.trim() || null, raise_open_pos: openPos.length > 0 });
       setConfirm(false);
-      navigate(`/planning/${plan.id}?step=5`); // approved = Plan history; there is no active plan now
+      navigate("/planning?step=5"); // no active plan now: Planning shows this plan, in force, read-only
       toast({
         title: "Plan approved",
         description: `${openPos.length ? `${plural(openPos.length, "PO")} sent to Purchasing · ` : ""}promised dates added to ${plural(seq.rows.length, "order")}`,

@@ -4,7 +4,9 @@ import { expect, test } from "vitest";
 import { PageActionsSlotProvider } from "@/components/layout/PageActions";
 import { json, ME, mockApi, renderApp, route } from "@/test/utils";
 import { PlanHistory } from "./PlanHistory";
-import { PlanningHome } from "./PlanningHome";
+import type { PlanSummary } from "./api";
+import { InForceBanner, InForceLine, PlanningHome } from "./PlanningHome";
+import { plansInForce } from "./status";
 
 const row = (number: string, stage: string, extra: Record<string, unknown> = {}) => ({
   id: number,
@@ -106,23 +108,58 @@ test("+ New plan starts one when there is no active plan", async () => {
   );
 });
 
-test("Planning with no active plan: start one or open history; never starts one by itself", async () => {
+test("Planning with nothing active or in force: start one or open history; never starts one by itself", async () => {
   const { calls } = mockApi(
     ...signedIn(),
-    route("GET", "/api/planning/plans", () => json(PLANS.slice(1))),
+    route("GET", "/api/planning/plans", () => json(PLANS.slice(3))), // completed + cancelled only
   );
   renderApp(<PlanningHome />);
   expect(await screen.findByText("No active plan")).toBeInTheDocument();
-  expect(await screen.findByText(/PLAN-004/)).toBeInTheDocument();
-  expect(
-    screen.getByText(/Rev 2 needs re-approval: ORD-1041 now finishes 26 Nov/),
-  ).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "+ New plan" })).toBeInTheDocument();
   expect(screen.getByRole("link", { name: "Plan history" })).toHaveAttribute(
     "href",
     "/planning/history",
   );
   expect(calls.some((c) => c.method === "POST" && c.url.includes("/api/planning/"))).toBe(false);
+});
+
+test("plans in force: approved and needs re-approval, newest approval first", () => {
+  const rows = [
+    row("PLAN-002", "completed"),
+    row("PLAN-003", "approved", { approved_at: "2026-11-01T10:00:00Z" }),
+    row("PLAN-004", "needs_reapproval", { approved_at: "2026-11-12T10:00:00Z" }),
+    row("PLAN-005", "draft"),
+  ] as PlanSummary[];
+  expect(plansInForce(rows).map((p) => p.number)).toEqual(["PLAN-004", "PLAN-003"]);
+});
+
+test("no plan being worked on: the plan in force is shown read-only with + New plan", async () => {
+  mockApi(...signedIn());
+  const [a, b] = [
+    row("PLAN-004", "approved"),
+    row("PLAN-003", "needs_reapproval"),
+  ] as PlanSummary[];
+  renderApp(
+    <WithTopBar>
+      <InForceBanner plan={a!} others={[b!]} />
+    </WithTopBar>,
+  );
+  const banner = await screen.findByRole("status", { name: "Plan in force" });
+  expect(within(banner).getByText("PLAN-004")).toBeInTheDocument();
+  expect(banner).toHaveTextContent("read-only");
+  expect(
+    within(banner).getByRole("link", { name: /PLAN-003 \(needs re-approval\)/ }),
+  ).toHaveAttribute("href", "/planning/PLAN-003");
+  expect(await screen.findByRole("button", { name: "+ New plan" })).toBeInTheDocument();
+});
+
+test("above the active plan: which approved plans are in force", async () => {
+  mockApi(...signedIn());
+  renderApp(<InForceLine plans={[row("PLAN-003", "approved")] as PlanSummary[]} />);
+  expect(await screen.findByRole("link", { name: /PLAN-003 \(approved/ })).toHaveAttribute(
+    "href",
+    "/planning/PLAN-003",
+  );
 });
 
 test("Delete is offered only for never-approved plans and asks first", async () => {

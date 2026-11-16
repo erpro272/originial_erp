@@ -216,4 +216,10 @@ Short records of choices and the reason for each. Newest at the bottom.
     competing orders, rules) that touch the same orders, materials or machines, and penalties / costs for
     money. The approved version stays in force (promised dates) until re-approved. An approved plan is
     recalculated around plans approved before it, never after, so a later plan can't disturb it.
+51. **Planning shows the plan in force when nothing is being worked on (owner's OK)**: `/planning` shows the
+    active plan if there is one (with an "In force: PLAN-x →" line for approved plans still being made);
+    otherwise the most recently approved plan in force, read-only, with "+ New plan" in the top bar and links
+    to any other plans in force; the empty "No active plan" page only when nothing is active or in force.
+    "In force" = approved (incl. needs re-approval) and not completed. A brand-new plan is tagged
+    "Draft · not generated yet" (it used to say "Awaiting owner approval").
 
