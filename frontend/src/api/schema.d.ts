@@ -677,7 +677,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * List Plans
+         * @description Every plan (the plans dashboard), newest first.
+         */
+        get: operations["list_plans_api_planning_plans_get"];
         put?: never;
         /** Create Plan */
         post: operations["create_plan_api_planning_plans_post"];
@@ -694,7 +698,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * Get Plan
+         * @description One plan. Approved / completed plans: their frozen approved version, or `view=live` (recalculated now).
+         */
+        get: operations["get_plan_api_planning_plans__plan_id__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -718,6 +726,23 @@ export interface paths {
         put?: never;
         /** Approve */
         post: operations["approve_api_planning_plans__plan_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/planning/plans/{plan_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel */
+        post: operations["cancel_api_planning_plans__plan_id__cancel_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1031,6 +1056,11 @@ export interface components {
             overheads: number;
             /** Packaging */
             packaging: number;
+        };
+        /** CancelIn */
+        CancelIn: {
+            /** Reason */
+            reason: string;
         };
         /** ChangesRequested */
         ChangesRequested: {
@@ -2365,7 +2395,13 @@ export interface components {
             approval_note: string | null;
             /** Approved At */
             approved_at: string | null;
+            /** Cancel Reason */
+            cancel_reason?: string | null;
+            /** Cancelled At */
+            cancelled_at?: string | null;
             changes_requested?: components["schemas"]["ChangesRequested"] | null;
+            /** Completed At */
+            completed_at?: string | null;
             /** Generated At */
             generated_at: string | null;
             /**
@@ -2383,6 +2419,12 @@ export interface components {
             rule: string;
             /** Schedule Saved At */
             schedule_saved_at?: string | null;
+            snapshot?: components["schemas"]["SnapshotInfo"] | null;
+            /**
+             * Snapshots
+             * @default []
+             */
+            snapshots: components["schemas"]["SnapshotInfo"][];
             /**
              * Start Date
              * Format: date
@@ -2392,6 +2434,12 @@ export interface components {
             status: string;
             /** Version */
             version: number;
+            /**
+             * View
+             * @default live
+             * @enum {string}
+             */
+            view: "live" | "snapshot";
         };
         /**
          * PlanPatch
@@ -2436,6 +2484,60 @@ export interface components {
             schedule: components["schemas"]["Schedule"];
             selection: components["schemas"]["Selection"];
             sequence: components["schemas"]["Sequence"];
+        };
+        /**
+         * PlanSummary
+         * @description One row of the plans dashboard.
+         */
+        PlanSummary: {
+            /** Approved At */
+            approved_at?: string | null;
+            /** Cancelled At */
+            cancelled_at?: string | null;
+            /** Completed At */
+            completed_at?: string | null;
+            /**
+             * Contribution
+             * @default 0
+             */
+            contribution: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** End */
+            end?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Margin
+             * @default 0
+             */
+            margin: number;
+            /** Number */
+            number: string;
+            /** Orders */
+            orders: number;
+            /** Snapshot Version */
+            snapshot_version?: number | null;
+            /**
+             * Stage
+             * @enum {string}
+             */
+            stage: "draft" | "awaiting" | "approved" | "needs_reapproval" | "completed" | "cancelled";
+            /** Start */
+            start?: string | null;
+            /** Status */
+            status: string;
+            /**
+             * Value
+             * @default 0
+             */
+            value: number;
         };
         /**
          * PlanningObjective
@@ -2970,6 +3072,18 @@ export interface components {
              * @enum {string}
              */
             tone: "hi" | "md" | "lo" | "ok" | "bl";
+        };
+        /** SnapshotInfo */
+        SnapshotInfo: {
+            /**
+             * Approved At
+             * Format: date-time
+             */
+            approved_at: string;
+            /** Note */
+            note?: string | null;
+            /** Version */
+            version: number;
         };
         /** StepIn */
         "StepIn-Input": {
@@ -4570,6 +4684,26 @@ export interface operations {
             };
         };
     };
+    list_plans_api_planning_plans_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanSummary"][];
+                };
+            };
+        };
+    };
     create_plan_api_planning_plans_post: {
         parameters: {
             query?: never;
@@ -4586,6 +4720,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlanOut"];
+                };
+            };
+        };
+    };
+    get_plan_api_planning_plans__plan_id__get: {
+        parameters: {
+            query?: {
+                view?: ("live" | "snapshot") | null;
+            };
+            header?: never;
+            path: {
+                plan_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -4639,6 +4806,41 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ApproveIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_api_planning_plans__plan_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plan_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CancelIn"];
             };
         };
         responses: {

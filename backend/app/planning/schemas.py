@@ -348,6 +348,37 @@ class SendBackIn(BaseModel):
     note: str | None = Field(default=None, max_length=2000)
 
 
+class SnapshotInfo(BaseModel):
+    version: int
+    approved_at: datetime
+    note: str | None = None
+
+
+class PlanSummary(BaseModel):
+    """One row of the plans dashboard."""
+
+    id: uuid.UUID
+    number: str
+    status: str
+    # draft | awaiting (generated) | approved | needs_reapproval | completed | cancelled
+    stage: Literal["draft", "awaiting", "approved", "needs_reapproval", "completed", "cancelled"]
+    created_at: datetime
+    orders: int
+    start: date | None = None
+    end: date | None = None
+    approved_at: datetime | None = None
+    completed_at: datetime | None = None
+    cancelled_at: datetime | None = None
+    value: int = 0
+    contribution: int = 0
+    margin: float = 0.0
+    snapshot_version: int | None = None  # the approved version the money comes from
+
+
+class CancelIn(BaseModel):
+    reason: str = Field(min_length=1, max_length=2000)
+
+
 class PlanOut(BaseModel):
     id: uuid.UUID
     number: str
@@ -363,6 +394,13 @@ class PlanOut(BaseModel):
     last_change: LastChange | None
     schedule_saved_at: datetime | None = None  # last "Save schedule" checkpoint (step 3)
     changes_requested: ChangesRequested | None = None  # owner sent it back to edit (until the next edit)
+    # "snapshot": the frozen approved version (approved/completed plans); "live": recalculated now
+    view: Literal["live", "snapshot"] = "live"
+    snapshot: SnapshotInfo | None = None  # the version shown, when view == "snapshot"
+    snapshots: list[SnapshotInfo] = []  # every approved version, newest first
+    completed_at: datetime | None = None
+    cancelled_at: datetime | None = None
+    cancel_reason: str | None = None
 
 
 class Diff(BaseModel):

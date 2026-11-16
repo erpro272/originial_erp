@@ -51,6 +51,7 @@ DEMO_TABLES = ("products", "materials", "customers", "orders", "invoices")
 
 TABLES_IN_DELETE_ORDER = [
     "purchase_requests",
+    "plan_snapshots",
     "plan_events",
     "plans",
     "downtime",

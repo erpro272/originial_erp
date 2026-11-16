@@ -1,5 +1,5 @@
 import uuid
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends
 
@@ -8,12 +8,14 @@ from app.core.permissions import Permission
 from app.planning import service
 from app.planning.schemas import (
     ApproveIn,
+    CancelIn,
     Factory,
     HistoryItem,
     PlanningObjective,
     PlanningRules,
     PlanOut,
     PlanPatch,
+    PlanSummary,
     PreviewOut,
     PurchaseRequestOut,
     RaisePoIn,
@@ -31,6 +33,25 @@ SettingsWriter = Annotated[Principal, Depends(require(Permission.SETTINGS_WRITE)
 async def current_plan(db: TenantDB, _: Reader) -> PlanOut | None:
     """The working plan (recalculated if anything it depends on changed), or the last approved one."""
     return await service.get_current(db)
+
+
+@router.get("/plans")
+async def list_plans(db: TenantDB, _: Reader) -> list[PlanSummary]:
+    """Every plan (the plans dashboard), newest first."""
+    return await service.list_plans(db)
+
+
+@router.get("/plans/{plan_id}")
+async def get_plan(
+    db: TenantDB, _: Reader, plan_id: uuid.UUID, view: Literal["live", "snapshot"] | None = None
+) -> PlanOut:
+    """One plan. Approved / completed plans: their frozen approved version, or `view=live` (recalculated now)."""
+    return await service.get_plan(db, plan_id, view)
+
+
+@router.post("/plans/{plan_id}/cancel")
+async def cancel(db: TenantDB, p: Approver, plan_id: uuid.UUID, body: CancelIn) -> PlanOut:
+    return await service.cancel(db, p.user_id, plan_id, body.reason)
 
 
 @router.post("/plans", status_code=201)

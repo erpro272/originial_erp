@@ -65,7 +65,9 @@ class Downtime(Base, TenantScoped):
     reason: Mapped[str | None] = mapped_column(String(200))
 
 
-PLAN_STATUSES = ("draft", "generated", "approved")
+# draft -> generated (awaiting approval) -> approved (-> needs_reapproval flag) -> completed (all its orders
+# shipped/closed); draft/generated -> cancelled (owner, with a reason).
+PLAN_STATUSES = ("draft", "generated", "approved", "completed", "cancelled")
 
 
 class Plan(Base, TenantScoped, TimestampMixin):
@@ -89,6 +91,26 @@ class Plan(Base, TenantScoped, TimestampMixin):
     approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     approved_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
     approval_note: Mapped[str | None] = mapped_column(Text)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    cancelled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    cancel_reason: Mapped[str | None] = mapped_column(Text)
+
+
+class PlanSnapshot(Base, TenantScoped, TimestampMixin):
+    """A frozen copy of a plan as approved (v1, v2 after a re-approval...). Never updated or deleted: the
+    app role has INSERT/SELECT only. Opening an approved plan shows its latest snapshot."""
+
+    __tablename__ = "plan_snapshots"
+    __table_args__ = (UniqueConstraint("plan_id", "version"),)
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    plan_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("plans.id"), index=True)
+    version: Mapped[int]
+    result: Mapped[dict[str, Any]] = mapped_column(JSONB)  # the plan result exactly as approved
+    inputs: Mapped[dict[str, Any]] = mapped_column(JSONB)  # the owner's choices (sequence, fixes...)
+    rule: Mapped[str] = mapped_column(String(16))
+    approved_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    approved_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
+    note: Mapped[str | None] = mapped_column(Text)
 
 
 class PlanEvent(Base, TenantScoped):

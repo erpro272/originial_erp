@@ -509,6 +509,21 @@
         "title": "Breakdown",
         "type": "object"
       },
+      "CancelIn": {
+        "properties": {
+          "reason": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "title": "CancelIn",
+        "type": "object"
+      },
       "ChangesRequested": {
         "properties": {
           "at": {
@@ -4580,6 +4595,29 @@
             ],
             "title": "Approved At"
           },
+          "cancel_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancel Reason"
+          },
+          "cancelled_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancelled At"
+          },
           "changes_requested": {
             "anyOf": [
               {
@@ -4589,6 +4627,18 @@
                 "type": "null"
               }
             ]
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
           },
           "generated_at": {
             "anyOf": [
@@ -4644,6 +4694,24 @@
             ],
             "title": "Schedule Saved At"
           },
+          "snapshot": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SnapshotInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "snapshots": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/SnapshotInfo"
+            },
+            "title": "Snapshots",
+            "type": "array"
+          },
           "start_date": {
             "format": "date",
             "title": "Start Date",
@@ -4656,6 +4724,15 @@
           "version": {
             "title": "Version",
             "type": "integer"
+          },
+          "view": {
+            "default": "live",
+            "enum": [
+              "live",
+              "snapshot"
+            ],
+            "title": "View",
+            "type": "string"
           }
         },
         "required": [
@@ -4870,6 +4947,141 @@
           "blocked"
         ],
         "title": "PlanResult",
+        "type": "object"
+      },
+      "PlanSummary": {
+        "description": "One row of the plans dashboard.",
+        "properties": {
+          "approved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved At"
+          },
+          "cancelled_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancelled At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "contribution": {
+            "default": 0,
+            "title": "Contribution",
+            "type": "integer"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "end": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "margin": {
+            "default": 0.0,
+            "title": "Margin",
+            "type": "number"
+          },
+          "number": {
+            "title": "Number",
+            "type": "string"
+          },
+          "orders": {
+            "title": "Orders",
+            "type": "integer"
+          },
+          "snapshot_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snapshot Version"
+          },
+          "stage": {
+            "enum": [
+              "draft",
+              "awaiting",
+              "approved",
+              "needs_reapproval",
+              "completed",
+              "cancelled"
+            ],
+            "title": "Stage",
+            "type": "string"
+          },
+          "start": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "value": {
+            "default": 0,
+            "title": "Value",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "status",
+          "stage",
+          "created_at",
+          "orders"
+        ],
+        "title": "PlanSummary",
         "type": "object"
       },
       "PlanningObjective": {
@@ -6131,6 +6343,36 @@
           "label"
         ],
         "title": "Signal",
+        "type": "object"
+      },
+      "SnapshotInfo": {
+        "properties": {
+          "approved_at": {
+            "format": "date-time",
+            "title": "Approved At",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "approved_at"
+        ],
+        "title": "SnapshotInfo",
         "type": "object"
       },
       "StepIn-Input": {
@@ -9359,6 +9601,35 @@
       }
     },
     "/api/planning/plans": {
+      "get": {
+        "description": "Every plan (the plans dashboard), newest first.",
+        "operationId": "list_plans_api_planning_plans_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PlanSummary"
+                  },
+                  "title": "Response List Plans Api Planning Plans Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Plans",
+        "tags": [
+          "planning"
+        ]
+      },
       "post": {
         "operationId": "create_plan_api_planning_plans_post",
         "responses": {
@@ -9385,6 +9656,73 @@
       }
     },
     "/api/planning/plans/{plan_id}": {
+      "get": {
+        "description": "One plan. Approved / completed plans: their frozen approved version, or `view=live` (recalculated now).",
+        "operationId": "get_plan_api_planning_plans__plan_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plan_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plan Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "view",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "live",
+                    "snapshot"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "View"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Plan",
+        "tags": [
+          "planning"
+        ]
+      },
       "patch": {
         "description": "Any edit. With `preview=true` nothing is saved: returns the recalculated plan and what got worse/better.",
         "operationId": "update_plan_api_planning_plans__plan_id__patch",
@@ -9506,6 +9844,64 @@
           }
         ],
         "summary": "Approve",
+        "tags": [
+          "planning"
+        ]
+      }
+    },
+    "/api/planning/plans/{plan_id}/cancel": {
+      "post": {
+        "operationId": "cancel_api_planning_plans__plan_id__cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plan_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plan Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Cancel",
         "tags": [
           "planning"
         ]
