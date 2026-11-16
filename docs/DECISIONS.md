@@ -159,3 +159,13 @@ Short records of choices and the reason for each. Newest at the bottom.
     the checklist and the approval popup render the same lines. Until Purchasing is built a request
     stays "requested, not received yet"; stock only changes when Purchasing records a receipt. Known
     gap: open requests from another plan are not yet counted as incoming supply for the next plan.
+46. **Night-shift fixes are intents for one order** (owner's report: CNC 01 night shift "avoids ₹20,000",
+    yet ORD-1041 stayed late once express steel was added). Before: the fix stored a fixed date window
+    worked out from the plan without fixes, any order could take the extra hours, and its "avoids ₹X"
+    was judged alone. Now `night:<machine>:for:<order>`: on every recalculation `resolve_night()` finds
+    the fewest night shifts, as close to the order's deadline as possible, that put it on time with the
+    plan's other fixes in place; only that order may use those hours; its cost is the hours it used.
+    Each fix shows its effect in the current plan (with all chosen fixes vs without this one):
+    resolves / not enough / no effect / not needed / planned (express: PO still to be raised). Older
+    fixed windows made for one late order are upgraded to its intent. A fix never marks an order on
+    time by itself: lateness always comes from the recalculated schedule.

@@ -173,6 +173,9 @@ export function ApprovalStep({ plan, go }: { plan: Plan; go: (step: string) => v
                       {f.label} · {money(f.cost)}
                       {need?.action &&
                         (need.requested ? " · PO requested" : " · PO not raised yet")}
+                      {(f.status === "no_effect" || f.status === "partly") &&
+                        " · not resolving the delay"}
+                      {f.status === "not_needed" && " · not needed"}
                     </Chip>
                   );
                 })}

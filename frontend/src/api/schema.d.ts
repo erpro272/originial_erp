@@ -1610,6 +1610,11 @@ export interface components {
         Fix: {
             /** Cost */
             cost: number;
+            /**
+             * Effect
+             * @default
+             */
+            effect: string;
             /** Id */
             id: string;
             /** Label */
@@ -1620,6 +1625,11 @@ export interface components {
             selected: boolean;
             /** Solves */
             solves: string[];
+            /**
+             * Status
+             * @default
+             */
+            status: string;
         };
         /** FixCost */
         FixCost: {

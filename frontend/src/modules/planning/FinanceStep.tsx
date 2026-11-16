@@ -5,6 +5,7 @@ import { useAuth } from "@/auth/AuthContext";
 import { DataTable } from "@/components/data-table/DataTable";
 import { Button } from "@/components/ui/Button";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
+import { Tag } from "@/components/ui/Tag";
 import { useToast } from "@/components/ui/Toast";
 import { cn } from "@/lib/cn";
 import { rupees, rupeesCompact } from "@/lib/format";
@@ -14,6 +15,22 @@ import { plural } from "./format";
 import { RuleButton, type RuleKey } from "./RuleButton";
 
 type View = "before" | "with";
+
+// A fix's effect in the current plan, with the other chosen fixes (worked out by the engine on every change).
+const FIX_TONE: Record<string, "ok" | "md" | "hi" | "lo" | "bl"> = {
+  resolves: "ok",
+  partly: "md",
+  no_effect: "hi",
+  not_needed: "lo",
+  planned: "bl",
+};
+const FIX_LABEL: Record<string, string> = {
+  resolves: "Resolves",
+  partly: "Not enough",
+  no_effect: "No effect",
+  not_needed: "Not needed",
+  planned: "Planned · PO needed",
+};
 type Row = Finance["rows"][number];
 
 // One hue, five steps (dataviz: a part-to-whole of one measure).
@@ -325,9 +342,18 @@ export function FinanceStep({ plan, go }: { plan: Plan; go: (step: string) => vo
                       <span>{f.label}</span>
                       <small className="text-xs text-subtle">
                         {money(f.cost)}
-                        {f.solves.length ? ` · fixes ${f.solves.join(", ")}` : ""}
-                        {f.penalty_avoided ? ` · avoids ${money(f.penalty_avoided)} penalty` : ""}
+                        {f.penalty_avoided > 0
+                          ? ` · avoids ${money(f.penalty_avoided)} penalty`
+                          : ""}
                       </small>
+                      {f.effect && (
+                        <span className="mt-1 flex flex-wrap items-center gap-1.5">
+                          <Tag tone={FIX_TONE[f.status] ?? "lo"} size="sm">
+                            {FIX_LABEL[f.status] ?? f.status}
+                          </Tag>
+                          <small className="text-xs text-muted">{f.effect}</small>
+                        </span>
+                      )}
                     </span>
                   </label>
                 }

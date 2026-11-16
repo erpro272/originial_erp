@@ -19,7 +19,7 @@ from typing import Any
 
 EPS = 1e-6
 # Bump when the engine's logic changes, so saved plan results are recalculated (part of the fingerprint).
-ENGINE_VERSION = 10
+ENGINE_VERSION = 12
 FULL_POOL = 10  # orders the fully optimized option searches exhaustively (2^N subsets)
 FULL_REFINE = 8  # best subsets whose sequence is then improved by pairwise swaps
 HORIZON_DAYS = 400
@@ -121,6 +121,8 @@ class Inputs:
     fixes: set[str] = field(default_factory=set)
     # material id -> the day a PO for it was actually requested (purchasing records, not a plan choice)
     ordered: dict[str, date] = field(default_factory=dict)
+    # night-shift intent -> the days it was worked out to need (see resolve_night)
+    night_windows: dict[str, tuple[date, date]] = field(default_factory=dict)
 
 
 # ---- calendar -------------------------------------------------------------------------------
@@ -179,16 +181,34 @@ class Sched:
     # time of day (hours) each machine finishes on each day: a step that waits for the previous route
     # step ends later than its hours alone say (that later end is what a night shift pays for)
     clock: dict[tuple[str, date], float] = field(default_factory=dict)
+    # night-shift fix id -> the (machine, day) pairs it opens
+    night_days: dict[str, set[tuple[str, date]]] = field(default_factory=dict)
 
 
-def _night(fixes: set[str]) -> set[tuple[str, date]]:
-    out = set()
-    for fx in fixes:
-        p = fx.split(":")
-        if p[0] == "night" and len(p) == 4:
-            a, b = date.fromisoformat(p[2]), date.fromisoformat(p[3])
-            out |= {(p[1], a + timedelta(i)) for i in range((b - a).days + 1)}
-    return out
+def night_target(fx: str) -> str | None:
+    """`night:<machine>:for:<order id>` -> the order the night shift is for (None for other fixes)."""
+    p = fx.split(":")
+    return p[3] if p[0] == "night" and len(p) == 4 and p[2] == "for" else None
+
+
+def _night_days(fx: str, f: Factory, jobs: list[Job], start: date,
+                windows: dict[str, tuple[date, date]] | None = None) -> set[tuple[str, date]]:  # fmt: skip
+    """The machine-days a night-shift fix opens.
+
+    `night:<machine>:for:<order>` is an intent: worked out again on every recalculation, from the plan start
+    to that order's deadline, so it follows the order when other changes (another fix, a reorder) move it.
+    `night:<machine>:<from>:<to>` is the older fixed window (kept for plans saved before)."""
+    p = fx.split(":")
+    if p[0] != "night" or len(p) != 4 or p[1] not in f.machines:
+        return set()
+    if p[2] == "for":
+        j = next((x for x in jobs if x.id == p[3]), None)
+        if j is None:
+            return set()
+        a, b = (windows or {}).get(fx, (start, max(start, j.deadline)))
+        return {(p[1], d) for d in days_in(a, b, f)}
+    a, b = date.fromisoformat(p[2]), date.fromisoformat(p[3])
+    return {(p[1], a + timedelta(i)) for i in range((b - a).days + 1)}
 
 
 def _express(fixes: set[str]) -> set[str]:
@@ -196,7 +216,16 @@ def _express(fixes: set[str]) -> set[str]:
 
 
 def schedule(f: Factory, running: list[Job], jobs: list[Job], inp: Inputs, today: date) -> Sched:
-    night = _night(inp.fixes)
+    # night-shift hours per (machine, day) and who may use them: the target order, or anyone (older windows)
+    night_days = {
+        fx: _night_days(fx, f, jobs, inp.start, inp.night_windows)
+        for fx in sorted(inp.fixes)
+        if fx.startswith("night:")
+    }
+    night: dict[tuple[str, date], set[str | None]] = defaultdict(set)
+    for fx, days in night_days.items():
+        for md in days:
+            night[md].add(night_target(fx))
     express = _express(inp.fixes)
     used: dict[tuple[str, date], float] = defaultdict(float)
     cap: dict[tuple[str, date], float] = {}
@@ -212,6 +241,14 @@ def schedule(f: Factory, running: list[Job], jobs: list[Job], inp: Inputs, today
             normal[(m, d)] = base
             cap[(m, d)] = base + (mach.night_hours if (m, d) in night and is_working(d, f) else 0.0)
         return cap[(m, d)]
+
+    def avail(m: str, d: date) -> float:
+        """Hours the order being placed may use: night hours only if the shift is for this order (or anyone)."""
+        total = capacity(m, d)
+        owners = night.get((m, d))
+        if owners and None not in owners and current[0] not in owners:
+            return normal[(m, d)]  # the night shift on this day is booked for another order
+        return total
 
     def place(
         step: Step, earliest: date, finish_by: date | None, after: float = 0.0
@@ -230,7 +267,7 @@ def schedule(f: Factory, running: list[Job], jobs: list[Job], inp: Inputs, today
             window = days_in(earliest, finish_by, f) or [next_working(finish_by, f)]
             for d in window:
                 begin = max(used[(step.machine, d)], after if d == earliest else 0.0)
-                take = min(max(capacity(step.machine, d) - begin, 0.0), need)
+                take = min(max(avail(step.machine, d) - begin, 0.0), need)
                 if take > EPS:
                     alloc[d] = take
                     need -= take
@@ -246,7 +283,7 @@ def schedule(f: Factory, running: list[Job], jobs: list[Job], inp: Inputs, today
             for _ in range(HORIZON_DAYS):
                 if is_working(d, f):
                     begin = max(used[(step.machine, d)], after if d == earliest else 0.0)
-                    take = min(max(capacity(step.machine, d) - begin, 0.0), need)
+                    take = min(max(avail(step.machine, d) - begin, 0.0), need)
                     if take > EPS:
                         alloc[d] = take
                         need -= take
@@ -339,7 +376,7 @@ def schedule(f: Factory, running: list[Job], jobs: list[Job], inp: Inputs, today
     for s in shortages:
         p = placed[s["job"]]
         s["needed_by"] = p.start
-    return Sched(placed, used, cap, normal, shortages, blocked, dict(overflow), dict(clock))
+    return Sched(placed, used, cap, normal, shortages, blocked, dict(overflow), dict(clock), night_days)
 
 
 # ---- analysis -------------------------------------------------------------------------------
@@ -536,8 +573,9 @@ def fix_costs(f: Factory, s: Sched, fixes: set[str], jobs: list[Job]) -> dict[st
             if m is None:
                 continue
             hrs, days = 0.0, []
+            opened = s.night_days.get(fx, set())
             for (mm, d), used_h in s.used.items():
-                if mm == p[1] and (mm, d) in _night({fx}):
+                if (mm, d) in opened:
                     h = max(used_h, s.clock.get((mm, d), 0.0))
                     extra = max(0.0, h - s.normal_cap.get((mm, d), 0.0))
                     if extra > EPS:
@@ -550,7 +588,9 @@ def fix_costs(f: Factory, s: Sched, fixes: set[str], jobs: list[Job]) -> dict[st
                                 share[j.id] += jh / h * extra
             cost = round(hrs * m.night_cost_ph)
             rng = _ranges(days, f)
-            label = f"Night shift on {m.name}" + (f" · {_fmt_range(rng[0][0], rng[-1][1])}" if rng else "")
+            target = next((j.number for j in jobs if j.id == night_target(fx)), None)
+            label = f"Night shift on {m.name}" + (f" for {target}" if target else "") + (
+                f" · {_fmt_range(rng[0][0], rng[-1][1])}" if rng else "")  # fmt: skip
             total_share = sum(share.values()) or 1.0
             out[fx] = {"label": label, "cost": cost, "hours": round(hrs, 1),
                        "split": {k: round(cost * v / total_share) for k, v in share.items()}}  # fmt: skip
@@ -711,45 +751,143 @@ def suggest_hint(f: Factory, rules: Rules, running: list[Job], jobs: list[Job], 
 
 def suggest_fixes(f: Factory, rules: Rules, running: list[Job], jobs: list[Job], inp: Inputs, cur: Eval,
                   today: date) -> list[dict[str, Any]]:  # fmt: skip
-    """Night shifts for late orders / overloaded machines, express delivery for short material."""
-    base = replace(inp, fixes=set())
-    base_eval = evaluate(f, rules, running, jobs, base, today)
-    cands: set[str] = set()
-    for b in base_eval.a["bottlenecks"]:
+    """Night shifts for late orders, express delivery for missing material.
+
+    Judged in the CURRENT plan, not on their own: a fix's effect is the plan with every chosen fix compared
+    with the same plan without that one (so picking another fix, or reordering, updates what each one does).
+    A night shift is an intent for one order (`night:<machine>:for:<order>`): the engine finds its days again
+    on every recalculation and only that order may use the extra hours.
+    """
+    chosen = set(inp.fixes)
+    cache: dict[frozenset[str], Eval] = {frozenset(chosen): cur}
+
+    windows = dict(inp.night_windows)
+
+    def ev(fixes: set[str]) -> Eval:
+        k = frozenset(fixes)
+        if k not in cache:
+            for fx in fixes:
+                if night_target(fx) and fx not in windows:  # a suggested shift: its own days in this plan
+                    win = resolve_night(
+                        f, rules, running, jobs, replace(inp, night_windows=windows), today, fx
+                    )
+                    if win:
+                        windows[fx] = win
+            cache[k] = evaluate(f, rules, running, jobs, replace(inp, fixes=set(fixes), night_windows=windows),
+                                today)  # fmt: skip
+        return cache[k]
+
+    # candidates: express for missing material (as if no fix was chosen); night shifts for every order that
+    # is late without any night shift, on each machine of its route
+    cands = set(chosen)
+    for b in ev(set()).a["bottlenecks"]:
         if b["kind"] in ("material", "material_wait"):
             cands.add(f"express:{b['material']}")
-        elif b["kind"] == "machine":
-            cands.add(f"night:{b['machine']}:{b['from'].isoformat()}:{b['to'].isoformat()}")
-        elif b["kind"] == "late":
+    for b in ev({x for x in chosen if not x.startswith("night:")}).a["bottlenecks"]:
+        if b["kind"] == "late":
             j = _job(jobs, b["orders"][0])
-            p = base_eval.sched.placed[j.id]
-            for st, alloc in zip(j.steps, p.steps, strict=False):
-                if alloc:
-                    cands.add(f"night:{st.machine}:{min(alloc).isoformat()}:{j.deadline.isoformat()}")
+            cands |= {f"night:{st.machine}:for:{j.id}" for st in j.steps if st.machine in f.machines}
+
     out = []
     for fx in sorted(cands):
-        ev = evaluate(f, rules, running, jobs, replace(base, fixes={fx}), today)
-        if ev.key() >= base_eval.key():
-            continue
-        info = ev.fixes.get(fx, {"label": fx, "cost": 0})
-        avoided = base_eval.fin["penalty"] - ev.fin["penalty"]
-        fixed = [b["title"] for b in base_eval.a["bottlenecks"]
-                 if b["title"] not in {x["title"] for x in ev.a["bottlenecks"]}]  # fmt: skip
-        out.append({"id": fx, "label": info["label"], "cost": info["cost"], "penalty_avoided": avoided,
-                    "solves": fixed, "selected": fx in inp.fixes})  # fmt: skip
-    # one night-shift suggestion per machine: keep the cheapest that solves the most
-    best: dict[str, dict[str, Any]] = {}
-    for x in out:
-        k = x["id"].rsplit(":", 2)[0] if x["id"].startswith("night:") else x["id"]
-        if k not in best or (-len(x["solves"]), x["cost"]) < (-len(best[k]["solves"]), best[k]["cost"]):
-            best[k] = x
-    keep = list(best.values())
-    for fx in inp.fixes:  # chosen fixes always stay listed
-        if fx not in {x["id"] for x in keep}:
-            info = cur.fixes.get(fx, {"label": fx, "cost": 0})
-            keep.append({"id": fx, "label": info["label"], "cost": info["cost"], "penalty_avoided": 0,
-                         "solves": [], "selected": True})  # fmt: skip
+        w, wo = ev(chosen | {fx}), ev(chosen - {fx})
+        status, effect = _fix_effect(f, fx, wo, w, jobs)
+        if fx not in chosen and status in ("no_effect", "not_needed"):
+            continue  # not worth suggesting in this plan
+        info = w.fixes.get(fx, {"label": fx, "cost": 0})
+        solved = [
+            b["title"]
+            for b in wo.a["bottlenecks"]
+            if b["title"] not in {x["title"] for x in w.a["bottlenecks"]}
+        ]
+        out.append({"id": fx, "label": info["label"], "cost": info["cost"],
+                    "penalty_avoided": wo.fin["penalty"] - w.fin["penalty"], "solves": solved,
+                    "selected": fx in chosen, "status": status, "effect": effect})  # fmt: skip
+    # every machine of a late order's route that helps is offered (the owner picks), each with its own effect
+    keep = out
     return sorted(keep, key=lambda x: x["label"])
+
+
+def resolve_night(f: Factory, rules: Rules, running: list[Job], jobs: list[Job], inp: Inputs, today: date,
+                  fx: str) -> tuple[date, date] | None:  # fmt: skip
+    """The fewest night shifts, as close to the order's deadline as possible, that put it on time.
+
+    Tries 1, 2, 3... working days ending on the deadline, with the plan's other fixes in place. If none is
+    enough, the window that leaves the order least late (then the shortest). Worked out on every recalculation,
+    so the shift follows the order when anything else moves it."""
+    t = night_target(fx)
+    j = next((x for x in jobs if x.id == t), None)
+    if j is None:
+        return None
+    days = days_in(inp.start, max(inp.start, j.deadline), f)
+    if not days:
+        return None
+    best: tuple[tuple[int, int], tuple[date, date]] | None = None
+    for k in range(1, len(days) + 1):
+        win = (days[-k], days[-1])
+        trial = replace(inp, fixes=set(inp.fixes) | {fx}, night_windows={**inp.night_windows, fx: win})
+        late = int(evaluate(f, rules, running, jobs, trial, today).a["rows"][j.id]["late_days"])
+        if late == 0:
+            return win
+        if best is None or (late, k) < best[0]:
+            best = ((late, k), win)
+    return best[1] if best else None
+
+
+def _upgrade_night(fx: str, f: Factory, jobs: list[Job]) -> str | None:
+    """Older plans saved night shifts as fixed date windows made for one late order (window ends on its
+    deadline). Turn them into that order's intent; drop an intent whose order left the plan."""
+    p = fx.split(":")
+    if p[0] != "night" or len(p) != 4:
+        return fx
+    if p[2] == "for":
+        return fx if any(j.id == p[3] for j in jobs) else None
+    hits = [j for j in jobs if j.deadline.isoformat() == p[3] and any(st.machine == p[1] for st in j.steps)]
+    return f"night:{p[1]}:for:{hits[0].id}" if len(hits) == 1 else fx
+
+
+def _fix_effect(f: Factory, fx: str, wo: Eval, w: Eval, jobs: list[Job]) -> tuple[str, str]:
+    """What a fix does in this plan: status (resolves | partly | no_effect | not_needed | planned) and a line."""
+    num = {j.id: j.number for j in jobs}
+
+    def late(e: Eval, jid: str) -> int:
+        return int(e.a["rows"].get(jid, {}).get("late_days", 0))
+
+    def days(n: int) -> str:
+        return f"{n} day{'s' * (n != 1)}"
+
+    target = night_target(fx)
+    if target is not None:
+        a, b = late(wo, target), late(w, target)
+        o = num.get(target, "the order")
+        if a == 0:
+            return "not_needed", f"Not needed: {o} is on time without it"
+        if b == 0:
+            return "resolves", f"Resolves: {o} on time (was {days(a)} late)"
+        if b < a:
+            return "partly", f"Not enough: {o} still {days(b)} late (was {days(a)})"
+        return "no_effect", f"No effect: {o} still {days(b)} late"
+    if fx.startswith("express:"):
+        mid = fx.split(":", 1)[1]
+        mat = f.materials.get(mid)
+        name = mat.name if mat else "material"
+        had = any(x["kind"] == "material" and x.get("material") == mid for x in wo.a["bottlenecks"])
+        line = f"Covers the {name} shortage with an express PO (planned: the PO still has to be raised)"
+        moved = [(j, late(wo, j), late(w, j)) for j in w.a["rows"] if late(w, j) != late(wo, j)]
+        for jid, a, b in moved:
+            if b > a:
+                line += f" · {num.get(jid, '')} {days(b)} late while it waits for the express delivery"
+        return ("planned" if had else "not_needed"), (line if had else f"Not needed: no {name} shortage")
+    # older fixed-window night shift: judged on all late days
+    a, b = (
+        sum(r["late_days"] for r in wo.a["rows"].values()),
+        sum(r["late_days"] for r in w.a["rows"].values()),
+    )
+    if a == 0:
+        return "not_needed", "Not needed: every order is on time without it"
+    if b == 0:
+        return "resolves", "Resolves: every order on time"
+    return ("partly", f"Not enough: still {days(b)} late in total") if b < a else ("no_effect", "No effect")
 
 
 def constraints(f: Factory, rules: Rules, running: list[Job], jobs: list[Job], inp: Inputs, ev: Eval,
@@ -1120,6 +1258,12 @@ def compute(f: Factory, rules: Rules, running: list[Job], cands: list[Job], sele
     inp.sequence = keep_locked(by_rule(rule, jobs, f, rules, inp.sequence), inp.sequence, inp.locks)
     inp.locks = {k: v for k, v in inp.locks.items() if k in inp.sequence}
     inp.pins = {k: v for k, v in inp.pins.items() if k in inp.sequence}
+    inp.fixes = {x for x in (_upgrade_night(fx, f, jobs) for fx in inp.fixes) if x}
+    inp.night_windows = {}
+    for fx in sorted(x for x in inp.fixes if night_target(x)):
+        win = resolve_night(f, rules, running, jobs, inp, today, fx)
+        if win:
+            inp.night_windows[fx] = win
     cur = evaluate(f, rules, running, jobs, inp, today)
     before = evaluate(f, rules, running, jobs, replace(inp, fixes=set()), today) if inp.fixes else cur
     a = cur.a

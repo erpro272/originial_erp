@@ -173,3 +173,19 @@ test("with selected fixes: fix cost line, no penalty, the insight compares cost 
   fireEvent.click(screen.getByRole("tab", { name: "Before fixes" }));
   expect(screen.getByText("After ₹20,000 penalty at risk")).toBeInTheDocument();
 });
+
+test("each fix shows its effect in the current plan", async () => {
+  mockApi(...signedIn());
+  const p = makePlan(true);
+  const fixes = (p.result.finance as unknown as { fixes: Record<string, unknown>[] }).fixes;
+  fixes[0] = { ...fixes[0], status: "no_effect", effect: "No effect: ORD-2 still 1 day late" };
+  fixes[1] = {
+    ...fixes[1],
+    status: "planned",
+    effect: "Covers the Steel shortage with an express PO (planned: the PO still has to be raised)",
+  };
+  renderApp(<FinanceStep plan={p} go={vi.fn()} />);
+  expect(await screen.findByText("No effect")).toBeInTheDocument();
+  expect(screen.getByText("No effect: ORD-2 still 1 day late")).toBeInTheDocument();
+  expect(screen.getByText("Planned · PO needed")).toBeInTheDocument();
+});

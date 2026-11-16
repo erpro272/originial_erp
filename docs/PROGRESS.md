@@ -91,6 +91,10 @@
     express fix (a simulated express PO with a real delivery time) and actual purchase requests (status,
     expected arrival); materials on order no longer ask for a PO; checklist and popup share one source.
     Tests: 264 pytest, 49 Vitest, 16 Playwright.
+  - Fix (owner feedback): night shifts target one order and follow it when the plan changes (fewest
+    nights before its deadline); each fix shows its real effect in the current plan. Tests: 271 pytest,
+    50 Vitest, 16 Playwright. Purchasing / Inventory / Production separation is designed (see the
+    architecture review in the conversation) and left for those modules.
 
 ## Next
 - Planning v1 archived in `archive/planning-v1/` (owner request). Rebuild in progress:

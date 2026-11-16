@@ -264,6 +264,10 @@ class Fix(BaseModel):
     penalty_avoided: int
     solves: list[str]
     selected: bool
+    # its effect in the current plan (with the other chosen fixes): resolves | partly | no_effect |
+    # not_needed | planned (express: a plan assumption until the PO is raised)
+    status: str = ""
+    effect: str = ""
 
 
 class Finances(BaseModel):

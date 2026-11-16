@@ -2537,6 +2537,11 @@
             "title": "Cost",
             "type": "integer"
           },
+          "effect": {
+            "default": "",
+            "title": "Effect",
+            "type": "string"
+          },
           "id": {
             "title": "Id",
             "type": "string"
@@ -2559,6 +2564,11 @@
             },
             "title": "Solves",
             "type": "array"
+          },
+          "status": {
+            "default": "",
+            "title": "Status",
+            "type": "string"
           }
         },
         "required": [
