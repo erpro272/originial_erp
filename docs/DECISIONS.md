@@ -185,3 +185,17 @@ Short records of choices and the reason for each. Newest at the bottom.
     are never deleted (no button; the API refuses). Delete hides the plan from every screen and API
     read (`plans.deleted_at` / `deleted_by` kept in the row), writes an audit entry, and sends a deleted
     draft's orders back to accepted, not in planning. Plan numbers are never reused.
+49. **Purchasing, Inventory tab (owner's choices)**: stock is a ledger (`stock_movements`, insert-only:
+    opening / receipt / issue / adjustment); `material_stock.on_hand` is a cache of its total.
+    *Reserved* = materials for orders of approved plans not issued yet; demand also comes from the working
+    plan and from orders marked for planning, so shortages show before a plan exists. Status per material,
+    walking demand in date order and adding deliveries that arrive in time: **critical short** (an order
+    can't be covered), **in transit** (covered only by a delivery on order), **low stock** (below the
+    reorder level), else **adequate**. POs: raised by Purchasing (purchaser / owner) -> **awaiting
+    approval** (not counted as on order) -> owner approves -> **ordered** -> supplier date -> **confirmed**
+    -> received (partial receipts allowed, never more than ordered) / cancelled (open ones, before any
+    receipt). Ordered / confirmed POs set the material's next delivery that Planning reads, and a PO raised
+    for a material links the plan's purchase requests (`po_number`): requested -> po_raised -> ordered ->
+    confirmed -> received; cancelling sends them back to requested. Migration 0008 turns existing
+    on-hand into opening balances and existing next arrivals into confirmed POs, so nothing is lost.
+    Raw Material Purchase and Supplier Comparison tabs come next.

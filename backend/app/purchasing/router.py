@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends
 from app.core.auth import Principal, TenantDB, require
 from app.core.permissions import Permission
 from app.purchasing import service
-from app.purchasing.schemas import CancelPoIn, ConfirmIn, InventoryOut, PoOut, RaisePoIn, ReceiveIn
+from app.purchasing.schemas import CancelPoIn, ConfirmIn, InventoryOut, PoOut, PoRaiseIn, ReceiveIn
 
 router = APIRouter(prefix="/purchasing", tags=["purchasing"])
 Reader = Annotated[Principal, Depends(require(Permission.PURCHASING_READ))]
@@ -26,7 +26,7 @@ async def purchase_orders(db: TenantDB, _: Reader) -> list[PoOut]:
 
 
 @router.post("/purchase-orders", status_code=201)
-async def raise_po(db: TenantDB, p: Writer, body: RaisePoIn) -> PoOut:
+async def raise_po(db: TenantDB, p: Writer, body: PoRaiseIn) -> PoOut:
     """Raise a PO; it waits for the owner's approval before it counts as on order."""
     return await service.raise_po(db, p.user_id, body)
 

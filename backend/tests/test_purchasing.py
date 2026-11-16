@@ -35,6 +35,9 @@ def _by_code(inv: dict) -> dict:  # type: ignore[type-arg]
 async def test_inventory_status_rules_on_the_demo(client: AsyncClient) -> None:
     co = await _demo_co("pur-inv")
     h = await headers_for(client, co)
+    # orders sent to Planning count even before anyone opens Planning (no plan made yet)
+    early = _by_code((await client.get("/purchasing/inventory", headers=h)).json())
+    assert early["WR8"]["status"] == "critical_short"
     await client.get("/planning/plan", headers=h)  # orders sent to Planning get a working plan
     inv = (await client.get("/purchasing/inventory", headers=h)).json()
     m = _by_code(inv)

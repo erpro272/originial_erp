@@ -27,6 +27,10 @@ test("sign in, visit every module, sign out", async ({ page }) => {
     ).toBeVisible();
     if (name === "Orders")
       await expect(page.getByText("All orders received")).toBeVisible();
+    else if (name === "Purchasing")
+      await expect(
+        page.getByText("Raw material stock & PO status"),
+      ).toBeVisible();
     else if (name === "Planning")
       await expect(
         page.getByRole("group", { name: "Plan status" }),

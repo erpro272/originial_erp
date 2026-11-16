@@ -5663,6 +5663,64 @@
         "title": "PoOut",
         "type": "object"
       },
+      "PoRaiseIn": {
+        "properties": {
+          "expected_date": {
+            "format": "date",
+            "title": "Expected Date",
+            "type": "string"
+          },
+          "material_id": {
+            "format": "uuid",
+            "title": "Material Id",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "price_per_unit_paise": {
+            "minimum": 0.0,
+            "title": "Price Per Unit Paise",
+            "type": "integer"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "supplier": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Supplier",
+            "type": "string"
+          }
+        },
+        "required": [
+          "material_id",
+          "supplier",
+          "quantity",
+          "price_per_unit_paise",
+          "expected_date"
+        ],
+        "title": "PoRaiseIn",
+        "type": "object"
+      },
       "PreviewOut": {
         "properties": {
           "diff": {
@@ -6002,6 +6060,19 @@
           "created_at"
         ],
         "title": "PurchaseRequestOut",
+        "type": "object"
+      },
+      "RaisePoIn": {
+        "properties": {
+          "material_id": {
+            "title": "Material Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "material_id"
+        ],
+        "title": "RaisePoIn",
         "type": "object"
       },
       "RankingSettings": {
@@ -7442,77 +7513,6 @@
           "parallel"
         ],
         "title": "Overview",
-        "type": "object"
-      },
-      "app__planning__schemas__RaisePoIn": {
-        "properties": {
-          "material_id": {
-            "title": "Material Id",
-            "type": "string"
-          }
-        },
-        "required": [
-          "material_id"
-        ],
-        "title": "RaisePoIn",
-        "type": "object"
-      },
-      "app__purchasing__schemas__RaisePoIn": {
-        "properties": {
-          "expected_date": {
-            "format": "date",
-            "title": "Expected Date",
-            "type": "string"
-          },
-          "material_id": {
-            "format": "uuid",
-            "title": "Material Id",
-            "type": "string"
-          },
-          "note": {
-            "anyOf": [
-              {
-                "maxLength": 2000,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Note"
-          },
-          "price_per_unit_paise": {
-            "minimum": 0.0,
-            "title": "Price Per Unit Paise",
-            "type": "integer"
-          },
-          "quantity": {
-            "anyOf": [
-              {
-                "exclusiveMinimum": 0.0,
-                "type": "number"
-              },
-              {
-                "type": "string"
-              }
-            ],
-            "title": "Quantity"
-          },
-          "supplier": {
-            "maxLength": 200,
-            "minLength": 1,
-            "title": "Supplier",
-            "type": "string"
-          }
-        },
-        "required": [
-          "material_id",
-          "supplier",
-          "quantity",
-          "price_per_unit_paise",
-          "expected_date"
-        ],
-        "title": "RaisePoIn",
         "type": "object"
       }
     },
@@ -10682,7 +10682,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/app__planning__schemas__RaisePoIn"
+                "$ref": "#/components/schemas/RaisePoIn"
               }
             }
           },
@@ -10990,7 +10990,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/app__purchasing__schemas__RaisePoIn"
+                "$ref": "#/components/schemas/PoRaiseIn"
               }
             }
           },

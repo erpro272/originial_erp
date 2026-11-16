@@ -97,7 +97,7 @@ class InventoryOut(BaseModel):
     today: date
 
 
-class RaisePoIn(BaseModel):
+class PoRaiseIn(BaseModel):
     material_id: uuid.UUID
     supplier: str = Field(min_length=1, max_length=200)
     quantity: Decimal = Field(gt=0)

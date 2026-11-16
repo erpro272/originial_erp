@@ -94,6 +94,12 @@ isolation). One company per website: no company picker or switcher in the UI.
   (`planning-rules`: late penalty fixed or %, overhead %, packaging, minimum margin).
   Ticks == `Order.marked_for_planning` (synced both ways); `inputs.base` = owner's own picks the
   optimizer starts from; `selection.using` = option in use. No working plan + orders sent → new draft.
+- `purchasing/` suppliers, purchase orders (+ lines), `stock_movements` ledger (insert-only; `post_movement`
+  keeps `material_stock.on_hand` = its total). `sync_incoming` mirrors the earliest ordered/confirmed PO
+  into `material_stock.next_arrival_*` (what Planning reads). Demand/reserved come from
+  `planning.service.material_demand()`; PO steps update the plan's requests via `planning.link_requests` /
+  `update_requests`. Permissions: `purchasing.read` (planner, purchaser, accountant, owner),
+  `purchasing.write` (purchaser, owner), `purchasing.approve` (owner).
 - Seed: `seed/demo_data.py` (dates relative to today; mirrors the Orders mockup). Planning demo:
   `seed/planning_demo.py` (idempotent upsert; `python -m seed.planning_demo` fixes an old DB in place).
   Bump `engine.ENGINE_VERSION` whenever engine logic changes (saved results then recalculate). Startup
@@ -122,6 +128,8 @@ isolation). One company per website: no company picker or switcher in the UI.
 - Reporting period lives in the URL (`?period=fytd|this_month|...&from&to`).
 - Charts: hand-rolled SVG, one validated hue, hover tooltip + sr-only table (see dataviz rules).
   Categorical series colours `s1..s5` (validated); machine colours `in/bl/te/ai/lo` by machine order.
+- Purchasing routes: `/purchasing` (Inventory), `/purchasing/purchase` and `/purchasing/suppliers` (coming next).
+  `modules/purchasing/`: `PurchasingPage` (KPIs, Needs attention, inventory table, open POs), `PoDialogs`.
 - Planning UI v1 is archived in `archive/planning-v1/`. Rebuild: `modules/planning/` has step 1
   (`SelectedOrders`: `OrderTimeline`, `OrdersInPlan`, `OptionsTable`), step 2 (`SequenceStep`) and
   step 3 (`ScheduleStep`, warning popup in `reorder.tsx`), step 4 (`FinanceStep`, company rules via

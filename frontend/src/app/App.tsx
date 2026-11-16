@@ -15,6 +15,7 @@ import { OrdersLayout } from "@/modules/orders/OrdersLayout";
 import { OrdersReceivedTab } from "@/modules/orders/OrdersReceivedTab";
 import { PlanningPage } from "@/modules/planning/PlanningPage";
 import { PlansDashboard } from "@/modules/planning/PlansDashboard";
+import { PurchasingPage } from "@/modules/purchasing/PurchasingPage";
 import { MODULES } from "./nav";
 
 const DesignPage = import.meta.env.DEV
@@ -57,7 +58,12 @@ export function App() {
         </Route>
         <Route path="/planning" element={<PlansDashboard />} />
         <Route path="/planning/:planId" element={<PlanningPage />} />
-        {MODULES.filter((m) => m.key !== "orders" && m.key !== "planning").map((m) => (
+        <Route path="/purchasing" element={<PurchasingPage />} />
+        <Route path="/purchasing/purchase" element={<PurchasingPage />} />
+        <Route path="/purchasing/suppliers" element={<PurchasingPage />} />
+        {MODULES.filter(
+          (m) => m.key !== "orders" && m.key !== "planning" && m.key !== "purchasing",
+        ).map((m) => (
           <Route key={m.key} path={`${m.path}/*`} element={<ComingSoonPage module={m} />} />
         ))}
         <Route

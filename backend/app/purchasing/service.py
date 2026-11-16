@@ -29,7 +29,7 @@ from app.purchasing.schemas import (
     MaterialRow,
     PoLine,
     PoOut,
-    RaisePoIn,
+    PoRaiseIn,
     ReceiveIn,
     Shortfall,
 )
@@ -239,7 +239,7 @@ async def _materials_of(session: AsyncSession, po: PurchaseOrder) -> set[uuid.UU
     return set((await session.execute(q)).scalars())
 
 
-async def raise_po(session: AsyncSession, actor: uuid.UUID, body: RaisePoIn) -> PoOut:
+async def raise_po(session: AsyncSession, actor: uuid.UUID, body: PoRaiseIn) -> PoOut:
     """Purchaser / owner raises a PO. It waits for the owner's approval before it counts as on order."""
     mat = await session.get(Material, body.material_id)
     if mat is None:

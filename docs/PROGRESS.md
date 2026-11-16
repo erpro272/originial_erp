@@ -100,6 +100,10 @@
     orders ship. Tests: 275 pytest, 53 Vitest, 17 Playwright.
   - Delete plan (2026-11-16): owner deletes draft / awaiting / cancelled plans (hidden, trace kept);
     approved and completed plans are kept for good. Tests: 277 pytest, 54 Vitest, 17 Playwright.
+- Feature 3 Purchasing, Inventory tab (2026-11-16, awaiting owner review): suppliers, purchase orders
+  (raise -> owner approves -> confirmed -> received / cancelled), stock ledger, reorder levels, KPIs,
+  "Needs attention" cards, inventory table (filters, column picker), open POs; links to Planning's
+  purchase requests and deliveries. Tests: 282 pytest, 56 Vitest, 18 Playwright.
 
 ## Next
 - Planning v1 archived in `archive/planning-v1/` (owner request). Rebuild in progress:
@@ -108,7 +112,8 @@
   table synced both ways with Orders received, options comparison with "Use this selection",
   swappable "Best score" rule (`planning-objective` setting). Steps 2–5 locked (coming soon).
 - Owner review of Feature 2 (Planning).
-- Later: Dashboard tab (owner will specify), Purchasing, Production, Billing, Finance,
+- Purchasing: Raw Material Purchase and Supplier Comparison tabs.
+- Later: Dashboard tab (owner will specify), Production, Billing, Finance,
   AI assistant panel.
 
 ## Trial
@@ -124,4 +129,6 @@
 - Planning: setup time is shown in the tooltip, not as a separate striped bar; the schedule has
   no week paging (scrolls); the optimizer is a greedy search (fine for tens of orders).
 - Planning: per-order late-penalty override not built (company rule only, as agreed).
+- Purchasing: Planning reads only the earliest delivery per material; production doesn't record
+  material issues yet (orders in production count as already issued).
 - Key rotation for tenant data keys is designed for (versioned `tenant_keys`) but not built.

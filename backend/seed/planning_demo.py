@@ -241,6 +241,14 @@ async def upsert(s: AsyncSession, tenant_id: uuid.UUID) -> dict[str, Any]:
         bom_code, _, _, bom_qty = BOMS[pname]
         units = float(o.quantity) * float(bom_qty)
         materials[bom_code].price_per_unit_paise = max(0, round(mat_cost / units))
+    # deliveries on order were created before the prices were worked out: price them now
+    from app.purchasing.models import PurchaseOrderLine
+
+    for ln in (await s.execute(select(PurchaseOrderLine).where(PurchaseOrderLine.tenant_id == tenant_id,
+                                                                PurchaseOrderLine.price_per_unit_paise == 0))).scalars():  # fmt: skip
+        mat = next((m for m in materials.values() if m.id == ln.material_id), None)
+        if mat is not None:
+            ln.price_per_unit_paise = mat.price_per_unit_paise
     await _set_version(s, tenant_id, DEMO_VERSION)
     await s.flush()
     return {"machines": len(machines), "candidates": len(CANDIDATES), "running": len(RUNNING)}

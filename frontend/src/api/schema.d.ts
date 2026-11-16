@@ -2907,6 +2907,27 @@ export interface components {
             /** Value Paise */
             value_paise: number;
         };
+        /** PoRaiseIn */
+        PoRaiseIn: {
+            /**
+             * Expected Date
+             * Format: date
+             */
+            expected_date: string;
+            /**
+             * Material Id
+             * Format: uuid
+             */
+            material_id: string;
+            /** Note */
+            note?: string | null;
+            /** Price Per Unit Paise */
+            price_per_unit_paise: number;
+            /** Quantity */
+            quantity: number | string;
+            /** Supplier */
+            supplier: string;
+        };
         /** PreviewOut */
         PreviewOut: {
             diff: components["schemas"]["Diff"];
@@ -3034,6 +3055,11 @@ export interface components {
             status: string;
             /** Unit */
             unit: string;
+        };
+        /** RaisePoIn */
+        RaisePoIn: {
+            /** Material Id */
+            material_id: string;
         };
         /** RankingSettings */
         RankingSettings: {
@@ -3605,32 +3631,6 @@ export interface components {
             start: string | null;
             /** Utilisation */
             utilisation: number;
-        };
-        /** RaisePoIn */
-        app__planning__schemas__RaisePoIn: {
-            /** Material Id */
-            material_id: string;
-        };
-        /** RaisePoIn */
-        app__purchasing__schemas__RaisePoIn: {
-            /**
-             * Expected Date
-             * Format: date
-             */
-            expected_date: string;
-            /**
-             * Material Id
-             * Format: uuid
-             */
-            material_id: string;
-            /** Note */
-            note?: string | null;
-            /** Price Per Unit Paise */
-            price_per_unit_paise: number;
-            /** Quantity */
-            quantity: number | string;
-            /** Supplier */
-            supplier: string;
         };
     };
     responses: never;
@@ -5326,7 +5326,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["app__planning__schemas__RaisePoIn"];
+                "application/json": components["schemas"]["RaisePoIn"];
             };
         };
         responses: {
@@ -5538,7 +5538,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["app__purchasing__schemas__RaisePoIn"];
+                "application/json": components["schemas"]["PoRaiseIn"];
             };
         };
         responses: {

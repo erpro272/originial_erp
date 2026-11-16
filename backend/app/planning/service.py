@@ -942,8 +942,10 @@ async def material_demand(session: AsyncSession) -> list[dict[str, Any]]:
 
     - approved plans (not completed): their orders not started yet (status "planned"): this stock is
       reserved for them. Orders in production are taken as already issued (Production will record issues).
-    - the plan being worked on: its ticked orders (still "accepted"): needed, not reserved yet.
-    `needed_by` = the order's planned start (the plan's schedule); quantities from the bill of materials."""
+    - the plan being worked on: its ticked orders (still "accepted"): needed, not reserved yet; orders sent
+      to Planning before any plan was made count the same way.
+    `needed_by` = the order's planned start (the plan's schedule; today when there is no schedule yet);
+    quantities from the bill of materials."""
     plans = list((await session.execute(
         select(Plan).where(Plan.deleted_at.is_(None), Plan.status.in_((*WORKING, "approved")))
     )).scalars())  # fmt: skip
@@ -955,6 +957,8 @@ async def material_demand(session: AsyncSession) -> list[dict[str, Any]]:
             start = date.fromisoformat(starts[oid]) if oid in starts else None
             if oid not in wanted or approved:
                 wanted[oid] = (approved, p.number, start)
+    for oid in await _marked(session):  # sent to Planning, no plan made yet: needed now (no schedule yet)
+        wanted.setdefault(oid, (False, "", None))
     if not wanted:
         return []
     boms: dict[uuid.UUID, list[ProductMaterial]] = {}
@@ -971,7 +975,7 @@ async def material_demand(session: AsyncSession) -> list[dict[str, Any]]:
             continue  # started / finished / cancelled, or the working plan's tick is out of date
         for b in boms.get(o.product_id, []):
             out.append({"material_id": b.material_id, "order_id": o.id, "number": o.number, "customer": c.name,
-                        "qty": o.quantity * b.qty_per_unit, "needed_by": start or o.ship_date,
+                        "qty": o.quantity * b.qty_per_unit, "needed_by": start or clock.today(),
                         "reserved": reserved, "plan": number})  # fmt: skip
     return sorted(out, key=lambda d: (d["needed_by"], d["number"]))
 
