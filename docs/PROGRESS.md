@@ -127,7 +127,7 @@
   sales invoice draft -> verify -> issue -> send. Tests: 304 pytest, 70 Vitest, 23 Playwright.
 - Production, Factory Layout (2026-11-16, frontend preview on demo data, awaiting owner review): KPI cards,
   floor plan with stages S1-S3, stations, flow arrows and utility strip, hover card per stage / station,
-  Layout / Status view, legend, section performance, alerts. No backend yet. Tests: 73 Vitest, 24 Playwright.
+  Layout / Status view, legend, section performance, alerts. No backend yet. Tests: 71 Vitest, 24 Playwright.
 
 ## Next
 - Production backend: real stations from factory setup, live status/output from the plant floor.
