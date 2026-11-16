@@ -13,16 +13,13 @@ test("signed out: protected route redirects to login", async () => {
   expect(await screen.findByRole("heading", { name: "Sign in" })).toBeInTheDocument();
 });
 
-test.each(["Production", "Finance", "Dashboard"])(
-  "%s shows the Coming soon page",
-  async (name) => {
-    mockApi(...signedInHandlers());
-    renderApp(<App />, { path: `/${name.toLowerCase()}` });
-    expect(await screen.findByRole("heading", { name: "Coming soon" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 1, name })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name })).toHaveClass("border-primary");
-  },
-);
+test.each(["Finance", "Dashboard"])("%s shows the Coming soon page", async (name) => {
+  mockApi(...signedInHandlers());
+  renderApp(<App />, { path: `/${name.toLowerCase()}` });
+  expect(await screen.findByRole("heading", { name: "Coming soon" })).toBeInTheDocument();
+  expect(screen.getByRole("heading", { level: 1, name })).toBeInTheDocument();
+  expect(screen.getByRole("link", { name })).toHaveClass("border-primary");
+});
 
 test("top nav lists the six modules and Dashboard last", async () => {
   mockApi(...signedInHandlers());

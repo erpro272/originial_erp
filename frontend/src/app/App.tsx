@@ -15,6 +15,7 @@ import { OrdersLayout } from "@/modules/orders/OrdersLayout";
 import { OrdersReceivedTab } from "@/modules/orders/OrdersReceivedTab";
 import { PlanningPage } from "@/modules/planning/PlanningPage";
 import { BillingPage } from "@/modules/billing/BillingPage";
+import { ProductionPage } from "@/modules/production/ProductionPage";
 import { PlanHistory } from "@/modules/planning/PlanHistory";
 import { PlanningHome } from "@/modules/planning/PlanningHome";
 import { PurchasingPage } from "@/modules/purchasing/PurchasingPage";
@@ -58,6 +59,7 @@ export function App() {
           />
           <Route path="customers/:id" element={<CustomerProfile />} />
         </Route>
+        <Route path="/production" element={<ProductionPage />} />
         <Route path="/billing" element={<BillingPage />} />
         <Route path="/billing/ebill" element={<BillingPage />} />
         <Route path="/billing/gst" element={<BillingPage />} />
@@ -72,7 +74,8 @@ export function App() {
             m.key !== "orders" &&
             m.key !== "planning" &&
             m.key !== "purchasing" &&
-            m.key !== "billing",
+            m.key !== "billing" &&
+            m.key !== "production",
         ).map((m) => (
           <Route key={m.key} path={`${m.path}/*`} element={<ComingSoonPage module={m} />} />
         ))}

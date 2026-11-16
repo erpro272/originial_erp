@@ -147,6 +147,9 @@ isolation). One company per website: no company picker or switcher in the UI.
   compare, supplier window, quotes, score rule). `PoDialogs`: Raise PO + one dialog per step.
 - Billing routes: `/billing` (Payments: `?mode=ar|ap`, `customer=`, `supplier=` open the drawers), `/billing/ebill`
   (Invoice / E-bill, `?deal=`), `/billing/gst` (coming next). `DealChip` / `useDealRefs` show TXN chips elsewhere.
+- Production route `/production` = `ProductionPage` (Factory Layout). FRONTEND PREVIEW ONLY: all numbers are
+  placeholders in `modules/production/demoData.ts` (owner's request; replace with API data when the backend is
+  built). `FactoryLayout` places boxes in a 1000 x 420 plan space; hover / focus shows the stage or station card.
 - Planning UI v1 is archived in `archive/planning-v1/`. Rebuild: `modules/planning/` has step 1
   (`SelectedOrders`: `OrderTimeline`, `OrdersInPlan`, `OptionsTable`), step 2 (`SequenceStep`) and
   step 3 (`ScheduleStep`, warning popup in `reorder.tsx`), step 4 (`FinanceStep`, company rules via

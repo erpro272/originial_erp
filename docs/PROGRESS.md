@@ -125,8 +125,12 @@
   hold / reject, separation of duties with logged owner override); Invoice / E-bill tab with deals (TXN chips
   also on Orders and POs), deal drawer (overview, documents, interactions, activity), provisional deals,
   sales invoice draft -> verify -> issue -> send. Tests: 304 pytest, 70 Vitest, 23 Playwright.
+- Production, Factory Layout (2026-11-16, frontend preview on demo data, awaiting owner review): KPI cards,
+  floor plan with stages S1-S3, stations, flow arrows and utility strip, hover card per stage / station,
+  Layout / Status view, legend, section performance, alerts. No backend yet. Tests: 73 Vitest, 24 Playwright.
 
 ## Next
+- Production backend: real stations from factory setup, live status/output from the plant floor.
 - Billing round 2: document intake + review queue, quotation versions and compare, e-invoice / IRN,
   credit notes and advances screens, GST filing tab, Gmail / WhatsApp / bank feeds.
 - Planning v1 archived in `archive/planning-v1/` (owner request). Rebuild in progress:

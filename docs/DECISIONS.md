@@ -267,3 +267,10 @@ Short records of choices and the reason for each. Newest at the bottom.
     approved can't execute; the owner may override with a written reason, which is logged. Round 2 (later):
     document intake and review queue, quotation versions, e-invoice / IRN, credit notes and advances screens,
     GST filing tab, Gmail / WhatsApp / bank feeds.
+55. **Production, Factory Layout: frontend preview on demo data (owner's request)**: the owner asked for the
+    Factory Layout mockup as a frontend only, with one working feature (hovering a stage or station shows its
+    status, output, target and uptime) and dummy data everywhere else. This is a deliberate, owner-approved
+    exception to "never show hard-coded numbers": every placeholder lives in `modules/production/demoData.ts`
+    and the page says "Demo data" in a banner. The floor plan is a 1000 x 420 unit space (boxes placed in %,
+    walls and arrows in one SVG), so the real layout can later come from factory setup. Status view (extra)
+    tints each station by its status. New Order / Upload Document / View Details do nothing yet.
