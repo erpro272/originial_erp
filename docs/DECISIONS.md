@@ -295,5 +295,5 @@ Short records of choices and the reason for each. Newest at the bottom.
     PO, awaiting approval, at the gate), Billing (largest overdue receivables, supplier payments awaiting owner
     approval / overdue) and the Production demo alerts (marked demo); each links to its source record; View All opens
     a drawer with a module filter. Factory Layout = the Production tab's demo layout (marked demo). Brand default
-    "DND Labs" (`VITE_BRAND_NAME` still overrides); nav label "Executive Dashboard". Orders `?q=` and Customers
+    "Brand" (neutral placeholder again, owner's request; `VITE_BRAND_NAME` overrides); nav label "Executive Dashboard". Orders `?q=` and Customers
     `?health=` open those lists searched / filtered (dashboard links).

@@ -131,7 +131,7 @@
 - Executive Dashboard (2026-11-16, awaiting owner review): KPIs, Order Timeline (Gantt / Status view mirroring
   Planning) + Machine Load (Current Plan vs After New Orders, machine detail), Factory Layout (demo), Cash Flow
   (6 months), Customer Health, Alerts & Updates with View All drawer; date range in the URL; owner only.
-  Brand "DND Labs". Tests: 306 pytest, 72 Vitest, 26 Playwright.
+  Tests: 306 pytest, 72 Vitest, 26 Playwright.
 
 ## Next
 - Production backend: real stations from factory setup, live status/output from the plant floor.

@@ -138,7 +138,7 @@ isolation). One company per website: no company picker or switcher in the UI.
   never hand-write API types. Server state via TanStack Query.
 - Module pages replace the "Coming soon" route in `src/app/App.tsx`; nav in `src/app/nav.ts`.
 - Page-level top-bar actions (e.g. "+ New order") via `<PageActions>`.
-- Brand: `DND Labs` (default in `app/brand.ts`, `VITE_BRAND_NAME` overrides). Design language "Clean Kri".
+- Brand: neutral placeholder `Brand` (owner's choice; `VITE_BRAND_NAME` overrides). Design language "Clean Kri".
 - Tests: Vitest + RTL next to components (`*.test.tsx`); `src/test/utils.tsx` mocks fetch.
 - `/_design` (dev only) shows every shared component.
 - Orders module routes: `/orders` (received), `/orders/customers`, `/orders/customers/:id`,
