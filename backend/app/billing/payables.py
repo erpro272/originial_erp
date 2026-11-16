@@ -18,7 +18,7 @@ from datetime import date, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.billing.models import Deal, PayableEvent, SupplierInvoice, SupplierPayment
@@ -463,3 +463,24 @@ async def export_csv(session: AsyncSession, actor: uuid.UUID, month: str | None,
     await audit.record(session, actor_id=actor, action="export", entity_type="payables", entity_id=None,
                        summary=f"Payables exported · {out.period.month} · {len(out.rows)} rows")  # fmt: skip
     return buf.getvalue()
+
+
+async def monthly_totals(session: AsyncSession, start: date, end: date) -> dict[str, dict[str, int]]:
+    """Per month: supplier bills received (by invoice date, rejected ones left out) and supplier money that
+    actually left the bank (bank-confirmed payments, by confirmation date)."""
+    month = func.to_char(SupplierInvoice.invoice_date, "YYYY-MM")
+    billed = (await session.execute(
+        select(month, func.sum(SupplierInvoice.total_paise))
+        .where(SupplierInvoice.invoice_date.between(start, end), SupplierInvoice.status != "rejected").group_by(month)
+    )).all()  # fmt: skip
+    pmonth = func.to_char(SupplierPayment.confirmed_on, "YYYY-MM")
+    paid = (await session.execute(
+        select(pmonth, func.sum(SupplierPayment.amount_paise))
+        .where(SupplierPayment.status == "confirmed", SupplierPayment.confirmed_on.between(start, end)).group_by(pmonth)
+    )).all()  # fmt: skip
+    out: dict[str, dict[str, int]] = {}
+    for m, v in billed:
+        out.setdefault(m, {})["payables"] = int(v or 0)
+    for m, v in paid:
+        out.setdefault(m, {})["paid"] = int(v or 0)
+    return out

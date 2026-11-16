@@ -232,6 +232,70 @@
         "title": "AddressOut",
         "type": "object"
       },
+      "Alert": {
+        "properties": {
+          "at": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "link": {
+            "title": "Link",
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "planning",
+              "orders",
+              "purchasing",
+              "billing",
+              "production"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "tone": {
+            "enum": [
+              "hi",
+              "md",
+              "bl",
+              "ok"
+            ],
+            "title": "Tone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "source",
+          "tone",
+          "title",
+          "text",
+          "at",
+          "link"
+        ],
+        "title": "Alert",
+        "type": "object"
+      },
       "ApCards": {
         "properties": {
           "due_week_paise": {
@@ -1778,6 +1842,44 @@
         "title": "CancelPoIn",
         "type": "object"
       },
+      "CashMonth": {
+        "properties": {
+          "collected": {
+            "title": "Collected",
+            "type": "integer"
+          },
+          "invoiced": {
+            "title": "Invoiced",
+            "type": "integer"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "month": {
+            "title": "Month",
+            "type": "string"
+          },
+          "paid": {
+            "title": "Paid",
+            "type": "integer"
+          },
+          "payables": {
+            "title": "Payables",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "month",
+          "label",
+          "invoiced",
+          "collected",
+          "payables",
+          "paid"
+        ],
+        "title": "CashMonth",
+        "type": "object"
+      },
       "ChangesRequested": {
         "properties": {
           "at": {
@@ -2395,6 +2497,50 @@
           "merged_into_id"
         ],
         "title": "CustomerDetail",
+        "type": "object"
+      },
+      "CustomerHealth": {
+        "properties": {
+          "high_value": {
+            "title": "High Value",
+            "type": "integer"
+          },
+          "inactive": {
+            "title": "Inactive",
+            "type": "integer"
+          },
+          "period_label": {
+            "title": "Period Label",
+            "type": "string"
+          },
+          "repeat": {
+            "title": "Repeat",
+            "type": "integer"
+          },
+          "top": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TopCustomer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "total_orders": {
+            "title": "Total Orders",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "period_label",
+          "high_value",
+          "repeat",
+          "inactive",
+          "top",
+          "total_orders"
+        ],
+        "title": "CustomerHealth",
         "type": "object"
       },
       "CustomerIn": {
@@ -3257,6 +3403,46 @@
         "title": "CustomerRow",
         "type": "object"
       },
+      "DashboardOut": {
+        "properties": {
+          "alerts": {
+            "items": {
+              "$ref": "#/components/schemas/Alert"
+            },
+            "title": "Alerts",
+            "type": "array"
+          },
+          "cash_flow": {
+            "items": {
+              "$ref": "#/components/schemas/CashMonth"
+            },
+            "title": "Cash Flow",
+            "type": "array"
+          },
+          "customers": {
+            "$ref": "#/components/schemas/CustomerHealth"
+          },
+          "kpis": {
+            "$ref": "#/components/schemas/app__dashboard__schemas__Kpis"
+          },
+          "range": {
+            "$ref": "#/components/schemas/Range"
+          },
+          "timeline": {
+            "$ref": "#/components/schemas/Timeline"
+          }
+        },
+        "required": [
+          "range",
+          "kpis",
+          "timeline",
+          "cash_flow",
+          "customers",
+          "alerts"
+        ],
+        "title": "DashboardOut",
+        "type": "object"
+      },
       "DealCreateIn": {
         "properties": {
           "company": {
@@ -3919,6 +4105,41 @@
           "statuses"
         ],
         "title": "DealsOut",
+        "type": "object"
+      },
+      "DelayedOrder": {
+        "properties": {
+          "customer": {
+            "title": "Customer",
+            "type": "string"
+          },
+          "due": {
+            "format": "date",
+            "title": "Due",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "number": {
+            "title": "Number",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "customer",
+          "due",
+          "reason"
+        ],
+        "title": "DelayedOrder",
         "type": "object"
       },
       "DeliveryOut": {
@@ -5689,7 +5910,7 @@
             "type": "array"
           },
           "kpis": {
-            "$ref": "#/components/schemas/Kpis"
+            "$ref": "#/components/schemas/app__purchasing__schemas__Kpis"
           },
           "materials": {
             "items": {
@@ -6105,37 +6326,42 @@
         "title": "JsonValueIn",
         "type": "object"
       },
-      "Kpis": {
+      "Kpi": {
         "properties": {
-          "awaiting_approval": {
-            "title": "Awaiting Approval",
-            "type": "integer"
+          "note": {
+            "title": "Note",
+            "type": "string"
           },
-          "below_reorder": {
-            "title": "Below Reorder",
-            "type": "integer"
+          "trend": {
+            "default": [],
+            "items": {
+              "type": "number"
+            },
+            "title": "Trend",
+            "type": "array"
           },
-          "on_order": {
-            "title": "On Order",
-            "type": "integer"
+          "unit": {
+            "title": "Unit",
+            "type": "string"
           },
-          "skus": {
-            "title": "Skus",
-            "type": "integer"
-          },
-          "stock_value_paise": {
-            "title": "Stock Value Paise",
-            "type": "integer"
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
           }
         },
         "required": [
-          "skus",
-          "below_reorder",
-          "on_order",
-          "awaiting_approval",
-          "stock_value_paise"
+          "value",
+          "unit",
+          "note"
         ],
-        "title": "Kpis",
+        "title": "Kpi",
         "type": "object"
       },
       "LastChange": {
@@ -6235,6 +6461,44 @@
           "password"
         ],
         "title": "LoginRequest",
+        "type": "object"
+      },
+      "MachineDay": {
+        "properties": {
+          "after": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "After"
+          },
+          "current": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current"
+          },
+          "day": {
+            "format": "date",
+            "title": "Day",
+            "type": "string"
+          }
+        },
+        "required": [
+          "day",
+          "current",
+          "after"
+        ],
+        "title": "MachineDay",
         "type": "object"
       },
       "MachineIn-Input": {
@@ -6380,6 +6644,122 @@
           "night_shift_cost_per_hour_paise"
         ],
         "title": "MachineIn",
+        "type": "object"
+      },
+      "MachineLoad": {
+        "properties": {
+          "after": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "After"
+          },
+          "current": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current"
+          },
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/MachineDay"
+            },
+            "title": "Days",
+            "type": "array"
+          },
+          "machine": {
+            "title": "Machine",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "orders": {
+            "items": {
+              "$ref": "#/components/schemas/MachineOrder"
+            },
+            "title": "Orders",
+            "type": "array"
+          },
+          "over": {
+            "title": "Over",
+            "type": "boolean"
+          },
+          "peak_after": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Peak After"
+          },
+          "peak_day": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Peak Day"
+          }
+        },
+        "required": [
+          "machine",
+          "name",
+          "current",
+          "after",
+          "peak_after",
+          "peak_day",
+          "over",
+          "days",
+          "orders"
+        ],
+        "title": "MachineLoad",
+        "type": "object"
+      },
+      "MachineOrder": {
+        "properties": {
+          "added": {
+            "title": "Added",
+            "type": "boolean"
+          },
+          "customer": {
+            "title": "Customer",
+            "type": "string"
+          },
+          "hours": {
+            "title": "Hours",
+            "type": "number"
+          },
+          "number": {
+            "title": "Number",
+            "type": "string"
+          }
+        },
+        "required": [
+          "number",
+          "customer",
+          "hours",
+          "added"
+        ],
+        "title": "MachineOrder",
         "type": "object"
       },
       "MatchLine": {
@@ -7694,7 +8074,8 @@
           "billing.read",
           "billing.write",
           "billing.issue",
-          "billing.approve"
+          "billing.approve",
+          "dashboard.read"
         ],
         "title": "Permission",
         "type": "string"
@@ -8052,6 +8433,61 @@
           }
         },
         "title": "PlanPatch",
+        "type": "object"
+      },
+      "PlanRef": {
+        "properties": {
+          "approved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "needs_reapproval": {
+            "default": false,
+            "title": "Needs Reapproval",
+            "type": "boolean"
+          },
+          "number": {
+            "title": "Number",
+            "type": "string"
+          },
+          "orders": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Orders",
+            "type": "array"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          }
+        },
+        "required": [
+          "id",
+          "number"
+        ],
+        "title": "PlanRef",
         "type": "object"
       },
       "PlanResult": {
@@ -9893,6 +10329,41 @@
         "title": "RaisePoIn",
         "type": "object"
       },
+      "Range": {
+        "properties": {
+          "days": {
+            "items": {
+              "format": "date",
+              "type": "string"
+            },
+            "title": "Days",
+            "type": "array"
+          },
+          "end": {
+            "format": "date",
+            "title": "End",
+            "type": "string"
+          },
+          "start": {
+            "format": "date",
+            "title": "Start",
+            "type": "string"
+          },
+          "today": {
+            "format": "date",
+            "title": "Today",
+            "type": "string"
+          }
+        },
+        "required": [
+          "start",
+          "end",
+          "days",
+          "today"
+        ],
+        "title": "Range",
+        "type": "object"
+      },
       "RankingSettings": {
         "properties": {
           "mode": {
@@ -11532,6 +12003,139 @@
         "title": "SupplierRow",
         "type": "object"
       },
+      "Timeline": {
+        "properties": {
+          "draft": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlanRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "machines": {
+            "items": {
+              "$ref": "#/components/schemas/MachineLoad"
+            },
+            "title": "Machines",
+            "type": "array"
+          },
+          "plan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlanRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/TimelineRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "enum": [
+                  "approved",
+                  "committed"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          }
+        },
+        "required": [
+          "source",
+          "plan",
+          "draft",
+          "rows",
+          "machines"
+        ],
+        "title": "Timeline",
+        "type": "object"
+      },
+      "TimelineRow": {
+        "properties": {
+          "customer": {
+            "title": "Customer",
+            "type": "string"
+          },
+          "due": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due"
+          },
+          "finish": {
+            "format": "date",
+            "title": "Finish",
+            "type": "string"
+          },
+          "late": {
+            "title": "Late",
+            "type": "boolean"
+          },
+          "number": {
+            "title": "Number",
+            "type": "string"
+          },
+          "order_id": {
+            "format": "uuid",
+            "title": "Order Id",
+            "type": "string"
+          },
+          "progress_pct": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Progress Pct"
+          },
+          "start": {
+            "format": "date",
+            "title": "Start",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "order_id",
+          "number",
+          "customer",
+          "status",
+          "start",
+          "finish",
+          "due",
+          "progress_pct",
+          "late"
+        ],
+        "title": "TimelineRow",
+        "type": "object"
+      },
       "TokenResponse": {
         "properties": {
           "access_token": {
@@ -11588,6 +12192,30 @@
           "row"
         ],
         "title": "TopCard",
+        "type": "object"
+      },
+      "TopCustomer": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "sales_paise": {
+            "title": "Sales Paise",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "sales_paise"
+        ],
+        "title": "TopCustomer",
         "type": "object"
       },
       "UploadDetail": {
@@ -12034,6 +12662,38 @@
         "title": "Period",
         "type": "object"
       },
+      "app__dashboard__schemas__Kpis": {
+        "properties": {
+          "cycle_time": {
+            "$ref": "#/components/schemas/Kpi"
+          },
+          "delayed": {
+            "$ref": "#/components/schemas/Kpi"
+          },
+          "delayed_orders": {
+            "items": {
+              "$ref": "#/components/schemas/DelayedOrder"
+            },
+            "title": "Delayed Orders",
+            "type": "array"
+          },
+          "in_progress": {
+            "$ref": "#/components/schemas/Kpi"
+          },
+          "utilization": {
+            "$ref": "#/components/schemas/Kpi"
+          }
+        },
+        "required": [
+          "utilization",
+          "in_progress",
+          "cycle_time",
+          "delayed",
+          "delayed_orders"
+        ],
+        "title": "Kpis",
+        "type": "object"
+      },
       "app__planning__schemas__Overview": {
         "properties": {
           "bottlenecks": {
@@ -12101,6 +12761,39 @@
           "parallel"
         ],
         "title": "Overview",
+        "type": "object"
+      },
+      "app__purchasing__schemas__Kpis": {
+        "properties": {
+          "awaiting_approval": {
+            "title": "Awaiting Approval",
+            "type": "integer"
+          },
+          "below_reorder": {
+            "title": "Below Reorder",
+            "type": "integer"
+          },
+          "on_order": {
+            "title": "On Order",
+            "type": "integer"
+          },
+          "skus": {
+            "title": "Skus",
+            "type": "integer"
+          },
+          "stock_value_paise": {
+            "title": "Stock Value Paise",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "skus",
+          "below_reorder",
+          "on_order",
+          "awaiting_approval",
+          "stock_value_paise"
+        ],
+        "title": "Kpis",
         "type": "object"
       }
     },
@@ -14898,6 +15591,79 @@
         "summary": "Merge",
         "tags": [
           "customers"
+        ]
+      }
+    },
+    "/api/dashboard": {
+      "get": {
+        "description": "The owner's consolidated view for a date range (default: this week and next).",
+        "operationId": "overview_api_dashboard_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Overview",
+        "tags": [
+          "dashboard"
         ]
       }
     },

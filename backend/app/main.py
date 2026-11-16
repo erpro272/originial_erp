@@ -20,6 +20,7 @@ from app.core.logging import configure_logging
 from app.core.routers import admin, auth, health
 from app.core.storage import get_storage
 from app.customers.router import router as customers_router
+from app.dashboard.router import router as dashboard_router
 from app.invoices.router import files_router
 from app.invoices.router import router as invoices_router
 from app.orders.router import router as orders_router
@@ -98,6 +99,7 @@ def create_app() -> FastAPI:
         planning_router,
         purchasing_router,
         billing_router,
+        dashboard_router,
         invoices_router,
         files_router,
     ):

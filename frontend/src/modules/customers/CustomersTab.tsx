@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { createColumnHelper, type SortingState } from "@tanstack/react-table";
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { api, unwrap } from "@/api/client";
 import { useAuth } from "@/auth/AuthContext";
 import { DataTable } from "@/components/data-table/DataTable";
@@ -86,7 +86,11 @@ export function CustomersTab() {
   const { can } = useAuth();
   const navigate = useNavigate();
   const period = usePeriod();
-  const [health, setHealth] = useState<Health | "all">("all");
+  // `?health=high_value` (links from the Executive Dashboard) opens the list filtered
+  const [params] = useSearchParams();
+  const [health, setHealth] = useState<Health | "all">(
+    () => (params.get("health") as Health | null) ?? "all",
+  );
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
   const [sorting, setSorting] = useState<SortingState>([{ id: "total_sales", desc: true }]);

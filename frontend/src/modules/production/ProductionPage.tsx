@@ -1,91 +1,10 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
+import { Icon, KitIcon, KpiCard, Sparkline } from "@/components/kit/Kit";
+import { TONE } from "@/components/kit/tones";
 import { Button } from "@/components/ui/Button";
-import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { cn } from "@/lib/cn";
 import { ALERTS, DEMO_NOTICE, KPIS, SECTIONS } from "./demoData";
-import { FactoryLayout } from "./FactoryLayout";
-import { STATUS } from "./status";
-
-type Tone = "ok" | "bl" | "ai" | "hi" | "md";
-const TONE: Record<Tone, { stroke: string; icon: string; card: string }> = {
-  ok: { stroke: "stroke-ok", icon: "bg-ok-bg text-ok", card: "bg-ok-bg/40 border-ok-line/60" },
-  bl: {
-    stroke: "stroke-primary",
-    icon: "bg-bl-bg text-primary",
-    card: "bg-bl-bg/40 border-bl-line/60",
-  },
-  ai: { stroke: "stroke-ai", icon: "bg-ai-bg text-ai", card: "bg-ai-bg/40 border-ai-line" },
-  hi: { stroke: "stroke-hi", icon: "bg-hi-bg text-hi", card: "bg-hi-bg/40 border-hi-line/60" },
-  md: {
-    stroke: "stroke-md-accent",
-    icon: "bg-md-bg text-md",
-    card: "bg-md-bg/40 border-md-line/60",
-  },
-};
-
-/** Decorative trend line (the numbers are in the card's text). */
-function Sparkline({
-  data,
-  tone,
-  className,
-}: {
-  data: readonly number[];
-  tone: Tone;
-  className?: string;
-}) {
-  const min = Math.min(...data);
-  const max = Math.max(...data);
-  const pts = data
-    .map((v, i) => `${(i / (data.length - 1)) * 100},${28 - ((v - min) / (max - min || 1)) * 24}`)
-    .join(" ");
-  return (
-    <svg viewBox="0 0 100 30" preserveAspectRatio="none" className={className} aria-hidden="true">
-      <polyline
-        points={pts}
-        fill="none"
-        className={TONE[tone].stroke}
-        strokeWidth="1.6"
-        strokeLinejoin="round"
-        strokeLinecap="round"
-        vectorEffect="non-scaling-stroke"
-      />
-    </svg>
-  );
-}
-
-const KPI_ICON: Record<string, ReactNode> = {
-  util: <path d="M3 20h18M5 20v-7l4-3 4 3 6-6M5 9V5h4" />,
-  wip: (
-    <>
-      <path d="M12 2.5 20.5 7v10L12 21.5 3.5 17V7z" />
-      <path d="M3.5 7 12 11.5 20.5 7M12 11.5v10" />
-    </>
-  ),
-  cycle: (
-    <>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7v5l3 2" />
-    </>
-  ),
-  delayed: <path d="M12 3 22 20H2zM12 10v4M12 17v.5" />,
-};
-
-function Icon({ children, className }: { children: ReactNode; className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      className={className}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.7"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      {children}
-    </svg>
-  );
-}
+import { FactoryPanel } from "./FactoryPanel";
 
 function LiveClock() {
   const [now, setNow] = useState(() => new Date());
@@ -112,9 +31,10 @@ function LiveClock() {
   );
 }
 
+const ICONS = { util: "util", wip: "wip", cycle: "cycle", delayed: "alert" } as const;
+
 /** Production → Factory Layout. Frontend preview on demo data (see demoData.ts). */
 export function ProductionPage() {
-  const [view, setView] = useState<"layout" | "status">("layout");
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -131,9 +51,7 @@ export function ProductionPage() {
               + New Order
             </Button>
             <Button variant="pill" size="md" title={DEMO_NOTICE}>
-              <Icon className="size-4">
-                <path d="M12 16V4M7 9l5-5 5 5M4 16v4h16v-4" />
-              </Icon>
+              <KitIcon kind="upload" className="size-4" />
               Upload Document
             </Button>
           </div>
@@ -145,74 +63,22 @@ export function ProductionPage() {
         {DEMO_NOTICE} Hover a stage or station to see its numbers.
       </p>
 
-      <dl className="m-0 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {KPIS.map((k) => (
-          <div
+          <KpiCard
             key={k.key}
-            className={cn(
-              "flex items-center gap-4 rounded-card border px-5 py-4",
-              TONE[k.tone].card,
-            )}
-          >
-            <span
-              className={cn(
-                "grid size-12 shrink-0 place-items-center rounded-full",
-                TONE[k.tone].icon,
-              )}
-            >
-              <Icon className="size-6">{KPI_ICON[k.key]}</Icon>
-            </span>
-            <div className="flex shrink-0 flex-col">
-              <dt className="text-[14px] font-medium whitespace-nowrap text-ink-2">{k.label}</dt>
-              <dd className="m-0 flex items-baseline gap-1.5 text-[24px] font-bold whitespace-nowrap text-ink">
-                {k.value}
-                {"unit" in k && <span className="text-[18px] font-semibold">{k.unit}</span>}
-                {"delta" in k && (
-                  <span className="text-[13px] font-semibold text-ok">↑ {k.delta}</span>
-                )}
-              </dd>
-            </div>
-            <Sparkline
-              data={k.trend}
-              tone={k.tone}
-              className="ml-auto h-8 min-w-0 flex-1 basis-0"
-            />
-          </div>
-        ))}
-      </dl>
-
-      <section aria-labelledby="layout-h" className="rounded-card border border-line bg-white">
-        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-divider px-6 py-4">
-          <h2 id="layout-h" className="m-0 flex items-center gap-3 text-[19px] font-semibold">
-            <Icon className="size-6 text-ink-2">
-              <path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3zM9 3v15M15 6v15" />
-            </Icon>
-            Factory Layout
-          </h2>
-          <SegmentedControl
-            label="Layout or status view"
-            value={view}
-            onChange={(v) => setView(v as "layout" | "status")}
-            options={[
-              { value: "layout", label: "Layout View" },
-              { value: "status", label: "Status View" },
-            ]}
+            label={k.label}
+            value={k.value}
+            unit={"unit" in k ? k.unit : undefined}
+            delta={"delta" in k ? `↑ ${k.delta}` : undefined}
+            tone={k.tone}
+            icon={ICONS[k.key]}
+            trend={k.trend}
           />
-        </header>
-        <div className="flex gap-6 overflow-x-auto p-6">
-          <div className="flex-1">
-            <FactoryLayout view={view} />
-          </div>
-          <ul className="m-0 flex h-fit shrink-0 list-none flex-col gap-3 rounded-card border border-line p-4 text-[13px] text-ink-2 shadow-sm">
-            {(["running", "idle", "maintenance", "issue"] as const).map((s) => (
-              <li key={s} className="flex items-center gap-3">
-                <span className={cn("size-3 rounded-full", STATUS[s].dot)} />
-                {STATUS[s].label}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
+        ))}
+      </div>
+
+      <FactoryPanel id="layout-h" />
 
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.4fr_1fr]">
         <section aria-labelledby="perf-h" className="rounded-card border border-line bg-white p-5">
@@ -265,16 +131,7 @@ export function ProductionPage() {
                     TONE[a.tone].icon,
                   )}
                 >
-                  <Icon className="size-5">
-                    {a.tone === "hi" ? (
-                      KPI_ICON.delayed
-                    ) : (
-                      <>
-                        <circle cx="12" cy="12" r="9" />
-                        <path d="M12 11v6M12 7.5v.5" />
-                      </>
-                    )}
-                  </Icon>
+                  <KitIcon kind={a.tone === "hi" ? "alert" : "info"} className="size-5" />
                 </span>
                 <div className="flex min-w-0 flex-1 flex-col">
                   <span className="text-[15px] font-semibold text-ink">{a.title}</span>

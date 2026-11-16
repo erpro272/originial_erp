@@ -169,3 +169,24 @@ async def series_prefix(session: AsyncSession) -> str | None:
         if len(parts) == 3 and parts[2].isdigit() and parts[0]:
             return parts[0]
     return None
+
+
+async def monthly_totals(session: AsyncSession, start: date, end: date) -> dict[str, dict[str, int]]:
+    """Per month ("2026-06"): issued invoice value by invoice date, and real money received by receipt date
+    (each rupee counted once: a receipt is counted in the month it arrived, never again as invoiced)."""
+    month = func.to_char(Invoice.invoice_date, "YYYY-MM")
+    inv = (await session.execute(
+        select(month, func.sum(Invoice.grand_total_paise)).where(ISSUED, Invoice.invoice_date.between(start, end))
+        .group_by(month)
+    )).all()  # fmt: skip
+    rmonth = func.to_char(InvoiceReceipt.received_on, "YYYY-MM")
+    got = (await session.execute(
+        select(rmonth, func.sum(InvoiceReceipt.amount_paise))
+        .where(InvoiceReceipt.kind.in_(CASH_KINDS), InvoiceReceipt.received_on.between(start, end)).group_by(rmonth)
+    )).all()  # fmt: skip
+    out: dict[str, dict[str, int]] = {}
+    for m, v in inv:
+        out.setdefault(m, {})["invoiced"] = int(v or 0)
+    for m, v in got:
+        out.setdefault(m, {})["collected"] = int(v or 0)
+    return out

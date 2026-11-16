@@ -11,13 +11,14 @@ from datetime import UTC, date, datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.catalog import service as catalog
 from app.catalog.models import Product
 from app.core import audit, clock, counters
 from app.core.errors import DomainError, NotFound
+from app.core.models import AuditLog
 from app.core.services import kv
 from app.customers.models import Customer
 from app.orders.models import CURRENT_STATUSES, PAST_STATUSES, TRANSITIONS, Order
@@ -549,3 +550,33 @@ async def facts(session: AsyncSession, ids: list[uuid.UUID] | None = None) -> di
                    "promised_date": o.promised_date, "created_at": o.created_at, "closed_at": o.closed_at,
                    "cancel_reason": o.cancel_reason, "progress_pct": o.progress_pct}
             for o, pname in (await session.execute(q)).all()}  # fmt: skip
+
+
+# ---- Executive Dashboard ----------------------------------------------------------------------
+
+
+async def open_orders(session: AsyncSession) -> list[OrderOut]:
+    """Every open order (new / accepted / planned / in production) with its signal."""
+    return await _build(session, await _load(session, OrderFilters(scope="current")))
+
+
+async def received_between(session: AsyncSession, start: date, end: date) -> int:
+    """Orders received (created) in the period, cancelled ones included (they were received)."""
+    q = select(func.count()).where(func.date(Order.created_at).between(start, end))
+    return int((await session.execute(q)).scalar_one())
+
+
+async def cycle_days(session: AsyncSession, since: date) -> list[float]:
+    """Actual production cycle times (days from "in production" to "completed") of orders completed since
+    `since`, from the order history (audit log). Orders whose start wasn't recorded are left out."""
+    q = (select(AuditLog.entity_id, AuditLog.at, AuditLog.after["status"].astext)
+         .where(AuditLog.entity_type == "order", AuditLog.after["status"].astext.in_(("in_production", "completed")))
+         .order_by(AuditLog.at))  # fmt: skip
+    started: dict[str, datetime] = {}
+    out: list[float] = []
+    for oid, at, status in (await session.execute(q)).all():
+        if status == "in_production":
+            started[oid] = at
+        elif oid in started and at.date() >= since:
+            out.append(round((at - started.pop(oid)).total_seconds() / 86400, 2))
+    return out

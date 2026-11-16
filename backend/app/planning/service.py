@@ -1172,3 +1172,68 @@ async def plan_refs(session: AsyncSession, order_ids: list[uuid.UUID]) -> dict[u
         for i in ids & set(p.selected):
             out[uuid.UUID(i)] = plan_ref(p)
     return out
+
+
+# ---- Executive Dashboard ----------------------------------------------------------------------
+
+
+def _hours(rows: list[dict[str, Any]]) -> dict[str, dict[str, dict[str, float]]]:
+    """machine -> order id -> day -> hours, from schedule rows."""
+    out: dict[str, dict[str, dict[str, float]]] = {}
+    for r in rows:
+        for st in r.get("steps", []):
+            per = out.setdefault(st["machine"], {}).setdefault(r["id"], {})
+            for d, h in st["hours"].items():
+                per[str(d)] = per.get(str(d), 0.0) + float(h)
+    return out
+
+
+async def dashboard_schedule(session: AsyncSession) -> dict[str, Any]:
+    """What the Executive Dashboard mirrors (it never schedules anything itself):
+    - rows: the approved schedule (newest plan in force, as approved), else the work already committed (orders in
+      production / booked) as the working plan schedules it;
+    - load per machine and day: `current` = committed work, `after` = plus the orders of the working (draft) plan;
+    - hours: machine -> order -> day -> hours, with the draft's own orders marked as added."""
+    today = clock.today()
+    in_force = [p for p in await _active_plans(session) if p.status == "approved"]
+    newest = max(in_force, key=lambda p: p.approved_at or p.created_at) if in_force else None
+    draft = await _working(session)
+    approved: dict[str, Any] | None = None
+    if newest is not None:
+        snaps = await _snapshots(session, newest.id)
+        approved = (snaps[0].result if snaps else newest.result or {}).get("schedule")
+    live: dict[str, Any] | None = None
+    added: set[str] = set()
+    if draft is not None:
+        draft = await _refresh(session, draft, today)
+        live = (draft.result or {}).get("schedule")
+        added = set((draft.result or {}).get("selection", {}).get("selected") or draft.selected or [])
+    base = live or approved or {"rows": [], "load": []}
+    hours = _hours(base["rows"])
+    load = []
+    for m in base["load"]:
+        per = hours.get(m["machine"], {})
+        days: dict[str, dict[str, int | None]] = {}
+        for d, pct in m["days"].items():
+            if pct is None:
+                days[str(d)] = {"current": None, "after": None}
+                continue
+            total = sum(h.get(str(d), 0.0) for h in per.values())
+            mine = sum(h.get(str(d), 0.0) for oid, h in per.items() if oid not in added)
+            days[str(d)] = {"current": round(pct * mine / total) if total > 1e-6 else pct, "after": pct}
+        load.append({"machine": m["machine"], "name": m["name"], "days": days})
+    if approved is not None:
+        rows, source = approved["rows"], "approved"
+    else:
+        rows, source = [r for r in base["rows"] if r.get("running") or r["id"] not in added], "committed"
+    return {
+        "plan": {"id": newest.id, "number": newest.number, "approved_at": newest.approved_at,
+                 "needs_reapproval": newest.needs_reapproval} if newest else None,
+        "draft": {"id": draft.id, "number": draft.number, "status": _stage(draft), "orders": sorted(added)}
+        if draft else None,
+        "source": source if base["rows"] else None,
+        "rows": rows,
+        "load": load,
+        "hours": hours,
+        "added": sorted(added),
+    }  # fmt: skip

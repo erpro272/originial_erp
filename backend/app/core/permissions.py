@@ -34,6 +34,7 @@ class Permission(StrEnum):
     BILLING_WRITE = "billing.write"  # follow-ups, receipts, supplier invoices, verify, schedule, execute
     BILLING_ISSUE = "billing.issue"  # issue a sales invoice (owner, accountant)
     BILLING_APPROVE = "billing.approve"  # approve / hold / reject supplier payments (owner only)
+    DASHBOARD_READ = "dashboard.read"  # Executive Dashboard (owner only: it shows cash and every module)
 
 
 _ALL = frozenset(Permission)

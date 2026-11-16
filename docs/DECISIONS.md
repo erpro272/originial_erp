@@ -274,3 +274,26 @@ Short records of choices and the reason for each. Newest at the bottom.
     and the page says "Demo data" in a banner. The floor plan is a 1000 x 420 unit space (boxes placed in %,
     walls and arrows in one SVG), so the real layout can later come from factory setup. Status view (extra)
     tints each station by its status. New Order / Upload Document / View Details do nothing yet.
+56. **Executive Dashboard (owner's choices)**: `/dashboard`, owner only (`dashboard.read`). A read-only summary:
+    the `dashboard` module stores nothing and calls other modules' service functions only. Date range in the URL
+    (default this week and next, Mon-Sat; max 92 days). Order Timeline = mirror of Planning: the approved schedule of
+    the newest plan in force (as approved); with no approved plan, the work already committed (orders in production /
+    booked) as the working plan schedules it. Machine Load: `current` = committed work, `after` = plus the orders of
+    the working (draft) plan (= "new orders"), both from Planning's own schedule (`planning.dashboard_schedule`);
+    bar = average over the working days of the range, warning on the busiest day; click = day-by-day table and the
+    orders loading the machine, with a link to the plan. Planning's scheduler never books a machine past 100% (it
+    pushes work later and the orders turn late), so "After New Orders" saturates at 100% (amber "fully booked") and the
+    overflow shows as Delayed Orders; red > 100% only appears with forced locks / pins. Overall Utilization = average
+    committed machine load. In Progress = quantity of orders in production. Avg. Cycle Time = actual days from "in
+    production" to "completed" (order history, last 90 days), else planned (start to finish in the schedule), labelled
+    either way. Delayed Orders = open orders past their promised / ship date, planned to finish after it, or "behind"
+    in Orders. Cash Flow (6 months ending with the range): Invoiced = issued invoices by invoice date; Collected =
+    money actually received (receipts incl. opening receipts, by receipt date; promises and credit notes are not
+    cash); Payables = supplier bills received (rejected left out); "paid to suppliers" (bank-confirmed) in the
+    tooltip. Customer Health = the Customers tab's own rules and counts, FY to date; Total Orders = orders received
+    in the same period. Alerts: Planning (machine over capacity, re-approval), Orders (delayed), Purchasing (delayed
+    PO, awaiting approval, at the gate), Billing (largest overdue receivables, supplier payments awaiting owner
+    approval / overdue) and the Production demo alerts (marked demo); each links to its source record; View All opens
+    a drawer with a module filter. Factory Layout = the Production tab's demo layout (marked demo). Brand default
+    "DND Labs" (`VITE_BRAND_NAME` still overrides); nav label "Executive Dashboard". Orders `?q=` and Customers
+    `?health=` open those lists searched / filtered (dashboard links).

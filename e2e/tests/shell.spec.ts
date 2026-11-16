@@ -16,7 +16,7 @@ test("sign in, visit every module, sign out", async ({ page }) => {
     "Production",
     "Billing",
     "Finance",
-    "Dashboard",
+    "Executive Dashboard",
   ];
   await expect(nav.getByRole("link")).toHaveText(modules);
   for (const name of modules) {
@@ -26,7 +26,9 @@ test("sign in, visit every module, sign out", async ({ page }) => {
         ? /Order manufacturing plan/
         : name === "Production"
           ? "Factory Layout"
-          : name;
+          : name === "Executive Dashboard"
+            ? "Operations Dashboard"
+            : name;
     await expect(
       page.getByRole("heading", { level: 1, name: title }),
     ).toBeVisible();
@@ -42,6 +44,10 @@ test("sign in, visit every module, sign out", async ({ page }) => {
       ).toBeVisible();
     else if (name === "Production")
       await expect(page.getByText("Stage 1: Prep").first()).toBeVisible();
+    else if (name === "Executive Dashboard")
+      await expect(
+        page.getByRole("heading", { name: "Order Timeline" }),
+      ).toBeVisible();
     else if (name === "Billing")
       await expect(
         page.getByText("Customer receivables").first(),
@@ -55,7 +61,7 @@ test("sign in, visit every module, sign out", async ({ page }) => {
   // Session survives a reload (refresh cookie).
   await page.reload();
   await expect(
-    page.getByRole("heading", { level: 1, name: "Dashboard" }),
+    page.getByRole("heading", { level: 1, name: "Operations Dashboard" }),
   ).toBeVisible();
 
   await signOut(page);

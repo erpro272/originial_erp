@@ -1,6 +1,6 @@
 import { createColumnHelper, type SortingState } from "@tanstack/react-table";
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { DealChip } from "@/modules/billing/DealChip";
 import { useDealRefs } from "@/modules/billing/api";
 import { ApiError, api, unwrap } from "@/api/client";
@@ -98,7 +98,10 @@ export function OrdersTable({ onOpen }: { onOpen: (o: Order) => void }) {
   const customers = useCustomerOptions();
   const views = useSavedViews();
   const [filters, setFilters] = useState<OrderFilters>(EMPTY_FILTERS);
-  const [search, setSearch] = useState("");
+  // `?q=ORD-1046` (links from the Executive Dashboard) opens the table searched for that order
+  const [params] = useSearchParams();
+  const linkedQ = params.get("q");
+  const [search, setSearch] = useState(linkedQ ?? "");
   const [sorting, setSorting] = useState<SortingState>([]);
   const [offset, setOffset] = useState(0);
   const [selected, setSelected] = useState<string[]>([]);
@@ -110,7 +113,7 @@ export function OrdersTable({ onOpen }: { onOpen: (o: Order) => void }) {
   // Apply the user's default view once it has loaded (state adjusted during render, no effect).
   if (views.loaded && !appliedDefault) {
     setAppliedDefault(true);
-    const v = views.views.find((x) => x.id === views.defaultId);
+    const v = linkedQ ? undefined : views.views.find((x) => x.id === views.defaultId);
     if (v) {
       setFilters({ ...EMPTY_FILTERS, ...v.filters });
       setSearch(v.filters.q ?? "");

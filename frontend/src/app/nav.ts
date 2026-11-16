@@ -67,7 +67,7 @@ export const MODULES: ModuleNav[] = [
   },
   {
     key: "dashboard",
-    label: "Dashboard",
+    label: "Executive Dashboard",
     path: "/dashboard",
     description: "One overview across every module.",
     sections: [],

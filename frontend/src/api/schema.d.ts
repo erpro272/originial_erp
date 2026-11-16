@@ -721,6 +721,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Overview
+         * @description The owner's consolidated view for a date range (default: this week and next).
+         */
+        get: operations["overview_api_dashboard_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/files/{token}": {
         parameters: {
             query?: never;
@@ -1779,6 +1799,29 @@ export interface components {
             /** State Code */
             state_code?: string | null;
         };
+        /** Alert */
+        Alert: {
+            /** At */
+            at: string | null;
+            /** Id */
+            id: string;
+            /** Link */
+            link: string;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "planning" | "orders" | "purchasing" | "billing" | "production";
+            /** Text */
+            text: string;
+            /** Title */
+            title: string;
+            /**
+             * Tone
+             * @enum {string}
+             */
+            tone: "hi" | "md" | "bl" | "ok";
+        };
         /** ApCards */
         ApCards: {
             /** Due Week Paise */
@@ -2295,6 +2338,21 @@ export interface components {
             /** Reason */
             reason: string;
         };
+        /** CashMonth */
+        CashMonth: {
+            /** Collected */
+            collected: number;
+            /** Invoiced */
+            invoiced: number;
+            /** Label */
+            label: string;
+            /** Month */
+            month: string;
+            /** Paid */
+            paid: number;
+            /** Payables */
+            payables: number;
+        };
         /** ChangesRequested */
         ChangesRequested: {
             /**
@@ -2503,6 +2561,20 @@ export interface components {
             /** Upi Id */
             upi_id: string | null;
         };
+        /** CustomerHealth */
+        CustomerHealth: {
+            /** High Value */
+            high_value: number;
+            /** Inactive */
+            inactive: number;
+            /** Period Label */
+            period_label: string;
+            /** Repeat */
+            repeat: number;
+            top: components["schemas"]["TopCustomer"] | null;
+            /** Total Orders */
+            total_orders: number;
+        };
         /** CustomerIn */
         CustomerIn: {
             /** Addresses */
@@ -2702,6 +2774,17 @@ export interface components {
             /** Units Sold */
             units_sold: string;
         };
+        /** DashboardOut */
+        DashboardOut: {
+            /** Alerts */
+            alerts: components["schemas"]["Alert"][];
+            /** Cash Flow */
+            cash_flow: components["schemas"]["CashMonth"][];
+            customers: components["schemas"]["CustomerHealth"];
+            kpis: components["schemas"]["app__dashboard__schemas__Kpis"];
+            range: components["schemas"]["Range"];
+            timeline: components["schemas"]["Timeline"];
+        };
         /** DealCreateIn */
         DealCreateIn: {
             /** Company */
@@ -2860,6 +2943,25 @@ export interface components {
             rows: components["schemas"]["DealRow"][];
             /** Statuses */
             statuses: string[];
+        };
+        /** DelayedOrder */
+        DelayedOrder: {
+            /** Customer */
+            customer: string;
+            /**
+             * Due
+             * Format: date
+             */
+            due: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Number */
+            number: string;
+            /** Reason */
+            reason: string;
         };
         /** DeliveryOut */
         DeliveryOut: {
@@ -3464,7 +3566,7 @@ export interface components {
             attention: components["schemas"]["MaterialRow"][];
             /** Categories */
             categories: string[];
-            kpis: components["schemas"]["Kpis"];
+            kpis: components["schemas"]["app__purchasing__schemas__Kpis"];
             /** Materials */
             materials: components["schemas"]["MaterialRow"][];
             /** Purchase Orders */
@@ -3589,18 +3691,19 @@ export interface components {
                 [key: string]: unknown;
             };
         };
-        /** Kpis */
-        Kpis: {
-            /** Awaiting Approval */
-            awaiting_approval: number;
-            /** Below Reorder */
-            below_reorder: number;
-            /** On Order */
-            on_order: number;
-            /** Skus */
-            skus: number;
-            /** Stock Value Paise */
-            stock_value_paise: number;
+        /** Kpi */
+        Kpi: {
+            /** Note */
+            note: string;
+            /**
+             * Trend
+             * @default []
+             */
+            trend: number[];
+            /** Unit */
+            unit: string;
+            /** Value */
+            value: number | null;
         };
         /** LastChange */
         LastChange: {
@@ -3641,6 +3744,18 @@ export interface components {
              * @description Company to sign in to. Required if the user has several.
              */
             tenant_id?: string | null;
+        };
+        /** MachineDay */
+        MachineDay: {
+            /** After */
+            after: number | null;
+            /** Current */
+            current: number | null;
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
         };
         /** MachineIn */
         "MachineIn-Input": {
@@ -3689,6 +3804,38 @@ export interface components {
             operators: number;
             /** Shifts Per Day */
             shifts_per_day: number;
+        };
+        /** MachineLoad */
+        MachineLoad: {
+            /** After */
+            after: number | null;
+            /** Current */
+            current: number | null;
+            /** Days */
+            days: components["schemas"]["MachineDay"][];
+            /** Machine */
+            machine: string;
+            /** Name */
+            name: string;
+            /** Orders */
+            orders: components["schemas"]["MachineOrder"][];
+            /** Over */
+            over: boolean;
+            /** Peak After */
+            peak_after: number | null;
+            /** Peak Day */
+            peak_day: string | null;
+        };
+        /** MachineOrder */
+        MachineOrder: {
+            /** Added */
+            added: boolean;
+            /** Customer */
+            customer: string;
+            /** Hours */
+            hours: number;
+            /** Number */
+            number: string;
         };
         /** MatchLine */
         MatchLine: {
@@ -4161,7 +4308,7 @@ export interface components {
          * Permission
          * @enum {string}
          */
-        Permission: "audit.read" | "settings.read" | "settings.write" | "users.manage" | "sensitive.view" | "orders.read" | "orders.write" | "customers.read" | "customers.write" | "invoices.write" | "planning.read" | "planning.write" | "planning.approve" | "purchasing.read" | "purchasing.write" | "purchasing.approve" | "finance.read" | "billing.read" | "billing.write" | "billing.issue" | "billing.approve";
+        Permission: "audit.read" | "settings.read" | "settings.write" | "users.manage" | "sensitive.view" | "orders.read" | "orders.write" | "customers.read" | "customers.write" | "invoices.write" | "planning.read" | "planning.write" | "planning.approve" | "purchasing.read" | "purchasing.write" | "purchasing.approve" | "finance.read" | "billing.read" | "billing.write" | "billing.issue" | "billing.approve" | "dashboard.read";
         /** PlanOut */
         PlanOut: {
             /** Approval Note */
@@ -4245,6 +4392,30 @@ export interface components {
             start_date?: string | null;
             /** Use Option */
             use_option?: ("own" | "part" | "full") | null;
+        };
+        /** PlanRef */
+        PlanRef: {
+            /** Approved At */
+            approved_at?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Needs Reapproval
+             * @default false
+             */
+            needs_reapproval: boolean;
+            /** Number */
+            number: string;
+            /**
+             * Orders
+             * @default []
+             */
+            orders: string[];
+            /** Status */
+            status?: string | null;
         };
         /** PlanResult */
         PlanResult: {
@@ -4939,6 +5110,26 @@ export interface components {
             /** Material Id */
             material_id: string;
         };
+        /** Range */
+        Range: {
+            /** Days */
+            days: string[];
+            /**
+             * End
+             * Format: date
+             */
+            end: string;
+            /**
+             * Start
+             * Format: date
+             */
+            start: string;
+            /**
+             * Today
+             * Format: date
+             */
+            today: string;
+        };
         /** RankingSettings */
         RankingSettings: {
             /**
@@ -5590,6 +5781,47 @@ export interface components {
             /** Unit */
             unit: string;
         };
+        /** Timeline */
+        Timeline: {
+            draft: components["schemas"]["PlanRef"] | null;
+            /** Machines */
+            machines: components["schemas"]["MachineLoad"][];
+            plan: components["schemas"]["PlanRef"] | null;
+            /** Rows */
+            rows: components["schemas"]["TimelineRow"][];
+            /** Source */
+            source: ("approved" | "committed") | null;
+        };
+        /** TimelineRow */
+        TimelineRow: {
+            /** Customer */
+            customer: string;
+            /** Due */
+            due: string | null;
+            /**
+             * Finish
+             * Format: date
+             */
+            finish: string;
+            /** Late */
+            late: boolean;
+            /** Number */
+            number: string;
+            /**
+             * Order Id
+             * Format: uuid
+             */
+            order_id: string;
+            /** Progress Pct */
+            progress_pct: number | null;
+            /**
+             * Start
+             * Format: date
+             */
+            start: string;
+            /** Status */
+            status: string;
+        };
         /** TokenResponse */
         TokenResponse: {
             /** Access Token */
@@ -5614,6 +5846,18 @@ export interface components {
             /** Pct */
             pct: number;
             row: components["schemas"]["SupplierRow"];
+        };
+        /** TopCustomer */
+        TopCustomer: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Sales Paise */
+            sales_paise: number;
         };
         /** UploadDetail */
         UploadDetail: {
@@ -5793,6 +6037,15 @@ export interface components {
              */
             prev_to: string;
         };
+        /** Kpis */
+        app__dashboard__schemas__Kpis: {
+            cycle_time: components["schemas"]["Kpi"];
+            delayed: components["schemas"]["Kpi"];
+            /** Delayed Orders */
+            delayed_orders: components["schemas"]["DelayedOrder"][];
+            in_progress: components["schemas"]["Kpi"];
+            utilization: components["schemas"]["Kpi"];
+        };
         /** Overview */
         app__planning__schemas__Overview: {
             /** Bottlenecks */
@@ -5816,6 +6069,19 @@ export interface components {
             start: string | null;
             /** Utilisation */
             utilisation: number;
+        };
+        /** Kpis */
+        app__purchasing__schemas__Kpis: {
+            /** Awaiting Approval */
+            awaiting_approval: number;
+            /** Below Reorder */
+            below_reorder: number;
+            /** On Order */
+            on_order: number;
+            /** Skus */
+            skus: number;
+            /** Stock Value Paise */
+            stock_value_paise: number;
         };
     };
     responses: never;
@@ -7243,6 +7509,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Created"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    overview_api_dashboard_get: {
+        parameters: {
+            query?: {
+                from?: string | null;
+                to?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardOut"];
                 };
             };
             /** @description Validation Error */
