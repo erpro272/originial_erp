@@ -1,0 +1,91 @@
+"""Demo purchase orders at every stage, for the Raw Material Purchase tab (dev seed only).
+
+Kept out of `planning_demo.upsert` (which tests reuse) so the planning and inventory demos keep their numbers:
+the POs below only touch materials the demo plan has plenty of (or are not approved yet), so Planning's
+schedule doesn't change. The seed role bypasses RLS: everything is filtered by `tenant_id` explicitly.
+Idempotent: skipped when the company already has these demo POs (source "demo_buy").
+"""
+
+import uuid
+from datetime import UTC, datetime, timedelta
+from decimal import Decimal
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.catalog.models import Material
+from app.core import clock, counters
+from app.core.db import set_tenant
+from app.purchasing.models import PoEvent, PurchaseOrder, PurchaseOrderLine, Supplier
+
+SOURCE = "demo_buy"
+
+# material, supplier, qty, status, expected in N days, linked orders, priority (no order), steps done
+SCENARIO: list[tuple[str, str, str, str, int, list[str], str | None]] = [
+    # waits for the owner: WR8 for ORD-1041 (the shortage on the Inventory tab)
+    ("WR8", "JSW Steel", "2.4", "awaiting_approval", 3, ["ORD-1041"], None),
+    # dispatched, due yesterday: delayed
+    ("BSW", "Mukand Wires", "3.0", "dispatched", -1, ["ORD-1040"], None),
+    # arrived today: gate entry logged, waiting for QC
+    ("MSB", "Shree Steels", "2.0", "at_gate", 0, ["ORD-1044"], None),
+    # approved and sent, no supplier date yet
+    ("AS10", "Mukand Wires", "1.5", "ordered", 8, [], "medium"),
+]
+
+
+async def seed_purchases(s: AsyncSession, tenant_id: uuid.UUID) -> int:
+    await set_tenant(s, tenant_id)
+    done = (await s.execute(select(PurchaseOrder.id).where(PurchaseOrder.tenant_id == tenant_id,
+                                                           PurchaseOrder.source == SOURCE))).first()  # fmt: skip
+    if done is not None:
+        return 0
+    mats = {
+        m.code: m
+        for m in (await s.execute(select(Material).where(Material.tenant_id == tenant_id))).scalars()
+    }
+    today, now = clock.today(), datetime.now(UTC)
+    n_made = 0
+    for code, supplier, qty, status, days, orders, prio in SCENARIO:
+        mat = mats.get(code)
+        if mat is None:
+            continue
+        sup = (await s.execute(select(Supplier).where(Supplier.tenant_id == tenant_id, Supplier.name == supplier))
+               ).scalar_one_or_none()  # fmt: skip
+        if sup is None:
+            sup = Supplier(name=supplier)
+            s.add(sup)
+            await s.flush()
+        n = await counters.next_value(s, "po", start=0)
+        q = Decimal(qty)
+        po = PurchaseOrder(number=f"PO-{n:04d}", supplier_id=sup.id, status=status,
+                           expected_date=today + timedelta(days=days), source=SOURCE, note="Demo data",
+                           order_numbers=orders, priority=prio)  # fmt: skip
+        s.add(po)
+        await s.flush()
+        s.add(PurchaseOrderLine(po_id=po.id, material_id=mat.id, quantity=q, unit=mat.unit,
+                                price_per_unit_paise=mat.price_per_unit_paise, received_qty=Decimal(0),
+                                rejected_qty=Decimal(0)))  # fmt: skip
+        steps = [("raised", f"Raised · {qty} {mat.unit} {mat.name} from {supplier}", 6)]
+        if status != "awaiting_approval":
+            po.approved_at = now - timedelta(days=5)
+            steps.append(("approved", "Approved by the owner · PO sent to the supplier", 5))
+        if status in ("dispatched", "at_gate"):
+            po.confirmed = True
+            steps.append(("confirmed", f"Supplier confirmed delivery {po.expected_date:%a %-d %b}", 4))
+            po.dispatched_at = now - timedelta(days=2)
+            steps.append(("dispatched", f"Dispatched · arriving {po.expected_date:%a %-d %b}", 2))
+        if status == "at_gate":
+            po.gate_qty, po.gate_ref, po.gate_at = q, "CH-4471 / MH14 GT 2210", now
+            steps.append(("gate_entry", f"Gate entry · {qty} {mat.unit} · {po.gate_ref}", 0))
+        for kind, summary, ago in steps:
+            s.add(
+                PoEvent(
+                    po_id=po.id, kind=kind, summary=summary, data={}, created_at=now - timedelta(days=ago)
+                )
+            )
+        n_made += 1
+    await s.flush()
+    from app.purchasing.service import sync_incoming
+
+    await sync_incoming(s, {m.id for m in mats.values()})
+    return n_made

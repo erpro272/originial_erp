@@ -31,6 +31,7 @@ from app.core.permissions import Role
 from app.core.security import hash_password
 from seed import planning_demo
 from seed.demo_data import seed_demo, seed_second
+from seed.purchase_demo import seed_purchases
 
 PASSWORD = os.environ.get("ERP_SEED_PASSWORD", "Demo@12345")
 
@@ -51,6 +52,7 @@ DEMO_TABLES = ("products", "materials", "customers", "orders", "invoices")
 
 TABLES_IN_DELETE_ORDER = [
     "stock_movements",
+    "po_events",
     "purchase_order_lines",
     "purchase_orders",
     "suppliers",
@@ -126,6 +128,7 @@ async def seed(session: AsyncSession) -> dict[str, uuid.UUID]:
 async def seed_business(session: AsyncSession, ids: dict[str, uuid.UUID]) -> None:
     owner = (await session.execute(select(User.id).where(User.email == "owner@demo.example"))).scalar_one()
     await seed_demo(session, ids["demo"], owner)
+    await seed_purchases(session, ids["demo"])  # POs at every stage (Raw Material Purchase)
     await seed_second(session, ids["second"])
 
 
@@ -186,7 +189,11 @@ async def seed_missing(session: AsyncSession) -> list[str]:
             else:
                 print(f"seed: company '{slug}' already has data, left untouched")
             continue
-        await (seed_demo(session, ids[slug], owner) if slug == "demo" else seed_second(session, ids[slug]))
+        if slug == "demo":
+            await seed_demo(session, ids[slug], owner)
+            await seed_purchases(session, ids[slug])
+        else:
+            await seed_second(session, ids[slug])
         filled.append(slug)
     return filled
 

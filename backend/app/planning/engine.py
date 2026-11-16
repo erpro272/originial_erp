@@ -19,7 +19,7 @@ from typing import Any
 
 EPS = 1e-6
 # Bump when the engine's logic changes, so saved plan results are recalculated (part of the fingerprint).
-ENGINE_VERSION = 14
+ENGINE_VERSION = 15
 FULL_POOL = 10  # orders the fully optimized option searches exhaustively (2^N subsets)
 FULL_REFINE = 8  # best subsets whose sequence is then improved by pairwise swaps
 HORIZON_DAYS = 400
@@ -1225,6 +1225,8 @@ def _need_text(n: dict[str, Any], today: date) -> str:
                  "po_raised": f"{po} awaiting approval, not received yet",
                  "ordered": f"{po} ordered, not received yet",
                  "confirmed": f"{po} confirmed by the supplier, not received yet",
+                 "dispatched": f"{po} dispatched by the supplier, not received yet",
+                 "at_gate": f"{po} at the gate, waiting for QC",
                  "received": f"{po} received"}.get(req["status"], req["status"])  # fmt: skip
         return f"{kind} for {qty} requested {_fmt_day(req['at'])} · {state} · {eta} · {need}"
     if act == "express_po":

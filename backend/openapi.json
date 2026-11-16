@@ -2052,6 +2052,36 @@
         "title": "Diff",
         "type": "object"
       },
+      "DispatchIn": {
+        "properties": {
+          "expected_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Date"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "title": "DispatchIn",
+        "type": "object"
+      },
       "DowntimeIn-Input": {
         "properties": {
           "day": {
@@ -2649,6 +2679,33 @@
         "title": "FixCost",
         "type": "object"
       },
+      "FollowUpIn": {
+        "properties": {
+          "note": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Note",
+            "type": "string"
+          },
+          "promised_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Promised Date"
+          }
+        },
+        "required": [
+          "note"
+        ],
+        "title": "FollowUpIn",
+        "type": "object"
+      },
       "FollowupIn": {
         "properties": {
           "assigned_to": {
@@ -2901,6 +2958,46 @@
           "setup"
         ],
         "title": "GanttStep",
+        "type": "object"
+      },
+      "GateEntryIn": {
+        "properties": {
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "reference": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Reference",
+            "type": "string"
+          }
+        },
+        "required": [
+          "quantity",
+          "reference"
+        ],
+        "title": "GateEntryIn",
         "type": "object"
       },
       "Group": {
@@ -3829,6 +3926,14 @@
             "title": "Name",
             "type": "string"
           },
+          "needs": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Need"
+            },
+            "title": "Needs",
+            "type": "array"
+          },
           "next_need": {
             "anyOf": [
               {
@@ -4006,6 +4111,36 @@
           "sales_paise"
         ],
         "title": "MonthPoint",
+        "type": "object"
+      },
+      "Need": {
+        "description": "An order that needs this material (for linking a PO to it).",
+        "properties": {
+          "customer": {
+            "title": "Customer",
+            "type": "string"
+          },
+          "needed_by": {
+            "format": "date",
+            "title": "Needed By",
+            "type": "string"
+          },
+          "number": {
+            "title": "Number",
+            "type": "string"
+          },
+          "qty": {
+            "title": "Qty",
+            "type": "string"
+          }
+        },
+        "required": [
+          "number",
+          "customer",
+          "needed_by",
+          "qty"
+        ],
+        "title": "Need",
         "type": "object"
       },
       "OptionRow": {
@@ -5624,6 +5759,354 @@
         "title": "PlanningSelectionOut",
         "type": "object"
       },
+      "PoDetail": {
+        "properties": {
+          "approved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved At"
+          },
+          "cancel_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancel Reason"
+          },
+          "confirmed": {
+            "title": "Confirmed",
+            "type": "boolean"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "dispatched_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dispatched At"
+          },
+          "events": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/PoEventOut"
+            },
+            "title": "Events",
+            "type": "array"
+          },
+          "expected_date": {
+            "format": "date",
+            "title": "Expected Date",
+            "type": "string"
+          },
+          "gate_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gate At"
+          },
+          "gate_qty": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gate Qty"
+          },
+          "gate_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gate Ref"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/PoLine"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "needed_by": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Needed By"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "number": {
+            "title": "Number",
+            "type": "string"
+          },
+          "open_value_paise": {
+            "default": 0,
+            "title": "Open Value Paise",
+            "type": "integer"
+          },
+          "orders": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Orders",
+            "type": "array"
+          },
+          "priority": {
+            "default": "medium",
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ],
+            "title": "Priority",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "stage": {
+            "default": "pending_approval",
+            "enum": [
+              "pending_approval",
+              "sent",
+              "confirmed",
+              "in_transit",
+              "delayed",
+              "arriving_today",
+              "at_gate",
+              "received",
+              "cancelled"
+            ],
+            "title": "Stage",
+            "type": "string"
+          },
+          "stage_text": {
+            "default": "",
+            "title": "Stage Text",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "supplier": {
+            "title": "Supplier",
+            "type": "string"
+          },
+          "value_paise": {
+            "title": "Value Paise",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "supplier",
+          "status",
+          "expected_date",
+          "confirmed",
+          "note",
+          "source",
+          "created_at",
+          "approved_at",
+          "cancel_reason",
+          "value_paise",
+          "lines"
+        ],
+        "title": "PoDetail",
+        "type": "object"
+      },
+      "PoEditIn": {
+        "description": "Change a PO while it waits for approval.",
+        "properties": {
+          "expected_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Date"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "order_numbers": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 50,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Numbers"
+          },
+          "price_per_unit_paise": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Per Unit Paise"
+          },
+          "priority": {
+            "anyOf": [
+              {
+                "enum": [
+                  "high",
+                  "medium",
+                  "low"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "supplier": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier"
+          }
+        },
+        "title": "PoEditIn",
+        "type": "object"
+      },
+      "PoEventOut": {
+        "properties": {
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "By"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "summary",
+          "at"
+        ],
+        "title": "PoEventOut",
+        "type": "object"
+      },
       "PoLine": {
         "properties": {
           "code": {
@@ -5654,6 +6137,11 @@
           },
           "received_qty": {
             "title": "Received Qty",
+            "type": "string"
+          },
+          "rejected_qty": {
+            "default": "0",
+            "title": "Rejected Qty",
             "type": "string"
           },
           "unit": {
@@ -5708,10 +6196,56 @@
             "title": "Created At",
             "type": "string"
           },
+          "dispatched_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dispatched At"
+          },
           "expected_date": {
             "format": "date",
             "title": "Expected Date",
             "type": "string"
+          },
+          "gate_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gate At"
+          },
+          "gate_qty": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gate Qty"
+          },
+          "gate_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gate Ref"
           },
           "id": {
             "format": "uuid",
@@ -5724,6 +6258,18 @@
             },
             "title": "Lines",
             "type": "array"
+          },
+          "needed_by": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Needed By"
           },
           "note": {
             "anyOf": [
@@ -5740,8 +6286,52 @@
             "title": "Number",
             "type": "string"
           },
+          "open_value_paise": {
+            "default": 0,
+            "title": "Open Value Paise",
+            "type": "integer"
+          },
+          "orders": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Orders",
+            "type": "array"
+          },
+          "priority": {
+            "default": "medium",
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ],
+            "title": "Priority",
+            "type": "string"
+          },
           "source": {
             "title": "Source",
+            "type": "string"
+          },
+          "stage": {
+            "default": "pending_approval",
+            "enum": [
+              "pending_approval",
+              "sent",
+              "confirmed",
+              "in_transit",
+              "delayed",
+              "arriving_today",
+              "at_gate",
+              "received",
+              "cancelled"
+            ],
+            "title": "Stage",
+            "type": "string"
+          },
+          "stage_text": {
+            "default": "",
+            "title": "Stage Text",
             "type": "string"
           },
           "status": {
@@ -5799,10 +6389,35 @@
             ],
             "title": "Note"
           },
+          "order_numbers": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 50,
+            "title": "Order Numbers",
+            "type": "array"
+          },
           "price_per_unit_paise": {
             "minimum": 0.0,
             "title": "Price Per Unit Paise",
             "type": "integer"
+          },
+          "priority": {
+            "anyOf": [
+              {
+                "enum": [
+                  "high",
+                  "medium",
+                  "low"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority"
           },
           "quantity": {
             "anyOf": [
@@ -5951,6 +6566,34 @@
           "unit_cost_paise"
         ],
         "title": "ProductOut",
+        "type": "object"
+      },
+      "PurchaseKpis": {
+        "properties": {
+          "in_transit": {
+            "title": "In Transit",
+            "type": "integer"
+          },
+          "open": {
+            "title": "Open",
+            "type": "integer"
+          },
+          "open_spend_paise": {
+            "title": "Open Spend Paise",
+            "type": "integer"
+          },
+          "pending_approval": {
+            "title": "Pending Approval",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "open",
+          "pending_approval",
+          "in_transit",
+          "open_spend_paise"
+        ],
+        "title": "PurchaseKpis",
         "type": "object"
       },
       "PurchaseNeed": {
@@ -6142,6 +6785,17 @@
             "title": "Order Numbers",
             "type": "array"
           },
+          "po_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Po Number"
+          },
           "quantity": {
             "title": "Quantity",
             "type": "string"
@@ -6172,6 +6826,94 @@
           "created_at"
         ],
         "title": "PurchaseRequestOut",
+        "type": "object"
+      },
+      "PurchasesOut": {
+        "properties": {
+          "attention": {
+            "items": {
+              "$ref": "#/components/schemas/PoOut"
+            },
+            "title": "Attention",
+            "type": "array"
+          },
+          "kpis": {
+            "$ref": "#/components/schemas/PurchaseKpis"
+          },
+          "purchase_orders": {
+            "items": {
+              "$ref": "#/components/schemas/PoOut"
+            },
+            "title": "Purchase Orders",
+            "type": "array"
+          },
+          "suppliers": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Suppliers",
+            "type": "array"
+          },
+          "today": {
+            "format": "date",
+            "title": "Today",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kpis",
+          "attention",
+          "purchase_orders",
+          "suppliers",
+          "today"
+        ],
+        "title": "PurchasesOut",
+        "type": "object"
+      },
+      "QcIn": {
+        "properties": {
+          "accepted": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Accepted"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "rejected": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "default": "0",
+            "title": "Rejected"
+          }
+        },
+        "required": [
+          "accepted"
+        ],
+        "title": "QcIn",
         "type": "object"
       },
       "RaisePoIn": {
@@ -6255,45 +6997,6 @@
           }
         },
         "title": "RankingWeights",
-        "type": "object"
-      },
-      "ReceiveIn": {
-        "properties": {
-          "line_id": {
-            "format": "uuid",
-            "title": "Line Id",
-            "type": "string"
-          },
-          "note": {
-            "anyOf": [
-              {
-                "maxLength": 2000,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Note"
-          },
-          "quantity": {
-            "anyOf": [
-              {
-                "exclusiveMinimum": 0.0,
-                "type": "number"
-              },
-              {
-                "type": "string"
-              }
-            ],
-            "title": "Quantity"
-          }
-        },
-        "required": [
-          "line_id",
-          "quantity"
-        ],
-        "title": "ReceiveIn",
         "type": "object"
       },
       "Regenerate": {
@@ -11212,7 +11915,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PoOut"
+                  "$ref": "#/components/schemas/PoDetail"
                 }
               }
             },
@@ -11240,8 +11943,115 @@
         ]
       }
     },
+    "/api/purchasing/purchase-orders/{po_id}": {
+      "get": {
+        "description": "One PO with its timeline.",
+        "operationId": "get_po_api_purchasing_purchase_orders__po_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "po_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Po Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PoDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Po",
+        "tags": [
+          "purchasing"
+        ]
+      },
+      "patch": {
+        "description": "Change a PO while it waits for approval.",
+        "operationId": "edit_po_api_purchasing_purchase_orders__po_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "po_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Po Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PoEditIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PoDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Edit Po",
+        "tags": [
+          "purchasing"
+        ]
+      }
+    },
     "/api/purchasing/purchase-orders/{po_id}/approve": {
       "post": {
+        "description": "Owner approves: the PO is sent to the supplier and counts as on order.",
         "operationId": "approve_api_purchasing_purchase_orders__po_id__approve_post",
         "parameters": [
           {
@@ -11260,7 +12070,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PoOut"
+                  "$ref": "#/components/schemas/PoDetail"
                 }
               }
             },
@@ -11318,7 +12128,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PoOut"
+                  "$ref": "#/components/schemas/PoDetail"
                 }
               }
             },
@@ -11377,7 +12187,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PoOut"
+                  "$ref": "#/components/schemas/PoDetail"
                 }
               }
             },
@@ -11405,10 +12215,10 @@
         ]
       }
     },
-    "/api/purchasing/purchase-orders/{po_id}/receive": {
+    "/api/purchasing/purchase-orders/{po_id}/dispatch": {
       "post": {
-        "description": "Goods received: stock goes up (ledger).",
-        "operationId": "receive_api_purchasing_purchase_orders__po_id__receive_post",
+        "description": "The supplier dispatched the goods: in transit.",
+        "operationId": "dispatch_api_purchasing_purchase_orders__po_id__dispatch_post",
         "parameters": [
           {
             "in": "path",
@@ -11425,7 +12235,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ReceiveIn"
+                "$ref": "#/components/schemas/DispatchIn"
               }
             }
           },
@@ -11436,7 +12246,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PoOut"
+                  "$ref": "#/components/schemas/PoDetail"
                 }
               }
             },
@@ -11458,7 +12268,211 @@
             "HTTPBearer": []
           }
         ],
-        "summary": "Receive",
+        "summary": "Dispatch",
+        "tags": [
+          "purchasing"
+        ]
+      }
+    },
+    "/api/purchasing/purchase-orders/{po_id}/follow-up": {
+      "post": {
+        "description": "Chased the supplier: note and the new promised date.",
+        "operationId": "follow_up_api_purchasing_purchase_orders__po_id__follow_up_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "po_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Po Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FollowUpIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PoDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Follow Up",
+        "tags": [
+          "purchasing"
+        ]
+      }
+    },
+    "/api/purchasing/purchase-orders/{po_id}/gate-entry": {
+      "post": {
+        "description": "Goods arrived at the gate: waiting for QC (not in stock yet).",
+        "operationId": "gate_entry_api_purchasing_purchase_orders__po_id__gate_entry_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "po_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Po Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GateEntryIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PoDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Gate Entry",
+        "tags": [
+          "purchasing"
+        ]
+      }
+    },
+    "/api/purchasing/purchase-orders/{po_id}/qc": {
+      "post": {
+        "description": "QC: accepted quantity into stock, rejected quantity back to the supplier.",
+        "operationId": "qc_api_purchasing_purchase_orders__po_id__qc_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "po_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Po Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QcIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PoDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Qc",
+        "tags": [
+          "purchasing"
+        ]
+      }
+    },
+    "/api/purchasing/purchases": {
+      "get": {
+        "description": "Raw Material Purchase: every PO with its stage, KPIs and the POs that need attention.",
+        "operationId": "purchases_api_purchasing_purchases_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurchasesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Purchases",
         "tags": [
           "purchasing"
         ]

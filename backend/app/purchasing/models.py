@@ -8,18 +8,22 @@ Stock on hand is the sum of `stock_movements` (opening balance, receipts, issues
 import uuid
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Any
 
 from sqlalchemy import BigInteger, DateTime, ForeignKey, Numeric, String, Text, UniqueConstraint
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 
 from app.core.db import Base, TenantScoped, TimestampMixin
 
-# awaiting_approval -> (owner approves) ordered -> confirmed (supplier's date) -> received
-# any open status -> cancelled (with a reason)
-PO_STATUSES = ("awaiting_approval", "ordered", "confirmed", "received", "cancelled")
-OPEN = ("awaiting_approval", "ordered", "confirmed")
-INCOMING = ("ordered", "confirmed")  # really on the way (approved and sent)
+# awaiting_approval -> (owner approves) ordered ("PO sent") -> confirmed (supplier's date) -> dispatched
+# (in transit) -> at_gate (gate entry logged, waiting for QC) -> received (QC accepted everything)
+# A partial QC sends it back to confirmed / ordered for the rest. Open (not at the gate, nothing received)
+# -> cancelled (with a reason).
+PO_STATUSES = ("awaiting_approval", "ordered", "confirmed", "dispatched", "at_gate", "received", "cancelled")
+OPEN = ("awaiting_approval", "ordered", "confirmed", "dispatched", "at_gate")
+INCOMING = ("ordered", "confirmed", "dispatched", "at_gate")  # really on the way (approved and sent)
 
 
 class Supplier(Base, TenantScoped, TimestampMixin):
@@ -44,6 +48,14 @@ class PurchaseOrder(Base, TenantScoped, TimestampMixin):
     approved_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
     approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     cancel_reason: Mapped[str | None] = mapped_column(Text)
+    # orders the material is for (order numbers): from Planning's requests, or picked when raised by hand
+    order_numbers: Mapped[list[Any]] = mapped_column(JSONB, default=list)
+    priority: Mapped[str | None] = mapped_column(String(8))  # only for POs with no linked order
+    dispatched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # the gate entry waiting for QC (one at a time)
+    gate_qty: Mapped[Decimal | None] = mapped_column(Numeric(14, 3))
+    gate_ref: Mapped[str | None] = mapped_column(String(100))  # challan / vehicle no.
+    gate_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class PurchaseOrderLine(Base, TenantScoped, TimestampMixin):
@@ -54,7 +66,10 @@ class PurchaseOrderLine(Base, TenantScoped, TimestampMixin):
     quantity: Mapped[Decimal] = mapped_column(Numeric(14, 3))
     unit: Mapped[str] = mapped_column(String(16))
     price_per_unit_paise: Mapped[int] = mapped_column(BigInteger)
-    received_qty: Mapped[Decimal] = mapped_column(Numeric(14, 3), default=Decimal("0"))
+    received_qty: Mapped[Decimal] = mapped_column(Numeric(14, 3), default=Decimal("0"))  # QC accepted
+    rejected_qty: Mapped[Decimal] = mapped_column(
+        Numeric(14, 3), default=Decimal("0")
+    )  # QC rejected (returned)
 
 
 class StockMovement(Base, TenantScoped):
@@ -67,5 +82,19 @@ class StockMovement(Base, TenantScoped):
     kind: Mapped[str] = mapped_column(String(16))  # opening | receipt | issue | adjustment
     po_line_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("purchase_order_lines.id"))
     note: Mapped[str | None] = mapped_column(Text)
+    actor_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class PoEvent(Base, TenantScoped):
+    """What happened to a PO, in order (raised, approved, confirmed, dispatched, gate entry, QC, follow-up,
+    cancelled). Insert-only for the app role."""
+
+    __tablename__ = "po_events"
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    po_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("purchase_orders.id", ondelete="CASCADE"), index=True)
+    kind: Mapped[str] = mapped_column(String(24))
+    summary: Mapped[str] = mapped_column(Text)
+    data: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)
     actor_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

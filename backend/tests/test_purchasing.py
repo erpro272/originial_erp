@@ -112,21 +112,44 @@ async def test_po_lifecycle_and_the_planning_link(client: AsyncClient) -> None:
                             headers=buyer)).json()  # fmt: skip
     assert po["status"] == "confirmed" and po["confirmed"] and po["expected_date"] == due2
 
-    # receive part, then the rest: stock goes up through the ledger; over-receiving is refused
-    lid = po["lines"][0]["id"]
-    rec = f"/purchasing/purchase-orders/{po['id']}/receive"
-    po = (await client.post(rec, json={"line_id": lid, "quantity": "1.0"}, headers=buyer)).json()
-    assert po["status"] == "confirmed" and float(po["lines"][0]["received_qty"]) == 1.0
+    # gate entry -> QC: stock goes up only by what QC accepts; the rejected part is still owed
+    base = f"/purchasing/purchase-orders/{po['id']}"
+    bad = await client.post(f"{base}/gate-entry", json={"quantity": "5", "reference": "CH-1"}, headers=buyer)
+    assert bad.status_code == 400 and "still to come" in bad.json()["error"]["message"]
+    po = (await client.post(f"{base}/gate-entry", json={"quantity": "1.0", "reference": "CH-101 / MH12 AB 1234"},
+                            headers=buyer)).json()  # fmt: skip
+    assert po["status"] == "at_gate" and po["stage"] == "at_gate" and "CH-101" in po["stage_text"]
+    reqs = (await client.get("/planning/purchase-requests", headers=owner)).json()
+    assert {r["status"] for r in reqs if r["po_number"] == po["number"]} == {"at_gate"}
+    assert (
+        await client.post(f"{base}/cancel", json={"reason": "x"}, headers=buyer)
+    ).status_code == 400  # at the gate: QC first
+    bad = await client.post(f"{base}/qc", json={"accepted": "0.8", "rejected": "0.2"}, headers=buyer)
+    assert bad.status_code == 400 and "why" in bad.json()["error"]["message"]  # rejection needs a reason
+    bad = await client.post(f"{base}/qc", json={"accepted": "0.5"}, headers=buyer)
+    assert bad.status_code == 400  # must add up to what is at the gate
+    po = (await client.post(f"{base}/qc", json={"accepted": "0.8", "rejected": "0.2", "reason": "Rusty coils"},
+                            headers=buyer)).json()  # fmt: skip
+    ln = po["lines"][0]
+    assert (
+        po["status"] == "confirmed" and float(ln["received_qty"]) == 0.8 and float(ln["rejected_qty"]) == 0.2
+    )
     assert (
         float(_by_code((await client.get("/purchasing/inventory", headers=owner)).json())["WR8"]["in_stock"])
-        == 1.6
+        == 1.4
     )
-    bad = await client.post(rec, json={"line_id": lid, "quantity": "5"}, headers=buyer)
-    assert bad.status_code == 400 and "still to come" in bad.json()["error"]["message"]
-    po = (await client.post(rec, json={"line_id": lid, "quantity": "1.4"}, headers=buyer)).json()
-    assert po["status"] == "received"
+    # the rest: dispatched (in transit), arrives, passes QC -> received
+    po = (await client.post(f"{base}/dispatch", json={}, headers=buyer)).json()
+    assert po["status"] == "dispatched" and po["stage"] in ("in_transit", "delayed", "arriving_today")
+    po = (await client.post(f"{base}/gate-entry", json={"quantity": "1.6", "reference": "CH-102"},
+                            headers=buyer)).json()  # fmt: skip
+    po = (await client.post(f"{base}/qc", json={"accepted": "1.6"}, headers=buyer)).json()
+    assert po["status"] == "received" and po["stage"] == "received"
     w = _by_code((await client.get("/purchasing/inventory", headers=owner)).json())["WR8"]
     assert float(w["in_stock"]) == 3.0 and float(w["on_order"]) == 0 and w["status"] != "critical_short"
+    kinds = [e["kind"] for e in po["events"]]
+    assert kinds == ["raised", "approved", "confirmed", "gate_entry", "qc", "dispatched", "gate_entry", "qc"]
+    assert po["events"][1]["by"]  # who did it
     # received POs can't be cancelled
     c = await client.post(
         f"/purchasing/purchase-orders/{po['id']}/cancel", json={"reason": "x"}, headers=buyer

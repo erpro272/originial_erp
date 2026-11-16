@@ -489,6 +489,7 @@ class PurchaseRequestOut(BaseModel):
     source: str
     status: str
     created_at: datetime
+    po_number: str | None = None  # the PO that took it over (Purchasing)
 
 
 # ---- company rules (the small ⚙ dialogs next to discretionary numbers) -----------------------

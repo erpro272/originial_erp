@@ -917,6 +917,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/purchasing/purchase-orders/{po_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Po
+         * @description One PO with its timeline.
+         */
+        get: operations["get_po_api_purchasing_purchase_orders__po_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Edit Po
+         * @description Change a PO while it waits for approval.
+         */
+        patch: operations["edit_po_api_purchasing_purchase_orders__po_id__patch"];
+        trace?: never;
+    };
     "/api/purchasing/purchase-orders/{po_id}/approve": {
         parameters: {
             query?: never;
@@ -926,7 +950,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Approve */
+        /**
+         * Approve
+         * @description Owner approves: the PO is sent to the supplier and counts as on order.
+         */
         post: operations["approve_api_purchasing_purchase_orders__po_id__approve_post"];
         delete?: never;
         options?: never;
@@ -971,7 +998,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/purchasing/purchase-orders/{po_id}/receive": {
+    "/api/purchasing/purchase-orders/{po_id}/dispatch": {
         parameters: {
             query?: never;
             header?: never;
@@ -981,10 +1008,90 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Receive
-         * @description Goods received: stock goes up (ledger).
+         * Dispatch
+         * @description The supplier dispatched the goods: in transit.
          */
-        post: operations["receive_api_purchasing_purchase_orders__po_id__receive_post"];
+        post: operations["dispatch_api_purchasing_purchase_orders__po_id__dispatch_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/purchase-orders/{po_id}/follow-up": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Follow Up
+         * @description Chased the supplier: note and the new promised date.
+         */
+        post: operations["follow_up_api_purchasing_purchase_orders__po_id__follow_up_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/purchase-orders/{po_id}/gate-entry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Gate Entry
+         * @description Goods arrived at the gate: waiting for QC (not in stock yet).
+         */
+        post: operations["gate_entry_api_purchasing_purchase_orders__po_id__gate_entry_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/purchase-orders/{po_id}/qc": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Qc
+         * @description QC: accepted quantity into stock, rejected quantity back to the supplier.
+         */
+        post: operations["qc_api_purchasing_purchase_orders__po_id__qc_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/purchases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Purchases
+         * @description Raw Material Purchase: every PO with its stage, KPIs and the POs that need attention.
+         */
+        get: operations["purchases_api_purchasing_purchases_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1600,6 +1707,13 @@ export interface components {
             /** Worse */
             worse: components["schemas"]["Bottleneck"][];
         };
+        /** DispatchIn */
+        DispatchIn: {
+            /** Expected Date */
+            expected_date?: string | null;
+            /** Note */
+            note?: string | null;
+        };
         /** DowntimeIn */
         "DowntimeIn-Input": {
             /**
@@ -1805,6 +1919,13 @@ export interface components {
             /** Label */
             label: string;
         };
+        /** FollowUpIn */
+        FollowUpIn: {
+            /** Note */
+            note: string;
+            /** Promised Date */
+            promised_date?: string | null;
+        };
         /** FollowupIn */
         FollowupIn: {
             /** Assigned To */
@@ -1897,6 +2018,15 @@ export interface components {
              * Format: date
              */
             start: string;
+        };
+        /** GateEntryIn */
+        GateEntryIn: {
+            /** Note */
+            note?: string | null;
+            /** Quantity */
+            quantity: number | string;
+            /** Reference */
+            reference: string;
         };
         /** Group */
         Group: {
@@ -2272,6 +2402,11 @@ export interface components {
             incoming: components["schemas"]["Incoming"][];
             /** Name */
             name: string;
+            /**
+             * Needs
+             * @default []
+             */
+            needs: components["schemas"]["Need"][];
             /** Next Need */
             next_need?: string | null;
             /** On Order */
@@ -2335,6 +2470,23 @@ export interface components {
             month: string;
             /** Sales Paise */
             sales_paise: number;
+        };
+        /**
+         * Need
+         * @description An order that needs this material (for linking a PO to it).
+         */
+        Need: {
+            /** Customer */
+            customer: string;
+            /**
+             * Needed By
+             * Format: date
+             */
+            needed_by: string;
+            /** Number */
+            number: string;
+            /** Qty */
+            qty: string;
         };
         /** OptionRow */
         OptionRow: {
@@ -2885,6 +3037,120 @@ export interface components {
             /** Updated */
             updated: number;
         };
+        /** PoDetail */
+        PoDetail: {
+            /** Approved At */
+            approved_at: string | null;
+            /** Cancel Reason */
+            cancel_reason: string | null;
+            /** Confirmed */
+            confirmed: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Dispatched At */
+            dispatched_at?: string | null;
+            /**
+             * Events
+             * @default []
+             */
+            events: components["schemas"]["PoEventOut"][];
+            /**
+             * Expected Date
+             * Format: date
+             */
+            expected_date: string;
+            /** Gate At */
+            gate_at?: string | null;
+            /** Gate Qty */
+            gate_qty?: string | null;
+            /** Gate Ref */
+            gate_ref?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Lines */
+            lines: components["schemas"]["PoLine"][];
+            /** Needed By */
+            needed_by?: string | null;
+            /** Note */
+            note: string | null;
+            /** Number */
+            number: string;
+            /**
+             * Open Value Paise
+             * @default 0
+             */
+            open_value_paise: number;
+            /**
+             * Orders
+             * @default []
+             */
+            orders: string[];
+            /**
+             * Priority
+             * @default medium
+             * @enum {string}
+             */
+            priority: "high" | "medium" | "low";
+            /** Source */
+            source: string;
+            /**
+             * Stage
+             * @default pending_approval
+             * @enum {string}
+             */
+            stage: "pending_approval" | "sent" | "confirmed" | "in_transit" | "delayed" | "arriving_today" | "at_gate" | "received" | "cancelled";
+            /**
+             * Stage Text
+             * @default
+             */
+            stage_text: string;
+            /** Status */
+            status: string;
+            /** Supplier */
+            supplier: string;
+            /** Value Paise */
+            value_paise: number;
+        };
+        /**
+         * PoEditIn
+         * @description Change a PO while it waits for approval.
+         */
+        PoEditIn: {
+            /** Expected Date */
+            expected_date?: string | null;
+            /** Note */
+            note?: string | null;
+            /** Order Numbers */
+            order_numbers?: string[] | null;
+            /** Price Per Unit Paise */
+            price_per_unit_paise?: number | null;
+            /** Priority */
+            priority?: ("high" | "medium" | "low") | null;
+            /** Quantity */
+            quantity?: number | string | null;
+            /** Supplier */
+            supplier?: string | null;
+        };
+        /** PoEventOut */
+        PoEventOut: {
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** By */
+            by?: string | null;
+            /** Kind */
+            kind: string;
+            /** Summary */
+            summary: string;
+        };
         /** PoLine */
         PoLine: {
             /** Code */
@@ -2907,6 +3173,11 @@ export interface components {
             quantity: string;
             /** Received Qty */
             received_qty: string;
+            /**
+             * Rejected Qty
+             * @default 0
+             */
+            rejected_qty: string;
             /** Unit */
             unit: string;
         };
@@ -2923,11 +3194,19 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /** Dispatched At */
+            dispatched_at?: string | null;
             /**
              * Expected Date
              * Format: date
              */
             expected_date: string;
+            /** Gate At */
+            gate_at?: string | null;
+            /** Gate Qty */
+            gate_qty?: string | null;
+            /** Gate Ref */
+            gate_ref?: string | null;
             /**
              * Id
              * Format: uuid
@@ -2935,12 +3214,41 @@ export interface components {
             id: string;
             /** Lines */
             lines: components["schemas"]["PoLine"][];
+            /** Needed By */
+            needed_by?: string | null;
             /** Note */
             note: string | null;
             /** Number */
             number: string;
+            /**
+             * Open Value Paise
+             * @default 0
+             */
+            open_value_paise: number;
+            /**
+             * Orders
+             * @default []
+             */
+            orders: string[];
+            /**
+             * Priority
+             * @default medium
+             * @enum {string}
+             */
+            priority: "high" | "medium" | "low";
             /** Source */
             source: string;
+            /**
+             * Stage
+             * @default pending_approval
+             * @enum {string}
+             */
+            stage: "pending_approval" | "sent" | "confirmed" | "in_transit" | "delayed" | "arriving_today" | "at_gate" | "received" | "cancelled";
+            /**
+             * Stage Text
+             * @default
+             */
+            stage_text: string;
             /** Status */
             status: string;
             /** Supplier */
@@ -2962,8 +3270,15 @@ export interface components {
             material_id: string;
             /** Note */
             note?: string | null;
+            /**
+             * Order Numbers
+             * @default []
+             */
+            order_numbers: string[];
             /** Price Per Unit Paise */
             price_per_unit_paise: number;
+            /** Priority */
+            priority?: ("high" | "medium" | "low") | null;
             /** Quantity */
             quantity: number | string;
             /** Supplier */
@@ -3010,6 +3325,17 @@ export interface components {
             unit_cost_paise: number;
             /** Unit Price Paise */
             unit_price_paise: number;
+        };
+        /** PurchaseKpis */
+        PurchaseKpis: {
+            /** In Transit */
+            in_transit: number;
+            /** Open */
+            open: number;
+            /** Open Spend Paise */
+            open_spend_paise: number;
+            /** Pending Approval */
+            pending_approval: number;
         };
         /** PurchaseNeed */
         PurchaseNeed: {
@@ -3088,6 +3414,8 @@ export interface components {
             needed_by: string;
             /** Order Numbers */
             order_numbers: string[];
+            /** Po Number */
+            po_number?: string | null;
             /** Quantity */
             quantity: string;
             /** Source */
@@ -3096,6 +3424,33 @@ export interface components {
             status: string;
             /** Unit */
             unit: string;
+        };
+        /** PurchasesOut */
+        PurchasesOut: {
+            /** Attention */
+            attention: components["schemas"]["PoOut"][];
+            kpis: components["schemas"]["PurchaseKpis"];
+            /** Purchase Orders */
+            purchase_orders: components["schemas"]["PoOut"][];
+            /** Suppliers */
+            suppliers: string[];
+            /**
+             * Today
+             * Format: date
+             */
+            today: string;
+        };
+        /** QcIn */
+        QcIn: {
+            /** Accepted */
+            accepted: number | string;
+            /** Reason */
+            reason?: string | null;
+            /**
+             * Rejected
+             * @default 0
+             */
+            rejected: number | string;
         };
         /** RaisePoIn */
         RaisePoIn: {
@@ -3148,18 +3503,6 @@ export interface components {
              * @default 10
              */
             requirement: number;
-        };
-        /** ReceiveIn */
-        ReceiveIn: {
-            /**
-             * Line Id
-             * Format: uuid
-             */
-            line_id: string;
-            /** Note */
-            note?: string | null;
-            /** Quantity */
-            quantity: number | string;
         };
         /**
          * Regenerate
@@ -5629,7 +5972,73 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PoOut"];
+                    "application/json": components["schemas"]["PoDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_po_api_purchasing_purchase_orders__po_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                po_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PoDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    edit_po_api_purchasing_purchase_orders__po_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                po_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PoEditIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PoDetail"];
                 };
             };
             /** @description Validation Error */
@@ -5660,7 +6069,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PoOut"];
+                    "application/json": components["schemas"]["PoDetail"];
                 };
             };
             /** @description Validation Error */
@@ -5695,7 +6104,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PoOut"];
+                    "application/json": components["schemas"]["PoDetail"];
                 };
             };
             /** @description Validation Error */
@@ -5730,7 +6139,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PoOut"];
+                    "application/json": components["schemas"]["PoDetail"];
                 };
             };
             /** @description Validation Error */
@@ -5744,7 +6153,7 @@ export interface operations {
             };
         };
     };
-    receive_api_purchasing_purchase_orders__po_id__receive_post: {
+    dispatch_api_purchasing_purchase_orders__po_id__dispatch_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -5755,7 +6164,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ReceiveIn"];
+                "application/json": components["schemas"]["DispatchIn"];
             };
         };
         responses: {
@@ -5765,7 +6174,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PoOut"];
+                    "application/json": components["schemas"]["PoDetail"];
                 };
             };
             /** @description Validation Error */
@@ -5775,6 +6184,131 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    follow_up_api_purchasing_purchase_orders__po_id__follow_up_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                po_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FollowUpIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PoDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    gate_entry_api_purchasing_purchase_orders__po_id__gate_entry_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                po_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GateEntryIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PoDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    qc_api_purchasing_purchase_orders__po_id__qc_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                po_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QcIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PoDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    purchases_api_purchasing_purchases_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchasesOut"];
                 };
             };
         };

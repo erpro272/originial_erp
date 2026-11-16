@@ -380,7 +380,7 @@ async def _check_regenerate(session: AsyncSession, plan: Plan) -> None:
             str(i): n
             for i, n in (
                 await session.execute(select(Order.id, Order.number).where(Order.id.in_(ids)))
-            ).tuples()
+            ).all()
         }
         plan.status = "draft"
         plan.inputs = {**(plan.inputs or {}), "regenerate": {
@@ -909,7 +909,7 @@ async def purchase_requests(session: AsyncSession) -> list[PurchaseRequestOut]:
                                   .order_by(PurchaseRequest.created_at.desc()))).all()  # fmt: skip
     return [PurchaseRequestOut(id=p.id, material=m.name, quantity=p.quantity, unit=p.unit, needed_by=p.needed_by,
                                express=p.express, order_numbers=p.order_numbers, source=p.source, status=p.status,
-                               created_at=p.created_at) for p, m in rows]  # fmt: skip
+                               created_at=p.created_at, po_number=p.po_number) for p, m in rows]  # fmt: skip
 
 
 # ---- factory setup ----------------------------------------------------------------------------
@@ -1087,16 +1087,19 @@ async def material_demand(session: AsyncSession) -> list[dict[str, Any]]:
     return sorted(out, key=lambda d: (d["needed_by"], d["number"]))
 
 
-async def link_requests(session: AsyncSession, material_id: uuid.UUID, po_number: str) -> int:
-    """A PO was raised for a material: Planning's open requests for it are now handled by that PO."""
-    rows = (await session.execute(
+async def link_requests(session: AsyncSession, material_id: uuid.UUID, po_number: str) -> list[str] | None:
+    """A PO was raised for a material: Planning's open requests for it are now handled by that PO.
+    Returns the order numbers they were for (None when there was no request)."""
+    rows = list((await session.execute(
         select(PurchaseRequest).where(PurchaseRequest.material_id == material_id, PurchaseRequest.status == "requested")
-    )).scalars()  # fmt: skip
-    n = 0
+    )).scalars())  # fmt: skip
+    if not rows:
+        return None
+    nums: list[str] = []
     for r in rows:
         r.status, r.po_number = "po_raised", po_number
-        n += 1
-    return n
+        nums += [n for n in r.order_numbers if n not in nums]
+    return nums
 
 
 async def update_requests(session: AsyncSession, po_number: str, status: str) -> None:

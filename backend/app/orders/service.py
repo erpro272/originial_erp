@@ -526,3 +526,11 @@ async def find_order_for_invoice(
             if name and pname.lower() in name.lower() and qty is not None and qty == o.quantity:
                 return o
     return None
+
+
+async def priorities(session: AsyncSession, numbers: list[str]) -> dict[str, str]:
+    """Order number -> priority (high / medium / low), for other modules (Purchasing)."""
+    if not numbers:
+        return {}
+    q = select(Order.number, Order.priority).where(Order.number.in_(numbers))
+    return {n: p for n, p in (await session.execute(q)).all()}
