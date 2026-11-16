@@ -179,7 +179,7 @@ async def _requested(session: AsyncSession, plan: Plan) -> dict[str, dict[str, A
         )
     ).scalars()
     return {str(p.material_id): {"status": p.status, "at": p.created_at.date(), "express": p.express,
-                                 "qty": float(p.quantity)} for p in rows}  # fmt: skip
+                                 "qty": float(p.quantity), "po": p.po_number} for p in rows}  # fmt: skip
 
 
 def _fp(*parts: Any) -> str:
@@ -932,3 +932,70 @@ async def put_factory(session: AsyncSession, actor: uuid.UUID, body: Factory) ->
     await audit.record(session, actor_id=actor, action="update", entity_type="factory", entity_id=None,
                        summary="Factory set-up changed")  # fmt: skip
     return await get_factory(session)
+
+
+# ---- for Purchasing (called through these functions, never through Planning's tables) -----------------
+
+
+async def material_demand(session: AsyncSession) -> list[dict[str, Any]]:
+    """Which orders need which material, how much and from when, as planned now.
+
+    - approved plans (not completed): their orders not started yet (status "planned"): this stock is
+      reserved for them. Orders in production are taken as already issued (Production will record issues).
+    - the plan being worked on: its ticked orders (still "accepted"): needed, not reserved yet.
+    `needed_by` = the order's planned start (the plan's schedule); quantities from the bill of materials."""
+    plans = list((await session.execute(
+        select(Plan).where(Plan.deleted_at.is_(None), Plan.status.in_((*WORKING, "approved")))
+    )).scalars())  # fmt: skip
+    wanted: dict[str, tuple[bool, str, date | None]] = {}  # order id -> (reserved?, plan number, start)
+    for p in plans:
+        approved = p.status == "approved"
+        starts = {r["id"]: r["start"] for r in ((p.result or {}).get("sequence") or {}).get("rows", [])}
+        for oid in p.selected:
+            start = date.fromisoformat(starts[oid]) if oid in starts else None
+            if oid not in wanted or approved:
+                wanted[oid] = (approved, p.number, start)
+    if not wanted:
+        return []
+    boms: dict[uuid.UUID, list[ProductMaterial]] = {}
+    for b in (await session.execute(select(ProductMaterial))).scalars():
+        boms.setdefault(b.product_id, []).append(b)
+    rows = (await session.execute(
+        select(Order, Customer).join(Customer, Customer.id == Order.customer_id)
+        .where(Order.id.in_([uuid.UUID(i) for i in wanted]))
+    )).all()  # fmt: skip
+    out = []
+    for o, c in rows:
+        reserved, number, start = wanted[str(o.id)]
+        if (reserved and o.status != "planned") or (not reserved and o.status != "accepted"):
+            continue  # started / finished / cancelled, or the working plan's tick is out of date
+        for b in boms.get(o.product_id, []):
+            out.append({"material_id": b.material_id, "order_id": o.id, "number": o.number, "customer": c.name,
+                        "qty": o.quantity * b.qty_per_unit, "needed_by": start or o.ship_date,
+                        "reserved": reserved, "plan": number})  # fmt: skip
+    return sorted(out, key=lambda d: (d["needed_by"], d["number"]))
+
+
+async def link_requests(session: AsyncSession, material_id: uuid.UUID, po_number: str) -> int:
+    """A PO was raised for a material: Planning's open requests for it are now handled by that PO."""
+    rows = (await session.execute(
+        select(PurchaseRequest).where(PurchaseRequest.material_id == material_id, PurchaseRequest.status == "requested")
+    )).scalars()  # fmt: skip
+    n = 0
+    for r in rows:
+        r.status, r.po_number = "po_raised", po_number
+        n += 1
+    return n
+
+
+async def update_requests(session: AsyncSession, po_number: str, status: str) -> None:
+    """The PO moved on (ordered / confirmed / received / cancelled): its requests follow.
+    A cancelled PO hands its requests back (requested, no PO)."""
+    rows = (
+        await session.execute(select(PurchaseRequest).where(PurchaseRequest.po_number == po_number))
+    ).scalars()
+    for r in rows:
+        if status == "cancelled":
+            r.status, r.po_number = "requested", None
+        else:
+            r.status = status

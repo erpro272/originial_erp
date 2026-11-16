@@ -302,6 +302,7 @@ class PurchaseRecord(BaseModel):
     at: date
     express: bool
     qty: float
+    po: str | None = None  # the PO (Purchasing) that took the request over
 
 
 class PurchaseNeed(BaseModel):

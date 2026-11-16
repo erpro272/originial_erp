@@ -23,6 +23,7 @@ from app.invoices.router import files_router
 from app.invoices.router import router as invoices_router
 from app.orders.router import router as orders_router
 from app.planning.router import router as planning_router
+from app.purchasing.router import router as purchasing_router
 
 log = logging.getLogger(__name__)
 
@@ -94,6 +95,7 @@ def create_app() -> FastAPI:
         customers_router,
         orders_router,
         planning_router,
+        purchasing_router,
         invoices_router,
         files_router,
     ):

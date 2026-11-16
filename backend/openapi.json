@@ -524,6 +524,21 @@
         "title": "CancelIn",
         "type": "object"
       },
+      "CancelPoIn": {
+        "properties": {
+          "reason": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "title": "CancelPoIn",
+        "type": "object"
+      },
       "ChangesRequested": {
         "properties": {
           "at": {
@@ -707,6 +722,20 @@
           "role"
         ],
         "title": "CompanyOut",
+        "type": "object"
+      },
+      "ConfirmIn": {
+        "properties": {
+          "expected_date": {
+            "format": "date",
+            "title": "Expected Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "expected_date"
+        ],
+        "title": "ConfirmIn",
         "type": "object"
       },
       "ContactIn": {
@@ -3068,6 +3097,109 @@
         "title": "HistoryItem",
         "type": "object"
       },
+      "Incoming": {
+        "properties": {
+          "confirmed": {
+            "title": "Confirmed",
+            "type": "boolean"
+          },
+          "expected_date": {
+            "format": "date",
+            "title": "Expected Date",
+            "type": "string"
+          },
+          "po_id": {
+            "format": "uuid",
+            "title": "Po Id",
+            "type": "string"
+          },
+          "po_number": {
+            "title": "Po Number",
+            "type": "string"
+          },
+          "quantity": {
+            "title": "Quantity",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "supplier": {
+            "title": "Supplier",
+            "type": "string"
+          }
+        },
+        "required": [
+          "po_id",
+          "po_number",
+          "status",
+          "supplier",
+          "quantity",
+          "expected_date",
+          "confirmed"
+        ],
+        "title": "Incoming",
+        "type": "object"
+      },
+      "InventoryOut": {
+        "properties": {
+          "attention": {
+            "items": {
+              "$ref": "#/components/schemas/MaterialRow"
+            },
+            "title": "Attention",
+            "type": "array"
+          },
+          "categories": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Categories",
+            "type": "array"
+          },
+          "kpis": {
+            "$ref": "#/components/schemas/Kpis"
+          },
+          "materials": {
+            "items": {
+              "$ref": "#/components/schemas/MaterialRow"
+            },
+            "title": "Materials",
+            "type": "array"
+          },
+          "purchase_orders": {
+            "items": {
+              "$ref": "#/components/schemas/PoOut"
+            },
+            "title": "Purchase Orders",
+            "type": "array"
+          },
+          "suppliers": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Suppliers",
+            "type": "array"
+          },
+          "today": {
+            "format": "date",
+            "title": "Today",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kpis",
+          "materials",
+          "attention",
+          "purchase_orders",
+          "categories",
+          "suppliers",
+          "today"
+        ],
+        "title": "InventoryOut",
+        "type": "object"
+      },
       "InvoiceBrief": {
         "properties": {
           "balance_due_paise": {
@@ -3269,6 +3401,39 @@
           "value"
         ],
         "title": "JsonValueIn",
+        "type": "object"
+      },
+      "Kpis": {
+        "properties": {
+          "awaiting_approval": {
+            "title": "Awaiting Approval",
+            "type": "integer"
+          },
+          "below_reorder": {
+            "title": "Below Reorder",
+            "type": "integer"
+          },
+          "on_order": {
+            "title": "On Order",
+            "type": "integer"
+          },
+          "skus": {
+            "title": "Skus",
+            "type": "integer"
+          },
+          "stock_value_paise": {
+            "title": "Stock Value Paise",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "skus",
+          "below_reorder",
+          "on_order",
+          "awaiting_approval",
+          "stock_value_paise"
+        ],
+        "title": "Kpis",
         "type": "object"
       },
       "LastChange": {
@@ -3605,6 +3770,160 @@
           "shortage"
         ],
         "title": "MaterialNeed",
+        "type": "object"
+      },
+      "MaterialRow": {
+        "properties": {
+          "awaiting_approval": {
+            "title": "Awaiting Approval",
+            "type": "string"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "free": {
+            "title": "Free",
+            "type": "string"
+          },
+          "grade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "in_stock": {
+            "title": "In Stock",
+            "type": "string"
+          },
+          "incoming": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Incoming"
+            },
+            "title": "Incoming",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "next_need": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Need"
+          },
+          "on_order": {
+            "title": "On Order",
+            "type": "string"
+          },
+          "price_per_unit_paise": {
+            "title": "Price Per Unit Paise",
+            "type": "integer"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "reorder_level": {
+            "title": "Reorder Level",
+            "type": "string"
+          },
+          "reserved": {
+            "title": "Reserved",
+            "type": "string"
+          },
+          "shortfall": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Shortfall"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "enum": [
+              "critical_short",
+              "low_stock",
+              "in_transit",
+              "adequate"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "stock_value_paise": {
+            "title": "Stock Value Paise",
+            "type": "integer"
+          },
+          "suggested_qty": {
+            "title": "Suggested Qty",
+            "type": "string"
+          },
+          "supplier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "name",
+          "unit",
+          "category",
+          "grade",
+          "in_stock",
+          "reserved",
+          "free",
+          "on_order",
+          "awaiting_approval",
+          "reorder_level",
+          "price_per_unit_paise",
+          "stock_value_paise",
+          "status",
+          "reason",
+          "suggested_qty"
+        ],
+        "title": "MaterialRow",
         "type": "object"
       },
       "MeResponse": {
@@ -4564,7 +4883,9 @@
           "planning.read",
           "planning.write",
           "planning.approve",
+          "purchasing.read",
           "purchasing.write",
+          "purchasing.approve",
           "finance.read"
         ],
         "title": "Permission",
@@ -5191,6 +5512,157 @@
         "title": "PlanningSelection",
         "type": "object"
       },
+      "PoLine": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "material": {
+            "title": "Material",
+            "type": "string"
+          },
+          "material_id": {
+            "format": "uuid",
+            "title": "Material Id",
+            "type": "string"
+          },
+          "price_per_unit_paise": {
+            "title": "Price Per Unit Paise",
+            "type": "integer"
+          },
+          "quantity": {
+            "title": "Quantity",
+            "type": "string"
+          },
+          "received_qty": {
+            "title": "Received Qty",
+            "type": "string"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "material_id",
+          "material",
+          "code",
+          "quantity",
+          "unit",
+          "price_per_unit_paise",
+          "received_qty"
+        ],
+        "title": "PoLine",
+        "type": "object"
+      },
+      "PoOut": {
+        "properties": {
+          "approved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved At"
+          },
+          "cancel_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancel Reason"
+          },
+          "confirmed": {
+            "title": "Confirmed",
+            "type": "boolean"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "expected_date": {
+            "format": "date",
+            "title": "Expected Date",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/PoLine"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "number": {
+            "title": "Number",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "supplier": {
+            "title": "Supplier",
+            "type": "string"
+          },
+          "value_paise": {
+            "title": "Value Paise",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "supplier",
+          "status",
+          "expected_date",
+          "confirmed",
+          "note",
+          "source",
+          "created_at",
+          "approved_at",
+          "cancel_reason",
+          "value_paise",
+          "lines"
+        ],
+        "title": "PoOut",
+        "type": "object"
+      },
       "PreviewOut": {
         "properties": {
           "diff": {
@@ -5439,6 +5911,17 @@
             "title": "Express",
             "type": "boolean"
           },
+          "po": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Po"
+          },
           "qty": {
             "title": "Qty",
             "type": "number"
@@ -5521,19 +6004,6 @@
         "title": "PurchaseRequestOut",
         "type": "object"
       },
-      "RaisePoIn": {
-        "properties": {
-          "material_id": {
-            "title": "Material Id",
-            "type": "string"
-          }
-        },
-        "required": [
-          "material_id"
-        ],
-        "title": "RaisePoIn",
-        "type": "object"
-      },
       "RankingSettings": {
         "properties": {
           "mode": {
@@ -5602,6 +6072,45 @@
           }
         },
         "title": "RankingWeights",
+        "type": "object"
+      },
+      "ReceiveIn": {
+        "properties": {
+          "line_id": {
+            "format": "uuid",
+            "title": "Line Id",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Quantity"
+          }
+        },
+        "required": [
+          "line_id",
+          "quantity"
+        ],
+        "title": "ReceiveIn",
         "type": "object"
       },
       "RejectIn": {
@@ -6289,6 +6798,42 @@
         "title": "Sequence",
         "type": "object"
       },
+      "Shortfall": {
+        "description": "The first order that free stock + deliveries arriving in time can't cover.",
+        "properties": {
+          "customer": {
+            "title": "Customer",
+            "type": "string"
+          },
+          "needed_by": {
+            "format": "date",
+            "title": "Needed By",
+            "type": "string"
+          },
+          "number": {
+            "title": "Number",
+            "type": "string"
+          },
+          "order_id": {
+            "format": "uuid",
+            "title": "Order Id",
+            "type": "string"
+          },
+          "short": {
+            "title": "Short",
+            "type": "string"
+          }
+        },
+        "required": [
+          "order_id",
+          "number",
+          "customer",
+          "needed_by",
+          "short"
+        ],
+        "title": "Shortfall",
+        "type": "object"
+      },
       "Signal": {
         "description": "The one-line status shown on cards and the Status column. Worked out in code.",
         "properties": {
@@ -6897,6 +7442,77 @@
           "parallel"
         ],
         "title": "Overview",
+        "type": "object"
+      },
+      "app__planning__schemas__RaisePoIn": {
+        "properties": {
+          "material_id": {
+            "title": "Material Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "material_id"
+        ],
+        "title": "RaisePoIn",
+        "type": "object"
+      },
+      "app__purchasing__schemas__RaisePoIn": {
+        "properties": {
+          "expected_date": {
+            "format": "date",
+            "title": "Expected Date",
+            "type": "string"
+          },
+          "material_id": {
+            "format": "uuid",
+            "title": "Material Id",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "price_per_unit_paise": {
+            "minimum": 0.0,
+            "title": "Price Per Unit Paise",
+            "type": "integer"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "supplier": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Supplier",
+            "type": "string"
+          }
+        },
+        "required": [
+          "material_id",
+          "supplier",
+          "quantity",
+          "price_per_unit_paise",
+          "expected_date"
+        ],
+        "title": "RaisePoIn",
         "type": "object"
       }
     },
@@ -10066,7 +10682,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RaisePoIn"
+                "$ref": "#/components/schemas/app__planning__schemas__RaisePoIn"
               }
             }
           },
@@ -10308,6 +10924,332 @@
         "summary": "Put Rules",
         "tags": [
           "planning"
+        ]
+      }
+    },
+    "/api/purchasing/inventory": {
+      "get": {
+        "description": "Stock, reserved, on order and status per material; needs-attention cards; open POs.",
+        "operationId": "inventory_api_purchasing_inventory_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Inventory",
+        "tags": [
+          "purchasing"
+        ]
+      }
+    },
+    "/api/purchasing/purchase-orders": {
+      "get": {
+        "operationId": "purchase_orders_api_purchasing_purchase_orders_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PoOut"
+                  },
+                  "title": "Response Purchase Orders Api Purchasing Purchase Orders Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Purchase Orders",
+        "tags": [
+          "purchasing"
+        ]
+      },
+      "post": {
+        "description": "Raise a PO; it waits for the owner's approval before it counts as on order.",
+        "operationId": "raise_po_api_purchasing_purchase_orders_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/app__purchasing__schemas__RaisePoIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PoOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Raise Po",
+        "tags": [
+          "purchasing"
+        ]
+      }
+    },
+    "/api/purchasing/purchase-orders/{po_id}/approve": {
+      "post": {
+        "operationId": "approve_api_purchasing_purchase_orders__po_id__approve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "po_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Po Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PoOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Approve",
+        "tags": [
+          "purchasing"
+        ]
+      }
+    },
+    "/api/purchasing/purchase-orders/{po_id}/cancel": {
+      "post": {
+        "operationId": "cancel_api_purchasing_purchase_orders__po_id__cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "po_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Po Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelPoIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PoOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Cancel",
+        "tags": [
+          "purchasing"
+        ]
+      }
+    },
+    "/api/purchasing/purchase-orders/{po_id}/confirm": {
+      "post": {
+        "description": "The supplier confirmed the order and its delivery date.",
+        "operationId": "confirm_api_purchasing_purchase_orders__po_id__confirm_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "po_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Po Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PoOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Confirm",
+        "tags": [
+          "purchasing"
+        ]
+      }
+    },
+    "/api/purchasing/purchase-orders/{po_id}/receive": {
+      "post": {
+        "description": "Goods received: stock goes up (ledger).",
+        "operationId": "receive_api_purchasing_purchase_orders__po_id__receive_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "po_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Po Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReceiveIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PoOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Receive",
+        "tags": [
+          "purchasing"
         ]
       }
     },

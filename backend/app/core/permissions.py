@@ -26,7 +26,9 @@ class Permission(StrEnum):
     PLANNING_READ = "planning.read"
     PLANNING_WRITE = "planning.write"
     PLANNING_APPROVE = "planning.approve"
+    PURCHASING_READ = "purchasing.read"
     PURCHASING_WRITE = "purchasing.write"
+    PURCHASING_APPROVE = "purchasing.approve"
     FINANCE_READ = "finance.read"
 
 
@@ -42,6 +44,7 @@ ROLE_PERMISSIONS: dict[Role, frozenset[Permission]] = {
             Permission.CUSTOMERS_READ,
             Permission.PLANNING_READ,
             Permission.PLANNING_WRITE,
+            Permission.PURCHASING_READ,
         }
     ),
     Role.PURCHASER: frozenset(
@@ -50,6 +53,7 @@ ROLE_PERMISSIONS: dict[Role, frozenset[Permission]] = {
             Permission.ORDERS_READ,
             Permission.CUSTOMERS_READ,
             Permission.PLANNING_READ,
+            Permission.PURCHASING_READ,
             Permission.PURCHASING_WRITE,
         }
     ),
@@ -62,6 +66,7 @@ ROLE_PERMISSIONS: dict[Role, frozenset[Permission]] = {
             Permission.CUSTOMERS_WRITE,
             Permission.INVOICES_WRITE,
             Permission.FINANCE_READ,
+            Permission.PURCHASING_READ,
         }
     ),
 }

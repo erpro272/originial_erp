@@ -149,5 +149,7 @@ class PurchaseRequest(Base, TenantScoped, TimestampMixin):
     express: Mapped[bool] = mapped_column(Boolean, default=False)
     order_numbers: Mapped[list[Any]] = mapped_column(JSONB, default=list)
     source: Mapped[str] = mapped_column(String(16))  # raise_now | approval
+    # requested -> po_raised (PO awaiting approval) -> ordered -> confirmed -> received; cancelled PO -> requested
     status: Mapped[str] = mapped_column(String(16), default="requested")
+    po_number: Mapped[str | None] = mapped_column(String(32))  # the PO that took it over (Purchasing)
     requested_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))

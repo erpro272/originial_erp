@@ -309,7 +309,7 @@ async def test_express_fix_then_po_on_the_demo(client: AsyncClient) -> None:
                              headers=h)).json()  # fmt: skip
     check = next(c for c in out["result"]["approval"]["checks"] if c.get("items"))
     assert check["ok"] and check["title"] == "Material POs raised · not received yet"
-    assert "status: requested, not received yet · expected" in check["items"][0]["text"]
+    assert "waiting for Purchasing to raise the PO · expected" in check["items"][0]["text"]
     prs = (await client.get("/planning/purchase-requests", headers=h)).json()
     assert [(p["material"], p["express"], p["status"]) for p in prs] == [
         ("Steel wire rod", True, "requested")

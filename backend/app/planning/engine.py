@@ -19,7 +19,7 @@ from typing import Any
 
 EPS = 1e-6
 # Bump when the engine's logic changes, so saved plan results are recalculated (part of the fingerprint).
-ENGINE_VERSION = 12
+ENGINE_VERSION = 13
 FULL_POOL = 10  # orders the fully optimized option searches exhaustively (2^N subsets)
 FULL_REFINE = 8  # best subsets whose sequence is then improved by pairwise swaps
 HORIZON_DAYS = 400
@@ -1220,8 +1220,13 @@ def _need_text(n: dict[str, Any], today: date) -> str:
     kind = {"express_po": "Express PO", "po": "PO", "expedite": "Expedite request"}[act]
     if req:
         eta = f"expected {_fmt_day(n['arrives'])}" if n["arrives"] else "arrival date not confirmed yet"
-        return (f"{kind} for {qty} requested {_fmt_day(req['at'])} · status: {req['status']}, not received yet · "
-                f"{eta} · {need}")  # fmt: skip
+        po = req.get("po")
+        state = {"requested": "waiting for Purchasing to raise the PO",
+                 "po_raised": f"{po} awaiting approval, not received yet",
+                 "ordered": f"{po} ordered, not received yet",
+                 "confirmed": f"{po} confirmed by the supplier, not received yet",
+                 "received": f"{po} received"}.get(req["status"], req["status"])  # fmt: skip
+        return f"{kind} for {qty} requested {_fmt_day(req['at'])} · {state} · {eta} · {need}"
     if act == "express_po":
         return (f"{kind} for {qty}{sup} not raised yet · planned fix, not ordered: arrives "
                 f"{_fmt_day(n['arrives'])} if ordered today · {need}")  # fmt: skip

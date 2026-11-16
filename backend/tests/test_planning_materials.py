@@ -83,7 +83,7 @@ def test_raised_po_shows_its_status_and_expected_arrival() -> None:
     c = material_check(out)
     assert c["ok"] and c["title"] == "Material POs raised · not received yet" and c["action"] is None
     assert c["items"][0]["text"] == (
-        "Express PO for 2.4 t Steel wire rod requested 14 Nov · status: requested, not received yet · "
+        "Express PO for 2.4 t Steel wire rod requested 14 Nov · waiting for Purchasing to raise the PO · "
         "expected 17 Nov · needed 17 Nov for ORD-x"
     )
 

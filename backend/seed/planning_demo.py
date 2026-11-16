@@ -33,6 +33,7 @@ from app.core.db import set_tenant
 from app.core.models import TenantSetting
 from app.orders.models import Order
 from app.planning.models import Department, Machine, RouteStep
+from app.purchasing.models import StockMovement
 
 # name, labour hours available per day, ₹ per labour hour
 DEPARTMENTS = [("Machining", "96", 180), ("Assembly", "16", 170), ("Quality", "16", 200)]
@@ -102,8 +103,19 @@ RUNNING = {
     "ORD-1039": ("planned", 0),
 }
 # Bump when the scenario above changes: dev startup then re-applies it ONCE to old demo databases.
-DEMO_VERSION = 3
+DEMO_VERSION = 4
 VERSION_KEY = "seed.planning-demo"
+
+# Purchasing: material code -> (category, grade / spec, reorder level)
+MATERIAL_INFO: dict[str, tuple[str, str, str]] = {
+    "WR8": ("Wire rod", "8mm wire rod", "3.0"),  # 0.6 t in stock: critical short for ORD-1041
+    "BSW": ("Wire rod", "Boron 10B21", "5.0"),
+    "MSB": ("Bar", "MS bright bar 12mm", "4.0"),
+    "SPS": ("Strip", "Spring steel 65Mn", "2.5"),  # 2.0 t in stock: low stock
+    "AS10": ("Wire rod", "Alloy 10.9", "2.0"),
+    "TRK": ("Bought-out", "Tie rod kit", "2000"),
+    "EN8": ("Bar", "EN8 16mm hex bar", "4.0"),  # 3.0 t in stock, 8 t confirmed on order: in transit
+}
 
 # Company rule defaults (planning-rules), used only to derive the demo material prices.
 OVERHEAD_PCT = 7.0
@@ -196,10 +208,13 @@ async def upsert(s: AsyncSession, tenant_id: uuid.UUID) -> dict[str, Any]:
         if st is None:
             st = MaterialStock(material_id=mat.id)
             s.add(st)
-        st.on_hand = Decimal(on_hand)
-        st.next_arrival_date = today + timedelta(days=arrive_in) if arrive_in else None
-        st.next_arrival_qty = Decimal(arriving) if arrive_in else None
+        await s.flush()
+        await _set_stock(s, tenant_id, mat, Decimal(on_hand))
+        await _set_delivery(s, tenant_id, mat, supplier, today + timedelta(days=arrive_in) if arrive_in else None,
+                            Decimal(arriving))  # fmt: skip
         mat.express_cost_paise, mat.express_days, mat.express_supplier = exp * 100, exp_days, supplier
+        mat.category, mat.grade, reorder = MATERIAL_INFO[code]
+        mat.reorder_level = Decimal(reorder)
     await s.flush()
 
     orders = {o.number: o for o in (await s.execute(select(Order).where(Order.tenant_id == tenant_id, Order.number.in_([*CANDIDATES, *RUNNING])))).scalars()}  # fmt: skip
@@ -229,6 +244,65 @@ async def upsert(s: AsyncSession, tenant_id: uuid.UUID) -> dict[str, Any]:
     await _set_version(s, tenant_id, DEMO_VERSION)
     await s.flush()
     return {"machines": len(machines), "candidates": len(CANDIDATES), "running": len(RUNNING)}
+
+
+async def _set_stock(s: AsyncSession, tenant_id: uuid.UUID, mat: Material, target: Decimal) -> None:
+    """Stock is a ledger (Purchasing): bring it to the demo level with one opening / adjustment row."""
+    from sqlalchemy import func
+
+    from app.purchasing.service import post_movement
+
+    have = (await s.execute(select(func.coalesce(func.sum(StockMovement.quantity), 0))
+                            .where(StockMovement.tenant_id == tenant_id, StockMovement.material_id == mat.id))).scalar_one()  # fmt: skip
+    diff = target - Decimal(have)
+    if diff:
+        kind = "opening" if not have else "adjustment"
+        await post_movement(s, mat.id, diff, kind, note="Demo data")
+    st = (await s.execute(select(MaterialStock).where(MaterialStock.tenant_id == tenant_id,
+                                                      MaterialStock.material_id == mat.id))).scalar_one()  # fmt: skip
+    st.on_hand = target  # the ledger total
+
+
+async def _set_delivery(s: AsyncSession, tenant_id: uuid.UUID, mat: Material, supplier: str, due: Any,
+                        qty: Decimal) -> None:  # fmt: skip
+    """A delivery on order is a confirmed PO (Purchasing); `material_stock.next_arrival_*` mirrors it."""
+    from app.core import counters
+    from app.purchasing.models import INCOMING, PurchaseOrder, PurchaseOrderLine, Supplier
+    from app.purchasing.service import sync_incoming
+
+    line = (await s.execute(
+        select(PurchaseOrderLine).join(PurchaseOrder, PurchaseOrder.id == PurchaseOrderLine.po_id)
+        .where(PurchaseOrderLine.tenant_id == tenant_id, PurchaseOrderLine.material_id == mat.id,
+               PurchaseOrder.status.in_(INCOMING),
+               # the demo's own PO, or the one the Purchasing migration made from the old "next arrival"
+               (PurchaseOrder.source == "demo") | (PurchaseOrder.note == "Delivery on order before Purchasing was set up"))
+    )).scalars().first()  # fmt: skip
+    if due is None:
+        if line is not None:
+            po = await s.get(PurchaseOrder, line.po_id)
+            assert po is not None
+            po.status, po.cancel_reason = "cancelled", "Demo data reset"
+    else:
+        sup = (await s.execute(select(Supplier).where(Supplier.tenant_id == tenant_id, Supplier.name == supplier))
+               ).scalar_one_or_none()  # fmt: skip
+        if sup is None:
+            sup = Supplier(name=supplier)
+            s.add(sup)
+            await s.flush()
+        if line is None:
+            n = await counters.next_value(s, "po", start=0)
+            po = PurchaseOrder(number=f"PO-{n:04d}", supplier_id=sup.id, status="confirmed", expected_date=due,
+                               confirmed=True, source="demo", note="Demo data")  # fmt: skip
+            s.add(po)
+            await s.flush()
+            s.add(PurchaseOrderLine(po_id=po.id, material_id=mat.id, quantity=qty, unit=mat.unit,
+                                    price_per_unit_paise=mat.price_per_unit_paise, received_qty=Decimal(0)))  # fmt: skip
+        else:
+            po = await s.get(PurchaseOrder, line.po_id)
+            assert po is not None
+            po.expected_date, po.supplier_id, line.quantity, line.received_qty = due, sup.id, qty, Decimal(0)
+    await s.flush()
+    await sync_incoming(s, {mat.id})
 
 
 async def _version(s: AsyncSession, tenant_id: uuid.UUID) -> int:

@@ -34,6 +34,10 @@ class Material(Base, TenantScoped, TimestampMixin):
     express_cost_paise: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
     express_days: Mapped[int] = mapped_column(default=0, server_default="0")
     express_supplier: Mapped[str | None] = mapped_column(String(200))
+    # Purchasing: how it's grouped and specified, and the stock level that should trigger a reorder
+    category: Mapped[str | None] = mapped_column(String(64))
+    grade: Mapped[str | None] = mapped_column(String(120))
+    reorder_level: Mapped[Decimal] = mapped_column(Numeric(14, 3), default=Decimal("0"), server_default="0")
 
 
 class ProductMaterial(Base, TenantScoped):
