@@ -8,7 +8,7 @@ import { useToast } from "@/components/ui/Toast";
 import { cn } from "@/lib/cn";
 import { rupees, rupeesCompact, shortDate } from "@/lib/format";
 import { useApprove, useHistory, useRaisePo, useSendBack, type Plan } from "./api";
-import { planStatus } from "./status";
+import { isWorking, planStatus } from "./status";
 import { generatedLabel, plural, range } from "./format";
 import { RuleButton } from "./RuleButton";
 
@@ -23,7 +23,9 @@ export function ApprovalStep({ plan, go }: { plan: Plan; go: (step: string) => v
   const { can } = useAuth();
   const owner = can("planning.approve");
   const approved = plan.status === "approved";
-  const canApprove = owner && (!approved || plan.needs_reapproval);
+  // approve a working plan; re-approve an approved one from its recalculated (live) version
+  const decide = isWorking(plan) || (approved && plan.needs_reapproval && plan.view === "live");
+  const canApprove = owner && decide;
   const r = plan.result;
   const seq = r.sequence;
   const fin = r.finance.with;
@@ -226,7 +228,7 @@ export function ApprovalStep({ plan, go }: { plan: Plan; go: (step: string) => v
                     </small>
                   )}
                 </div>
-                {c.action === "raise_po" && !c.ok && can("planning.write") && !approved && (
+                {c.action === "raise_po" && !c.ok && can("planning.write") && isWorking(plan) && (
                   <Button
                     variant="pill"
                     size="pill"
@@ -259,12 +261,17 @@ export function ApprovalStep({ plan, go }: { plan: Plan; go: (step: string) => v
           <h3 className="m-0 text-[13px] font-semibold tracking-[0.06em] text-muted uppercase">
             Owner approval
           </h3>
-          {approved && !plan.needs_reapproval ? (
+          {!decide ? (
             <p className="m-0 text-sm text-ink-2">
-              Approved {plan.approved_at ? generatedLabel(plan.approved_at) : ""}
-              {plan.approval_note ? ` · “${plan.approval_note}”` : ""}. POs went to Purchasing and
-              promised dates were added to each order. This plan is read-only; start a new plan for
-              the next orders.
+              {plan.status === "cancelled"
+                ? `Cancelled${plan.cancel_reason ? `: “${plan.cancel_reason}”` : ""}. Nothing was sent to Purchasing or Production.`
+                : `Approved ${plan.snapshot ? generatedLabel(plan.snapshot.approved_at) : plan.approved_at ? generatedLabel(plan.approved_at) : ""}${plan.snapshot?.note ? ` · “${plan.snapshot.note}”` : ""}. POs went to Purchasing and promised dates were added to each order. This is the approved version, read-only.`}
+              {approved && plan.needs_reapproval && (
+                <span className="mt-2 block text-hi">
+                  Data has changed since: open the recalculated version (banner above) to
+                  re-approve.
+                </span>
+              )}
             </p>
           ) : (
             <>
@@ -313,6 +320,23 @@ export function ApprovalStep({ plan, go }: { plan: Plan; go: (step: string) => v
                   : "Only the owner can approve or send the plan back."}
               </span>
             </>
+          )}
+          {(plan.snapshots ?? []).length > 0 && (
+            <div className="flex flex-col gap-2 border-t border-divider pt-4">
+              <h4 className="m-0 text-[13px] font-semibold tracking-[0.06em] text-muted uppercase">
+                Approved versions
+              </h4>
+              {(plan.snapshots ?? []).map((v) => (
+                <span key={v.version} className="text-sm">
+                  <b>v{v.version}</b>{" "}
+                  <span className="text-muted">
+                    {generatedLabel(v.approved_at)}
+                    {v.note ? ` · “${v.note}”` : ""}
+                    {plan.snapshot?.version === v.version ? " · shown" : ""}
+                  </span>
+                </span>
+              ))}
+            </div>
           )}
           <div className="flex flex-col gap-3 border-t border-divider pt-4">
             <h4 className="m-0 text-[13px] font-semibold tracking-[0.06em] text-muted uppercase">
@@ -391,6 +415,8 @@ const TITLES: Record<string, string> = {
   generated: "Plan generated",
   saved: "Schedule saved",
   sent_back: "Sent back to edit",
+  completed: "Plan completed",
+  cancelled: "Plan cancelled",
   approved: "Plan approved",
   po: "PO requested",
   refresh: "Plan updated",

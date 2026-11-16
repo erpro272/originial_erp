@@ -13,6 +13,7 @@ import {
   type PlanPatch,
 } from "./api";
 import { generatedLabel, plural } from "./format";
+import { isWorking } from "./status";
 import { OptionsTable } from "./OptionsTable";
 import { OrdersInPlan } from "./OrdersInPlan";
 import { OrderTimeline } from "./OrderTimeline";
@@ -20,7 +21,7 @@ import { OrderTimeline } from "./OrderTimeline";
 /** Step 1: Selected orders. Timeline, the orders, and the 3 selection options all read one plan. */
 export function SelectedOrders({ plan, go }: { plan: Plan; go: (step: string) => void }) {
   const { can } = useAuth();
-  const editable = can("planning.write") && plan.status !== "approved";
+  const editable = can("planning.write") && isWorking(plan);
   const sel = plan.result.selection;
   const patch = usePatchPlan(plan.id);
   const generate = useGenerate(plan.id);

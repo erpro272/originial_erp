@@ -39,6 +39,9 @@ async def test_dashboard_snapshots_and_reapproval(client: AsyncClient) -> None:
     assert snap["view"] == "snapshot" and snap["snapshot"]["version"] == 1
     approved_contribution = snap["result"]["finance"]["with"]["contribution"]
 
+    # a day passing doesn't need re-approval: re-reading the plan keeps it approved
+    assert not (await client.get(f"/planning/plans/{pid}?view=live", headers=h)).json()["needs_reapproval"]
+
     # data changes after approval (company overheads up): the live view moves, the snapshot doesn't
     rules = (await client.get("/planning/rules", headers=h)).json()
     await client.put("/planning/rules", json={**rules, "overhead_pct": rules["overhead_pct"] + 5}, headers=h)
@@ -120,7 +123,8 @@ async def test_plan_completes_when_all_its_orders_are_shipped(client: AsyncClien
             r = await client.patch(f"/orders/{oid}", json={"status": status}, headers=h)
             assert r.status_code == 200, r.text
     [row] = (await client.get("/planning/plans", headers=h)).json()
-    assert row["stage"] == "approved"  # one order is made ("completed") but not shipped yet
+    # one order is made ("completed") but not shipped yet; production progress doesn't need re-approval
+    assert row["stage"] == "approved"
     await client.patch(f"/orders/{picked[-1]}", json={"status": "shipped"}, headers=h)
     [row] = (await client.get("/planning/plans", headers=h)).json()
     assert row["stage"] == "completed" and row["completed_at"]

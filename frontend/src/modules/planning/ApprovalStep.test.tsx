@@ -195,7 +195,7 @@ test("planner sees approval disabled; approved plan is read-only", async () => {
       go={vi.fn()}
     />,
   );
-  expect(await screen.findByText(/This plan is read-only/)).toBeInTheDocument();
+  expect(await screen.findByText(/This is the approved version, read-only/)).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Approve plan" })).toBeNull();
 });
 

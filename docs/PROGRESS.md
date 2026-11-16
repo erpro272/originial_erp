@@ -95,6 +95,9 @@
     nights before its deadline); each fix shows its real effect in the current plan. Tests: 271 pytest,
     50 Vitest, 16 Playwright. Purchasing / Inventory / Production separation is designed (see the
     architecture review in the conversation) and left for those modules.
+  - Plans dashboard (2026-11-16): every plan by stage with orders, window, approval and money; open any
+    plan (approved ones as approved: frozen snapshots v1, v2...); cancel drafts; plans complete when their
+    orders ship. Tests: 275 pytest, 53 Vitest, 17 Playwright.
 
 ## Next
 - Planning v1 archived in `archive/planning-v1/` (owner request). Rebuild in progress:

@@ -11,6 +11,7 @@ import { cn } from "@/lib/cn";
 import { rupees, rupeesCompact } from "@/lib/format";
 import { usePatchPlan, type Finance, type Plan } from "./api";
 import { Flash } from "./Flash";
+import { isWorking } from "./status";
 import { plural } from "./format";
 import { RuleButton, type RuleKey } from "./RuleButton";
 
@@ -55,7 +56,7 @@ function money(paise: number): string {
 /** Step 4: what this plan earns, what it costs, and what the planned fixes change. */
 export function FinanceStep({ plan, go }: { plan: Plan; go: (step: string) => void }) {
   const { can } = useAuth();
-  const edit = can("planning.write") && plan.status !== "approved";
+  const edit = can("planning.write") && isWorking(plan);
   const fin = plan.result.finance;
   const orders = plan.result.selection.orders;
   const num = (id: string) => orders[id]?.number ?? id;

@@ -169,3 +169,14 @@ Short records of choices and the reason for each. Newest at the bottom.
     resolves / not enough / no effect / not needed / planned (express: PO still to be raised). Older
     fixed windows made for one late order are upgraded to its intent. A fix never marks an order on
     time by itself: lateness always comes from the recalculated schedule.
+47. **Plans dashboard (owner's choices)**: `/planning` lists every plan by stage (Draft, Awaiting approval,
+    Approved, Needs re-approval, Completed, Cancelled); `/planning/:planId?step=1..5` opens one. One plan
+    is worked on at a time ("+ New plan" opens it instead of starting a second). Each approval writes an
+    insert-only `plan_snapshots` row (v1, v2...; the app role has no UPDATE/DELETE): approved and
+    completed plans open on their latest approved version; "See what changed" shows the recalculation.
+    "Needs re-approval" = the business data it was approved on changed (its orders' qty / value /
+    deadline / route / materials, factory data and stock, rules, the owner's choices), compared by a
+    fingerprint stored at approval; not a day passing, and not once its orders are in production
+    (Production carries it out). A plan completes itself when all its orders are shipped (or
+    cancelled). The owner can cancel a draft / awaiting plan with a reason; its orders go back to
+    accepted, not in planning. Approved plans can't be cancelled.

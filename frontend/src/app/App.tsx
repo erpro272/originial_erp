@@ -14,6 +14,7 @@ import { ReviewPage } from "@/modules/invoices/ReviewPage";
 import { OrdersLayout } from "@/modules/orders/OrdersLayout";
 import { OrdersReceivedTab } from "@/modules/orders/OrdersReceivedTab";
 import { PlanningPage } from "@/modules/planning/PlanningPage";
+import { PlansDashboard } from "@/modules/planning/PlansDashboard";
 import { MODULES } from "./nav";
 
 const DesignPage = import.meta.env.DEV
@@ -54,7 +55,8 @@ export function App() {
           />
           <Route path="customers/:id" element={<CustomerProfile />} />
         </Route>
-        <Route path="/planning" element={<PlanningPage />} />
+        <Route path="/planning" element={<PlansDashboard />} />
+        <Route path="/planning/:planId" element={<PlanningPage />} />
         {MODULES.filter((m) => m.key !== "orders" && m.key !== "planning").map((m) => (
           <Route key={m.key} path={`${m.path}/*`} element={<ComingSoonPage module={m} />} />
         ))}

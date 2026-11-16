@@ -126,7 +126,9 @@ isolation). One company per website: no company picker or switcher in the UI.
   (`SelectedOrders`: `OrderTimeline`, `OrdersInPlan`, `OptionsTable`), step 2 (`SequenceStep`) and
   step 3 (`ScheduleStep`, warning popup in `reorder.tsx`), step 4 (`FinanceStep`, company rules via
   `RuleButton`), step 5 (`ApprovalStep`, status tag in `status.ts`); 2–5 open after Generate plan.
-  An approved plan is read-only (API refuses edits); "+ New plan" via `PageActions`. E2E never
+  Routes: `/planning` = `PlansDashboard` (all plans by stage, "+ New plan" via `PageActions`),
+  `/planning/:planId?step=1..5[&view=live]` = `PlanningPage`. Only draft / awaiting plans are editable
+  (`isWorking`); approved / completed plans open on their frozen `plan_snapshots` row (insert-only). E2E never
   approves the demo plan (approval can't be undone; tests must stay rerunnable). Engine: `constraints()` sizes machine competition,
   `feasibility()` writes the lines, `keep_locked()` holds locked slots under any rule.
   Old notes: routes `/planning?step=1..5`, `/planning/factory`. Every planning number comes from the

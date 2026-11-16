@@ -33,6 +33,7 @@ import {
   type PlanPatch,
 } from "./api";
 import { addDays, dayParts, daysBetween, generatedLabel, plural, range } from "./format";
+import { isWorking } from "./status";
 import { useReorder } from "./reorder";
 
 const LABEL_W = 280;
@@ -52,7 +53,7 @@ interface UndoItem {
 /** Step 3: which machine runs which order, day by day. */
 export function ScheduleStep({ plan, go }: { plan: Plan; go: (step: string) => void }) {
   const { can } = useAuth();
-  const edit = can("planning.write") && plan.status !== "approved";
+  const edit = can("planning.write") && isWorking(plan);
   const sch = plan.result.schedule;
   const seq = plan.result.sequence;
   const orders = plan.result.selection.orders;

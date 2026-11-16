@@ -27,6 +27,7 @@ import { count, shortDate } from "@/lib/format";
 import { useGenerate, usePatchPlan, type Plan, type PlanPatch, type SeqRow } from "./api";
 import { Flash } from "./Flash";
 import { generatedLabel, groupReason, isoDay, plural } from "./format";
+import { isWorking } from "./status";
 
 const RULES = [
   { value: "deadline", label: "Deadline" },
@@ -61,7 +62,7 @@ function snapshot(p: Plan): Snapshot {
 /** Step 2: the order the selected orders will be made in, and whether that plan holds up. */
 export function SequenceStep({ plan, go }: { plan: Plan; go: (step: string) => void }) {
   const { can } = useAuth();
-  const edit = can("planning.write") && plan.status !== "approved";
+  const edit = can("planning.write") && isWorking(plan);
   const seq = plan.result.sequence;
   const orders = plan.result.selection.orders;
   const num = (id: string) => orders[id]?.number ?? id;

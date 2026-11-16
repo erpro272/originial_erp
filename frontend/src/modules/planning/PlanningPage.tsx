@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ApiError } from "@/api/client";
 import { useAuth } from "@/auth/AuthContext";
 import { Button } from "@/components/ui/Button";
@@ -7,10 +7,13 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { LoadingState } from "@/components/ui/Skeleton";
 import { StepTabs } from "@/components/ui/Tabs";
-import { PageActions } from "@/components/layout/PageActions";
+import { Modal } from "@/components/ui/Modal";
+import { Tag } from "@/components/ui/Tag";
 import { useToast } from "@/components/ui/Toast";
-import { useCreatePlan, useGenerate, usePlan, type Plan } from "./api";
-import { plural } from "./format";
+import { cn } from "@/lib/cn";
+import { useCancelPlan, useGenerate, usePlan, type Plan } from "./api";
+import { generatedLabel, plural } from "./format";
+import { isWorking, planStatus } from "./status";
 import { SelectedOrders } from "./SelectedOrders";
 import { ApprovalStep } from "./ApprovalStep";
 import { FinanceStep } from "./FinanceStep";
@@ -26,25 +29,25 @@ const STEPS = [
 ];
 const BUILT = ["1", "2", "3", "4", "5"];
 
-/** Planning: 5 steps on one plan; 2–5 open once the plan is generated; an approved plan is read-only. */
+/** One plan, in 5 steps. Opened from the plans dashboard (`/planning/:planId?step=1..5`). Draft and
+ * awaiting plans can be edited; approved ones open on their frozen approved version (`view=live` shows the
+ * recalculation); completed and cancelled plans are history. */
 export function PlanningPage() {
-  const { can } = useAuth();
-  const plan = usePlan();
-  const create = useCreatePlan();
-  const { toast } = useToast();
+  const { planId } = useParams();
   const [params, setParams] = useSearchParams();
   const step = params.get("step") ?? "1";
+  const view = params.get("view") === "live" ? "live" : undefined;
+  const plan = usePlan(planId, view);
   const go = (id: string) => {
-    setParams(id === "1" ? {} : { step: id });
+    const next: Record<string, string> = id === "1" ? {} : { step: id };
+    if (view) next.view = view;
+    setParams(next);
     window.scrollTo({ top: 0 });
   };
-
-  const start = async () => {
-    try {
-      await create.mutateAsync();
-    } catch (e) {
-      toast({ title: e instanceof ApiError ? e.message : "Couldn't start a plan.", tone: "error" });
-    }
+  const setView = (v: "live" | undefined) => {
+    const next: Record<string, string> = step === "1" ? {} : { step };
+    if (v) next.view = v;
+    setParams(next);
   };
   const p = plan.data;
   const generated = !!p?.generated_at;
@@ -55,61 +58,42 @@ export function PlanningPage() {
   const version = p?.version ?? 0;
   if (p && seen[step] !== version) setSeen({ ...seen, [step]: version }); // opened: no dot any more
   const changed = new Set((p?.last_change?.tabs ?? []).map(String));
+  const status = p ? planStatus(p) : null;
 
   return (
     <div className="flex flex-col gap-7">
-      <PageHeader
-        title="Order manufacturing plan"
-        subtitle="Pick the accepted orders, set their priority, and check the plan is feasible before it goes to production."
-      />
+      <div className="flex flex-col gap-3">
+        <Link to="/planning" className="text-[13px] no-underline">
+          ← All plans
+        </Link>
+        <PageHeader
+          title={
+            <span className="flex flex-wrap items-center gap-3">
+              Order manufacturing plan
+              {p && (
+                <span className="font-mono text-[22px] font-semibold text-muted">{p.number}</span>
+              )}
+              {status && <Tag tone={status.tone}>{status.text}</Tag>}
+            </span>
+          }
+          subtitle="Pick the accepted orders, set their priority, and check the plan is feasible before it goes to production."
+        />
+      </div>
       {plan.isLoading ? (
         <LoadingState label="Loading the plan" />
-      ) : !p ? (
+      ) : plan.isError || !p ? (
         <EmptyState
-          title="No orders in planning yet"
-          description="Send accepted orders to Planning from Orders received, or start a plan from all accepted orders."
+          title="Plan not found"
+          description="It may belong to another company, or the link is wrong."
           actions={
-            can("planning.write") ? (
-              <Button onClick={start} disabled={create.isPending}>
-                Start a plan
-              </Button>
-            ) : undefined
+            <Link to="/planning">
+              <Button variant="pill">All plans</Button>
+            </Link>
           }
         />
       ) : (
         <>
-          {p.status === "approved" && (
-            <>
-              <PageActions>
-                {can("planning.write") && !p.needs_reapproval && (
-                  <Button onClick={start} disabled={create.isPending}>
-                    + New plan
-                  </Button>
-                )}
-              </PageActions>
-              {step !== "5" && (
-                <div
-                  role="status"
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-ok-line bg-ok-bg px-5 py-3 text-sm"
-                >
-                  <span>
-                    <b>
-                      {p.number} is{" "}
-                      {p.needs_reapproval ? "approved but needs re-approval" : "approved"}.
-                    </b>{" "}
-                    It's read-only; start a new plan for the next orders.
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => go("5")}
-                    className="cursor-pointer border-0 bg-transparent p-0 text-[13px] text-link"
-                  >
-                    See approval →
-                  </button>
-                </div>
-              )}
-            </>
-          )}
+          <PlanBanner plan={p} view={view} onView={setView} go={go} />
           <StepTabs
             label="Plan steps"
             active={step}
@@ -118,7 +102,11 @@ export function PlanningPage() {
               ...s,
               locked: !open(s.id),
               changed:
-                open(s.id) && s.id !== step && changed.has(s.id) && (seen[s.id] ?? -1) < version,
+                isWorking(p) &&
+                open(s.id) &&
+                s.id !== step &&
+                changed.has(s.id) &&
+                (seen[s.id] ?? -1) < version,
             }))}
           />
           {step === "1" ? (
@@ -137,6 +125,150 @@ export function PlanningPage() {
         </>
       )}
     </div>
+  );
+}
+
+/** What kind of plan this is, when it isn't an editable one: approved snapshot / recalculation /
+ * completed / cancelled; plus Cancel for an owner on a working plan. */
+function PlanBanner({
+  plan: p,
+  view,
+  onView,
+  go,
+}: {
+  plan: Plan;
+  view: "live" | undefined;
+  onView: (v: "live" | undefined) => void;
+  go: (id: string) => void;
+}) {
+  const { can } = useAuth();
+  const [cancelling, setCancelling] = useState(false);
+  const link = "cursor-pointer border-0 bg-transparent p-0 text-[13px] text-link";
+  if (isWorking(p)) {
+    return can("planning.approve") ? (
+      <div className="-mt-3 flex justify-end">
+        <button type="button" className={link} onClick={() => setCancelling(true)}>
+          Cancel this plan
+        </button>
+        {cancelling && <CancelDialog plan={p} onClose={() => setCancelling(false)} />}
+      </div>
+    ) : null;
+  }
+  const box =
+    "flex flex-wrap items-center justify-between gap-3 rounded-card border px-5 py-3 text-sm";
+  if (p.status === "cancelled")
+    return (
+      <div role="status" className={cn(box, "border-line bg-surface")}>
+        <span>
+          <b>Cancelled{p.cancelled_at ? ` ${generatedLabel(p.cancelled_at)}` : ""}</b>
+          {p.cancel_reason ? ` · “${p.cancel_reason}”` : ""}. Kept as history, read-only; its orders
+          went back to Orders received.
+        </span>
+      </div>
+    );
+  if (p.status === "completed")
+    return (
+      <div role="status" className={cn(box, "border-bl-line bg-surface-blue")}>
+        <span>
+          <b>Completed{p.completed_at ? ` ${generatedLabel(p.completed_at)}` : ""}</b>: every order
+          in it has shipped. Showing the approved version (v{p.snapshot?.version ?? 1}), read-only.
+        </span>
+      </div>
+    );
+  // approved
+  if (view === "live")
+    return (
+      <div role="status" className={cn(box, "border-hi-line bg-hi-wash")}>
+        <span>
+          <b>Recalculated with today's orders, stock and factory data</b>, not what was approved
+          {p.needs_reapproval ? ". It differs from the approved version." : "."}
+        </span>
+        <span className="flex gap-4">
+          <button type="button" className={link} onClick={() => onView(undefined)}>
+            ← Approved version
+          </button>
+          {p.needs_reapproval && can("planning.approve") && (
+            <button type="button" className={link} onClick={() => go("5")}>
+              Re-approve →
+            </button>
+          )}
+        </span>
+      </div>
+    );
+  return (
+    <div
+      role="status"
+      className={cn(
+        box,
+        p.needs_reapproval ? "border-hi-line bg-hi-wash" : "border-ok-line bg-ok-bg",
+      )}
+    >
+      <span>
+        <b>
+          Approved version v{p.snapshot?.version ?? 1}
+          {p.snapshot ? `, ${generatedLabel(p.snapshot.approved_at)}` : ""}
+        </b>
+        , exactly as approved and read-only.
+        {p.needs_reapproval
+          ? " Orders, stock or factory data have changed since: it needs re-approval."
+          : ""}
+      </span>
+      <button type="button" className={link} onClick={() => onView("live")}>
+        {p.needs_reapproval ? "See what changed →" : "Recalculate with today's data →"}
+      </button>
+    </div>
+  );
+}
+
+function CancelDialog({ plan, onClose }: { plan: Plan; onClose: () => void }) {
+  const cancel = useCancelPlan(plan.id);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const [reason, setReason] = useState("");
+  return (
+    <Modal
+      open
+      tone="danger"
+      onOpenChange={(o) => !o && onClose()}
+      title={`Cancel ${plan.number}?`}
+      description="It stays in the plans list as Cancelled. Its orders go back to Orders received (accepted, not in planning)."
+      footer={
+        <>
+          <Button variant="pill" onClick={onClose}>
+            Keep the plan
+          </Button>
+          <Button
+            disabled={!reason.trim() || cancel.isPending}
+            onClick={async () => {
+              try {
+                await cancel.mutateAsync(reason.trim());
+                toast({ title: `${plan.number} cancelled`, tone: "success" });
+                onClose();
+                navigate("/planning");
+              } catch (e) {
+                toast({
+                  title: e instanceof ApiError ? e.message : "Couldn't cancel the plan.",
+                  tone: "error",
+                });
+              }
+            }}
+          >
+            Cancel plan
+          </Button>
+        </>
+      }
+    >
+      <label className="flex flex-col gap-1.5 text-sm font-medium">
+        Reason
+        <textarea
+          rows={3}
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          placeholder="e.g. Customer moved the delivery dates"
+          className="rounded-xl border border-line-input px-3.5 py-2.5 text-sm font-normal"
+        />
+      </label>
+    </Modal>
   );
 }
 

@@ -14,21 +14,69 @@ export type Finance = Schemas["Finance"];
 export type OptKey = "own" | "part" | "full";
 
 export const PLAN_KEY = ["planning", "plan"] as const;
+export type PlanSummary = Schemas["PlanSummary"];
+export type PlanView = "live" | "snapshot";
 
-/** The working plan. The server recalculates it whenever orders, stock or factory data changed. */
-export function usePlan() {
+/** The working plan (or the latest approved one). Starts a draft when orders were sent to Planning. */
+export function useCurrentPlan() {
   return useQuery({
-    queryKey: PLAN_KEY,
+    queryKey: [...PLAN_KEY, "current"],
     queryFn: async () => unwrap(await api.GET("/api/planning/plan")),
+  });
+}
+
+/** One plan. Approved / completed plans open on their frozen approved version unless view = "live". */
+export function usePlan(planId: string | undefined, view?: PlanView) {
+  return useQuery({
+    queryKey: [...PLAN_KEY, planId, view ?? "default"],
+    queryFn: async () =>
+      unwrap(
+        await api.GET("/api/planning/plans/{plan_id}", {
+          params: { path: { plan_id: planId! }, query: view ? { view } : {} },
+        }),
+      ),
+    enabled: !!planId,
+  });
+}
+
+/** Every plan for the dashboard (asks for the current plan first, so orders sent to Planning get a draft). */
+export function usePlans() {
+  return useQuery({
+    queryKey: ["planning", "plans"],
+    queryFn: async () => {
+      unwrap(await api.GET("/api/planning/plan"));
+      return unwrap(await api.GET("/api/planning/plans"));
+    },
   });
 }
 
 function useSetPlan() {
   const qc = useQueryClient();
   return (p: Plan) => {
-    qc.setQueryData(PLAN_KEY, p);
+    if (p.status === "draft" || p.status === "generated") {
+      qc.setQueryData([...PLAN_KEY, p.id, "default"], p); // working plans: the response is the live plan
+    } else {
+      void qc.invalidateQueries({ queryKey: [...PLAN_KEY, p.id] }); // approved: reload snapshot + live views
+    }
+    void qc.invalidateQueries({ queryKey: ["planning", "plans"] });
+    void qc.invalidateQueries({ queryKey: [...PLAN_KEY, "current"] });
     void qc.invalidateQueries({ queryKey: ["orders"] }); // ticks are "In planning" in Orders received
   };
+}
+
+/** Owner: cancel a draft / awaiting plan (its orders go back to accepted, not in planning). */
+export function useCancelPlan(planId: string | undefined) {
+  const set = useSetPlan();
+  return useMutation({
+    mutationFn: async (reason: string) =>
+      unwrap(
+        await api.POST("/api/planning/plans/{plan_id}/cancel", {
+          params: { path: { plan_id: planId! } },
+          body: { reason },
+        }),
+      ),
+    onSuccess: set,
+  });
 }
 
 export function useCreatePlan() {

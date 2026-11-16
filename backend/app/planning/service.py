@@ -229,6 +229,18 @@ async def _compute(session: AsyncSession, plan: Plan, today: date) -> tuple[dict
     # Fingerprint the inputs as the engine tidied them (sequence by rule etc.), so a re-read is stable.
     fp = _fp(f, rules.model_dump(), objective.model_dump(), cands, running, plan.selected, plan.rule,
              result["inputs"], plan.start_date, today, sorted(requested.items()))  # fmt: skip
+    # What an approval is about: the plan's orders (qty, value, deadline, route, materials), factory data and
+    # stock, company rules and the owner's choices. Not today's date and not production progress: an approved
+    # plan doesn't need re-approval because a day passed or its orders moved into production.
+    mine = sorted(((j.id, j.qty, j.value, j.deadline, j.steps, j.materials) for j in cands if j.id in plan.selected),
+                  key=lambda x: x[0])  # fmt: skip
+    if plan.status == "approved" and plan.selected:
+        statuses = (await session.execute(
+            select(Order.status).where(Order.id.in_([uuid.UUID(i) for i in plan.selected])))).scalars()  # fmt: skip
+        # its orders are being made / shipped: Production carries it out now, no more re-approval checks
+        result["_executing"] = any(st in ("in_production", "completed", "shipped") for st in statuses)
+    result["_data_fp"] = _fp(f, rules.model_dump(), objective.model_dump(), mine, plan.rule,
+                             {k: v for k, v in result["inputs"].items() if k != "sequence"}, plan.start_date)  # fmt: skip
     return result, fp, ofp
 
 
@@ -238,13 +250,14 @@ async def _save(session: AsyncSession, plan: Plan, result: dict[str, Any], fp: s
     plan.inputs = {**(plan.inputs or {}), **result["inputs"]}
     plan.result, plan.fingerprint, plan.options_fingerprint = result, fp, ofp
     plan.version += 1
-    if plan.status == "approved" and set(tabs) & {
-        2,
-        3,
-        4,
-        5,
-    }:  # its schedule, sequence, money or checklist moved
-        plan.needs_reapproval = True
+    if plan.status == "approved":
+        approved_fp = (plan.inputs or {}).get("approval_fp")
+        if result.get("_executing"):
+            pass  # in execution: keep the flag as it was
+        elif approved_fp:  # the business data it was approved on has changed
+            plan.needs_reapproval = result.get("_data_fp") != approved_fp
+        elif set(tabs) & {2, 3, 4, 5}:  # plans approved before the fingerprint existed
+            plan.needs_reapproval = True
     session.add(PlanEvent(plan_id=plan.id, kind=kind, summary=summary, tabs=tabs, actor_id=actor))
     await session.flush()
     return tabs
@@ -655,6 +668,7 @@ async def approve(session: AsyncSession, actor: uuid.UUID, plan_id: uuid.UUID, b
     plan.result, plan.fingerprint, plan.options_fingerprint = result, fp, ofp
     plan.version += 1
     plan.needs_reapproval = False
+    plan.inputs = {**(plan.inputs or {}), "approval_fp": result.get("_data_fp")}
     # a frozen copy of exactly what was approved: never updated or deleted (re-approval adds v2, v3...)
     n = len(await _snapshots(session, plan.id))
     session.add(PlanSnapshot(plan_id=plan.id, version=n + 1, result=result, inputs=dict(plan.inputs or {}),
@@ -684,6 +698,11 @@ def _stage(plan: Plan) -> str:
 
 async def list_plans(session: AsyncSession) -> list[PlanSummary]:
     """Every plan, newest first. Approved / completed plans show the money of their latest approved version."""
+    q = select(Plan).where(Plan.status == "approved").order_by(Plan.created_at.desc()).limit(1)
+    cur = (await session.execute(q)).scalar_one_or_none()
+    if cur is not None:
+        # the latest approved plan is the one still in force: check whether data has changed since approval
+        await _refresh(session, cur, clock.today())
     plans = list((await session.execute(select(Plan).order_by(Plan.created_at.desc()))).scalars())
     out = []
     for p in plans:

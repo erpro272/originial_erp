@@ -1,5 +1,18 @@
-import { expect, test, type APIRequestContext } from "@playwright/test";
+import {
+  expect,
+  test,
+  type APIRequestContext,
+  type Page,
+} from "@playwright/test";
 import { PASSWORD, signIn } from "./helpers";
+
+/** Planning opens on the plans dashboard: open the plan being worked on. Returns its path. */
+async function openWorkingPlan(page: Page): Promise<string> {
+  await page.goto("/planning");
+  await page.getByText("Continue planning →").click();
+  await page.waitForURL(/\/planning\/[0-9a-f-]{36}/);
+  return new URL(page.url()).pathname;
+}
 
 async function auth(
   request: APIRequestContext,
@@ -60,6 +73,8 @@ test("Selected orders: sent from Orders, on the timeline, synced back, options s
 
   // Planning: ticked in the table, and on the timeline under "Your selection".
   await page.getByRole("link", { name: "Planning", exact: true }).click();
+  await expect(page.getByText("Manufacturing plans")).toBeVisible();
+  const planPath = await openWorkingPlan(page);
   await expect(page.getByLabel(`Include ${order.number}`)).toBeChecked();
   const yours = page.getByRole("button", { name: "Highlight Your selection" });
   await expect(yours).toContainText(order.number);
@@ -108,7 +123,7 @@ test("Proposed manufacturing sequence: generate, hint with undo, lock keeps its 
   page,
 }) => {
   await signIn(page, "owner@demo.example");
-  await page.goto("/planning");
+  const planPath = await openWorkingPlan(page);
   await page
     .getByRole("button", { name: /Generate plan →|Recalculate plan →/ })
     .click();
@@ -167,7 +182,7 @@ test("Production schedule: chart, reorder warning (cancel / continue), undo, sav
   page,
 }) => {
   await signIn(page, "owner@demo.example");
-  await page.goto("/planning");
+  const planPath = await openWorkingPlan(page);
   await page
     .getByRole("button", { name: /Generate plan →|Recalculate plan →/ })
     .click();
@@ -224,12 +239,12 @@ test("Financial analysis: before / with fixes, a fix changes the whole plan", as
   page,
 }) => {
   await signIn(page, "owner@demo.example");
-  await page.goto("/planning");
+  const planPath = await openWorkingPlan(page);
   await page
     .getByRole("button", { name: /Generate plan →|Recalculate plan →/ })
     .click();
   await expect(page.getByText("Plan overview")).toBeVisible();
-  await page.goto("/planning?step=3");
+  await page.goto(`${planPath}?step=3`);
   await page
     .getByRole("button", { name: "Next: Financial analysis →" })
     .click();
@@ -272,12 +287,12 @@ test("Final plan approval: checklist, send back to edit, approve popup (not appr
   page,
 }) => {
   await signIn(page, "owner@demo.example");
-  await page.goto("/planning");
+  const planPath = await openWorkingPlan(page);
   await page
     .getByRole("button", { name: /Generate plan →|Recalculate plan →/ })
     .click();
   await expect(page.getByText("Plan overview")).toBeVisible();
-  await page.goto("/planning?step=4");
+  await page.goto(`${planPath}?step=4`);
   await page
     .getByRole("button", { name: "Next: Final plan approval →" })
     .click();
@@ -292,8 +307,8 @@ test("Final plan approval: checklist, send back to edit, approve popup (not appr
     .fill("e2e: please check the sequence");
   await page.getByRole("button", { name: "Send back to edit" }).click();
   await expect(page).toHaveURL(/step=2/);
-  await page.goto("/planning?step=5");
-  await expect(page.getByText("Changes requested")).toBeVisible();
+  await page.goto(`${planPath}?step=5`);
+  await expect(page.getByText("Changes requested").first()).toBeVisible();
   await expect(
     page.getByText("e2e: please check the sequence").first(),
   ).toBeVisible();
@@ -306,6 +321,45 @@ test("Final plan approval: checklist, send back to edit, approve popup (not appr
     await expect(dialog).toContainText(/Approve with \d open items?/);
     await dialog.getByRole("button", { name: "Go back" }).click();
     await expect(dialog).toBeHidden();
-    await expect(page.getByText("Changes requested")).toBeVisible();
+    await expect(page.getByText("Changes requested").first()).toBeVisible();
   }
+});
+
+test("Plans dashboard: stages, the plan being worked on, open it and come back", async ({
+  page,
+}) => {
+  await signIn(page, "owner@demo.example");
+  await page.goto("/planning");
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Manufacturing plans" }),
+  ).toBeVisible();
+  const chips = page.getByRole("group", { name: "Plan status" });
+  for (const s of [
+    "All",
+    "Draft",
+    "Awaiting approval",
+    "Approved",
+    "Needs re-approval",
+    "Completed",
+    "Cancelled",
+  ])
+    await expect(
+      chips.getByRole("button", { name: new RegExp(`^${s}`) }),
+    ).toBeVisible();
+  await expect(page.getByRole("button", { name: "+ New plan" })).toBeVisible();
+  // the plan being worked on is listed and opens on its 5 steps
+  const row = page
+    .getByRole("row")
+    .filter({ hasText: /PLAN-\d+/ })
+    .first();
+  await expect(row).toBeVisible();
+  const path = await openWorkingPlan(page);
+  await expect(
+    page.getByRole("tab", { name: /Selected orders/ }),
+  ).toBeVisible();
+  await page.getByRole("link", { name: "← All plans" }).click();
+  await expect(page).toHaveURL(/\/planning$/);
+  // + New plan while one is being worked on opens that one (no second plan)
+  await page.getByRole("button", { name: "+ New plan" }).click();
+  await expect(page).toHaveURL(new RegExp(`${path}$`));
 });

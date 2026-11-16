@@ -7,7 +7,9 @@ test.beforeEach(async ({ page }) => {
   await expect(page.getByText("All orders received")).toBeVisible();
 });
 
-test("KPIs, needs-attention cards and the Raise PO action come from the API", async ({ page }) => {
+test("KPIs, needs-attention cards and the Raise PO action come from the API", async ({
+  page,
+}) => {
   const kpis = page.locator("dl").first();
   await expect(kpis).toContainText("Open orders");
   await expect(kpis).toContainText("Ship in 7 days");
@@ -19,7 +21,9 @@ test("KPIs, needs-attention cards and the Raise PO action come from the API", as
   await expect(page).toHaveURL(/\/purchasing\?material=WR8/);
 });
 
-test("filter by status, switch to past orders, and save a view", async ({ page }) => {
+test("filter by status, switch to past orders, and save a view", async ({
+  page,
+}) => {
   const table = page.getByTestId("table-orders");
   await page.getByRole("button", { name: "Status filter" }).click();
   await page.getByRole("checkbox", { name: "Material short" }).check();
@@ -32,7 +36,9 @@ test("filter by status, switch to past orders, and save a view", async ({ page }
   const name = `Short ${Date.now().toString(36)}`;
   await page.getByLabel("Name").fill(name);
   await page.getByRole("button", { name: "Save view" }).click();
-  await expect(page.getByRole("button", { name: "Saved views" })).toContainText(name);
+  await expect(page.getByRole("button", { name: "Saved views" })).toContainText(
+    name,
+  );
 
   await page.reload();
   await page.getByRole("button", { name: "Saved views" }).click();
@@ -52,7 +58,9 @@ test("create, edit and cancel an order", async ({ page }) => {
   await page.getByRole("button", { name: "+ New order" }).click();
   const dialog = page.getByRole("dialog");
   await dialog.getByLabel("Customer").selectOption({ label: "JCB India" });
-  await dialog.getByLabel("Product").selectOption({ label: "M16 hex nuts (M16-HN)" });
+  await dialog
+    .getByLabel("Product")
+    .selectOption({ label: "M16 hex nuts (M16-HN)" });
   await dialog.getByLabel("Quantity (pcs)").fill("5000");
   await dialog.getByLabel("Unit price (₹)").fill("12.50");
   const ship = new Date(Date.now() + 20 * 86400_000).toISOString().slice(0, 10);
@@ -74,10 +82,18 @@ test("create, edit and cancel an order", async ({ page }) => {
 
   await row.click();
   await page.getByRole("button", { name: "Cancel order" }).click();
-  await page.getByRole("dialog", { name: /Cancel ORD/ }).getByLabel("Reason").fill("Customer postponed");
-  await page.getByRole("dialog", { name: /Cancel ORD/ }).getByRole("button", { name: "Cancel order" }).click();
+  await page
+    .getByRole("dialog", { name: /Cancel ORD/ })
+    .getByLabel("Reason")
+    .fill("Customer postponed");
+  await page
+    .getByRole("dialog", { name: /Cancel ORD/ })
+    .getByRole("button", { name: "Cancel order" })
+    .click();
   await expect(page.getByText(`${number} cancelled`)).toBeVisible();
-  await expect(page.getByTestId("table-orders")).toContainText("No open orders match"); // gone from current orders
+  await expect(page.getByTestId("table-orders")).toContainText(
+    "No open orders match",
+  ); // gone from current orders
   await page.getByRole("tab", { name: "Past" }).click();
   await expect(page.getByTestId("table-orders")).toContainText("Cancelled");
 });
