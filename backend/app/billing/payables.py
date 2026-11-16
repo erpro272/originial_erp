@@ -81,8 +81,8 @@ def match(inv: SupplierInvoice, po: dict[str, Any] | None) -> list[MatchLine]:
         )
     ok_rate = inv.rate_paise == po["rate_paise"]
     out.append(MatchLine(check="rate", ok=ok_rate,
-                         text=f"Rate agrees with {po['number']} (₹{po['rate_paise'] / 100:,.2f})" if ok_rate
-                         else f"Rate ₹{inv.rate_paise / 100:,.2f} vs ₹{po['rate_paise'] / 100:,.2f} on {po['number']}"))  # fmt: skip
+                         text=f"Rate agrees with {po['number']} ({inr(po['rate_paise'])})" if ok_rate
+                         else f"Rate {inr(inv.rate_paise)} vs {inr(po['rate_paise'])} on {po['number']}"))  # fmt: skip
     ok_amt = inv.taxable_paise <= po["value_paise"]
     out.append(MatchLine(check="amount", ok=ok_amt,
                          text=f"Taxable {inr(inv.taxable_paise)} within the PO value {inr(po['value_paise'])}"

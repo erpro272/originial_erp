@@ -14,6 +14,7 @@ import { ReviewPage } from "@/modules/invoices/ReviewPage";
 import { OrdersLayout } from "@/modules/orders/OrdersLayout";
 import { OrdersReceivedTab } from "@/modules/orders/OrdersReceivedTab";
 import { PlanningPage } from "@/modules/planning/PlanningPage";
+import { BillingPage } from "@/modules/billing/BillingPage";
 import { PlanHistory } from "@/modules/planning/PlanHistory";
 import { PlanningHome } from "@/modules/planning/PlanningHome";
 import { PurchasingPage } from "@/modules/purchasing/PurchasingPage";
@@ -57,6 +58,9 @@ export function App() {
           />
           <Route path="customers/:id" element={<CustomerProfile />} />
         </Route>
+        <Route path="/billing" element={<BillingPage />} />
+        <Route path="/billing/ebill" element={<BillingPage />} />
+        <Route path="/billing/gst" element={<BillingPage />} />
         <Route path="/planning" element={<PlanningHome />} />
         <Route path="/planning/history" element={<PlanHistory />} />
         <Route path="/planning/:planId" element={<PlanningPage />} />
@@ -64,7 +68,11 @@ export function App() {
         <Route path="/purchasing/purchase" element={<PurchasingPage />} />
         <Route path="/purchasing/suppliers" element={<PurchasingPage />} />
         {MODULES.filter(
-          (m) => m.key !== "orders" && m.key !== "planning" && m.key !== "purchasing",
+          (m) =>
+            m.key !== "orders" &&
+            m.key !== "planning" &&
+            m.key !== "purchasing" &&
+            m.key !== "billing",
         ).map((m) => (
           <Route key={m.key} path={`${m.path}/*`} element={<ComingSoonPage module={m} />} />
         ))}

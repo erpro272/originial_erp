@@ -100,7 +100,7 @@ async def _history(s: AsyncSession, tenant_id: uuid.UUID, mats: dict[str, Materi
                                 rejected_qty=bad))  # fmt: skip
         steps = [("raised", "Raised", approved - timedelta(days=1), {}),
                  ("approved", "Approved by the owner · PO sent to the supplier", approved, {}),
-                 ("gate_entry", f"Gate entry · {q} {mat.unit}", arrived, {"qty": str(q)}),
+                 ("gate_entry", f"Gate entry · {q} {mat.unit} · GRN-{n:04d}", arrived, {"qty": str(q), "ref": f"GRN-{n:04d}"}),
                  ("qc", f"QC · {q - bad} {mat.unit} accepted", arrived + timedelta(hours=3),
                   {"accepted": str(q - bad), "rejected": str(bad)})]  # fmt: skip
         if bad:  # the rejected part was replaced two days later
@@ -174,7 +174,11 @@ async def seed_purchases(s: AsyncSession, tenant_id: uuid.UUID) -> int:
         for kind, summary, ago in steps:
             s.add(
                 PoEvent(
-                    po_id=po.id, kind=kind, summary=summary, data={}, created_at=now - timedelta(days=ago)
+                    po_id=po.id,
+                    kind=kind,
+                    summary=summary,
+                    created_at=now - timedelta(days=ago),
+                    data={"ref": po.gate_ref} if kind == "gate_entry" else {},
                 )
             )
         n_made += 1

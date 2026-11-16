@@ -72,17 +72,26 @@ async def ensure_deals(session: AsyncSession) -> None:
     of = await orders.facts(session)
     new_orders = sorted((o for oid, o in of.items() if oid not in have_o), key=lambda o: o["created_at"])
     for o in new_orders:
-        session.add(Deal(number=await _next_number(session), kind="sale", name=f"{o['product']} – {o['number']}",
+        session.add(Deal(number=await _next_number(session), kind="sale", status="", name=f"{o['product']} – {o['number']}",
                          order_id=o["id"], customer_id=o["customer_id"], reference=o["number"], reference_kind="order",
                          item=o["product"], quantity=o["quantity"], unit=o["unit"]))  # fmt: skip
     po_ids = [i for i in await purchasing.all_po_ids(session) if i not in have_p]
     pf = await purchasing.po_facts(session, po_ids)
     for p in sorted(pf.values(), key=lambda p: p["created_at"]):
-        session.add(Deal(number=await _next_number(session), kind="purchase",
+        session.add(Deal(number=await _next_number(session), kind="purchase", status="",
                          name=f"{p['material']} ({p['code']}) – {p['number']}", po_id=p["id"],
                          supplier_id=p["supplier_id"], reference=p["number"], reference_kind="po", item=p["material"],
                          quantity=p["quantity"], unit=p["unit"], payment_terms_days=30))  # fmt: skip
     if new_orders or pf:
+        await session.flush()
+    # supplier invoices entered before their PO's deal existed join it
+    orphans = list((await session.execute(select(SupplierInvoice).where(
+        SupplierInvoice.deal_id.is_(None), SupplierInvoice.po_id.is_not(None)))).scalars())  # fmt: skip
+    if orphans:
+        by_po = {d.po_id: d.id for d in (await session.execute(
+            select(Deal).where(Deal.po_id.in_([si.po_id for si in orphans])))).scalars()}  # fmt: skip
+        for si in orphans:
+            si.deal_id = by_po.get(si.po_id)
         await session.flush()
 
 
@@ -332,7 +341,7 @@ async def _refresh(session: AsyncSession, deals: list[Deal], b: _Bundle) -> None
     for d in deals:
         st = _status(d, b)
         if st != d.status:
-            if d.status and d.created_at is not None and b.events is not None:
+            if d.status:  # a deal's first status (just created) isn't a change
                 session.add(DealEvent(deal_id=d.id, kind="status", summary=f"Deal status: {d.status} → {st}",
                                       direction="internal", data={"from": d.status, "to": st}))  # fmt: skip
             d.status = st

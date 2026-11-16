@@ -9,6 +9,7 @@ from app.billing.schemas import (
     ApOut,
     ApSupplier,
     ArCustomer,
+    ArFollowUpIn,
     ArOut,
     BankConfirmIn,
     DealCreateIn,
@@ -17,7 +18,6 @@ from app.billing.schemas import (
     DealsOut,
     DraftEditIn,
     ExecuteIn,
-    FollowUpIn,
     InteractionIn,
     InteractionOut,
     PromiseIn,
@@ -68,7 +68,7 @@ async def receivable_customer(
 
 
 @router.post("/receivables/customers/{customer_id}/follow-ups", status_code=201)
-async def follow_up(db: TenantDB, p: Writer, customer_id: uuid.UUID, body: FollowUpIn) -> InteractionOut:
+async def follow_up(db: TenantDB, p: Writer, customer_id: uuid.UUID, body: ArFollowUpIn) -> InteractionOut:
     return await receivables.log_follow_up(db, p.user_id, customer_id, body)
 
 

@@ -46,6 +46,7 @@ class ArRow(BaseModel):
     days_overdue: int  # of the earliest due, if past
     status: ArStatus
     part_paid: bool
+    has_promise: bool = False  # an open invoice has a promise on record
     latest_update: str | None
     latest_at: date | None
 
@@ -121,7 +122,7 @@ class ArCustomer(BaseModel):
     interactions: list[InteractionOut]
 
 
-class FollowUpIn(BaseModel):
+class ArFollowUpIn(BaseModel):
     invoice_id: uuid.UUID | None = None
     channel: Channel
     direction: Literal["incoming", "outgoing"] = "outgoing"

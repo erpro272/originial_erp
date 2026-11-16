@@ -1054,6 +1054,78 @@
         "title": "ArCustomer",
         "type": "object"
       },
+      "ArFollowUpIn": {
+        "properties": {
+          "channel": {
+            "enum": [
+              "call",
+              "whatsapp",
+              "email",
+              "visit",
+              "meeting"
+            ],
+            "title": "Channel",
+            "type": "string"
+          },
+          "contact": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact"
+          },
+          "direction": {
+            "default": "outgoing",
+            "enum": [
+              "incoming",
+              "outgoing"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "invoice_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invoice Id"
+          },
+          "next_follow_up": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Follow Up"
+          },
+          "note": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "channel",
+          "note"
+        ],
+        "title": "ArFollowUpIn",
+        "type": "object"
+      },
       "ArInvoice": {
         "properties": {
           "days_overdue": {
@@ -1274,6 +1346,11 @@
               }
             ],
             "title": "Gstin"
+          },
+          "has_promise": {
+            "default": false,
+            "title": "Has Promise",
+            "type": "boolean"
           },
           "latest_at": {
             "anyOf": [
@@ -4877,6 +4954,33 @@
           "cost"
         ],
         "title": "FixCost",
+        "type": "object"
+      },
+      "FollowUpIn": {
+        "properties": {
+          "note": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Note",
+            "type": "string"
+          },
+          "promised_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Promised Date"
+          }
+        },
+        "required": [
+          "note"
+        ],
+        "title": "FollowUpIn",
         "type": "object"
       },
       "FollowupIn": {
@@ -11823,78 +11927,6 @@
         "title": "WaitSpan",
         "type": "object"
       },
-      "app__billing__schemas__FollowUpIn": {
-        "properties": {
-          "channel": {
-            "enum": [
-              "call",
-              "whatsapp",
-              "email",
-              "visit",
-              "meeting"
-            ],
-            "title": "Channel",
-            "type": "string"
-          },
-          "contact": {
-            "anyOf": [
-              {
-                "maxLength": 200,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Contact"
-          },
-          "direction": {
-            "default": "outgoing",
-            "enum": [
-              "incoming",
-              "outgoing"
-            ],
-            "title": "Direction",
-            "type": "string"
-          },
-          "invoice_id": {
-            "anyOf": [
-              {
-                "format": "uuid",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Invoice Id"
-          },
-          "next_follow_up": {
-            "anyOf": [
-              {
-                "format": "date",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Next Follow Up"
-          },
-          "note": {
-            "maxLength": 2000,
-            "minLength": 1,
-            "title": "Note",
-            "type": "string"
-          }
-        },
-        "required": [
-          "channel",
-          "note"
-        ],
-        "title": "FollowUpIn",
-        "type": "object"
-      },
       "app__billing__schemas__Period": {
         "properties": {
           "as_of": {
@@ -12069,33 +12101,6 @@
           "parallel"
         ],
         "title": "Overview",
-        "type": "object"
-      },
-      "app__purchasing__schemas__FollowUpIn": {
-        "properties": {
-          "note": {
-            "maxLength": 2000,
-            "minLength": 1,
-            "title": "Note",
-            "type": "string"
-          },
-          "promised_date": {
-            "anyOf": [
-              {
-                "format": "date",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Promised Date"
-          }
-        },
-        "required": [
-          "note"
-        ],
-        "title": "FollowUpIn",
         "type": "object"
       }
     },
@@ -13875,7 +13880,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/app__billing__schemas__FollowUpIn"
+                "$ref": "#/components/schemas/ArFollowUpIn"
               }
             }
           },
@@ -17706,7 +17711,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/app__purchasing__schemas__FollowUpIn"
+                "$ref": "#/components/schemas/FollowUpIn"
               }
             }
           },

@@ -13,7 +13,7 @@ test("signed out: protected route redirects to login", async () => {
   expect(await screen.findByRole("heading", { name: "Sign in" })).toBeInTheDocument();
 });
 
-test.each(["Production", "Billing", "Finance", "Dashboard"])(
+test.each(["Production", "Finance", "Dashboard"])(
   "%s shows the Coming soon page",
   async (name) => {
     mockApi(...signedInHandlers());

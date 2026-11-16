@@ -20,11 +20,11 @@ from app.billing.models import Deal, Interaction, PaymentPromise
 from app.billing.schemas import (
     ArCards,
     ArCustomer,
+    ArFollowUpIn,
     ArInvoice,
     ArOut,
     ArRow,
     ArStatus,
-    FollowUpIn,
     InteractionOut,
     Period,
     PromiseIn,
@@ -145,10 +145,10 @@ async def receivables(session: AsyncSession, month: str | None, q: str | None = 
         rows.append(ArRow(customer_id=cid, name=c["name"], gstin=c["gstin"], phone=c["phone"],
                           outstanding_paise=sum(x.outstanding for x in xs), open_invoices=len(xs),
                           earliest_due=first.due, days_overdue=first.days_overdue, status=st,
-                          part_paid=any(x.part_paid for x in xs), latest_update=upd[1] if upd else None,
+                          part_paid=any(x.part_paid for x in xs), has_promise=any(x.promised for x in xs), latest_update=upd[1] if upd else None,
                           latest_at=upd[0] if upd else None))  # fmt: skip
     rows.sort(key=lambda r: -r.outstanding_paise)
-    counts = {"all": len(rows), **{s: sum(r.status == s for r in rows) for s in ("overdue", "due_week", "promise")},
+    counts = {"all": len(rows), "overdue": sum(r.status == "overdue" for r in rows), "due_week": sum(r.status == "due_week" for r in rows), "promise": sum(r.has_promise for r in rows),
               "part_paid": sum(r.part_paid for r in rows)}  # fmt: skip
     overdue = [x for x in open_ if x.status == "overdue"]
     cash, n_cash = await ledger.cash_received(session, p.start, p.as_of)
@@ -161,7 +161,17 @@ async def receivables(session: AsyncSession, month: str | None, q: str | None = 
         week_from=p.as_of, week_to=p.as_of + timedelta(days=6), received_paise=cash, receipts=n_cash,
     )  # fmt: skip
     if status and status != "all":
-        rows = [r for r in rows if (r.part_paid if status == "part_paid" else r.status == status)]
+        rows = [
+            r
+            for r in rows
+            if (
+                r.part_paid
+                if status == "part_paid"
+                else r.has_promise
+                if status == "promise"
+                else r.status == status
+            )
+        ]
     if q and q.strip():
         needle = q.strip().lower()
         nums = {x.inv.customer_id for x in open_ if needle in (x.inv.invoice_number or "").lower()}
@@ -312,7 +322,7 @@ async def _deal_of(session: AsyncSession, inv: Invoice) -> uuid.UUID | None:
 
 
 async def log_follow_up(
-    session: AsyncSession, actor: uuid.UUID, customer_id: uuid.UUID, body: FollowUpIn
+    session: AsyncSession, actor: uuid.UUID, customer_id: uuid.UUID, body: ArFollowUpIn
 ) -> InteractionOut:
     if customer_id not in await customers.briefs(session, [customer_id]):
         raise NotFound("Customer not found.")

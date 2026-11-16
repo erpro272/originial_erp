@@ -1,6 +1,8 @@
 import { createColumnHelper, type SortingState } from "@tanstack/react-table";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { DealChip } from "@/modules/billing/DealChip";
+import { useDealRefs } from "@/modules/billing/api";
 import { ApiError, api, unwrap } from "@/api/client";
 import { useAuth } from "@/auth/AuthContext";
 import { DataTable } from "@/components/data-table/DataTable";
@@ -119,6 +121,11 @@ export function OrdersTable({ onOpen }: { onOpen: (o: Order) => void }) {
   const effective = { ...filters, q };
   const query = toQuery(effective, sorting, offset);
   const orders = useOrders(query);
+  const refs = useDealRefs(
+    "order",
+    (orders.data?.items ?? []).map((o) => o.id),
+    can("billing.read"),
+  );
 
   const update = (patch: Partial<OrderFilters>) => {
     setFilters((f) => ({ ...f, ...patch }));
@@ -225,6 +232,12 @@ export function OrdersTable({ onOpen }: { onOpen: (o: Order) => void }) {
         cell: (c) => longDate(c.getValue()),
         meta: { label: "Created", defaultHidden: true },
       }),
+      h.display({
+        id: "deal",
+        header: "Deal",
+        cell: (c) => <DealChip deal={refs.data?.[c.row.original.id]} />,
+        meta: { label: "Deal (Billing)" },
+      }),
       h.accessor((o) => o.plan?.number ?? "", {
         id: "planning",
         header: "Plan",
@@ -236,7 +249,7 @@ export function OrdersTable({ onOpen }: { onOpen: (o: Order) => void }) {
         },
       }),
     ],
-    [],
+    [refs.data],
   );
 
   const selection = async (marked: boolean) => {

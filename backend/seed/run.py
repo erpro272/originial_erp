@@ -30,6 +30,7 @@ from app.core.models import Membership, Tenant, User
 from app.core.permissions import Role
 from app.core.security import hash_password
 from seed import planning_demo
+from seed.billing_demo import seed_billing
 from seed.demo_data import seed_demo, seed_second
 from seed.purchase_demo import seed_purchases
 
@@ -129,6 +130,7 @@ async def seed_business(session: AsyncSession, ids: dict[str, uuid.UUID]) -> Non
     owner = (await session.execute(select(User.id).where(User.email == "owner@demo.example"))).scalar_one()
     await seed_demo(session, ids["demo"], owner)
     await seed_purchases(session, ids["demo"])  # POs at every stage (Raw Material Purchase)
+    await seed_billing(session, ids["demo"])  # follow-ups, promises, supplier invoices at every stage
     await seed_second(session, ids["second"])
 
 
@@ -192,6 +194,7 @@ async def seed_missing(session: AsyncSession) -> list[str]:
         if slug == "demo":
             await seed_demo(session, ids[slug], owner)
             await seed_purchases(session, ids[slug])
+            await seed_billing(session, ids[slug])
         else:
             await seed_second(session, ids[slug])
         filled.append(slug)

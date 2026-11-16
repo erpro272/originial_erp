@@ -2062,6 +2062,28 @@ export interface components {
             /** Phone */
             phone: string | null;
         };
+        /** ArFollowUpIn */
+        ArFollowUpIn: {
+            /**
+             * Channel
+             * @enum {string}
+             */
+            channel: "call" | "whatsapp" | "email" | "visit" | "meeting";
+            /** Contact */
+            contact?: string | null;
+            /**
+             * Direction
+             * @default outgoing
+             * @enum {string}
+             */
+            direction: "incoming" | "outgoing";
+            /** Invoice Id */
+            invoice_id?: string | null;
+            /** Next Follow Up */
+            next_follow_up?: string | null;
+            /** Note */
+            note: string;
+        };
         /** ArInvoice */
         ArInvoice: {
             /** Days Overdue */
@@ -2127,6 +2149,11 @@ export interface components {
             earliest_due: string | null;
             /** Gstin */
             gstin: string | null;
+            /**
+             * Has Promise
+             * @default false
+             */
+            has_promise: boolean;
             /** Latest At */
             latest_at: string | null;
             /** Latest Update */
@@ -3156,6 +3183,13 @@ export interface components {
             id: string;
             /** Label */
             label: string;
+        };
+        /** FollowUpIn */
+        FollowUpIn: {
+            /** Note */
+            note: string;
+            /** Promised Date */
+            promised_date?: string | null;
         };
         /** FollowupIn */
         FollowupIn: {
@@ -5701,28 +5735,6 @@ export interface components {
              */
             to: string;
         };
-        /** FollowUpIn */
-        app__billing__schemas__FollowUpIn: {
-            /**
-             * Channel
-             * @enum {string}
-             */
-            channel: "call" | "whatsapp" | "email" | "visit" | "meeting";
-            /** Contact */
-            contact?: string | null;
-            /**
-             * Direction
-             * @default outgoing
-             * @enum {string}
-             */
-            direction: "incoming" | "outgoing";
-            /** Invoice Id */
-            invoice_id?: string | null;
-            /** Next Follow Up */
-            next_follow_up?: string | null;
-            /** Note */
-            note: string;
-        };
         /** Period */
         app__billing__schemas__Period: {
             /**
@@ -5804,13 +5816,6 @@ export interface components {
             start: string | null;
             /** Utilisation */
             utilisation: number;
-        };
-        /** FollowUpIn */
-        app__purchasing__schemas__FollowUpIn: {
-            /** Note */
-            note: string;
-            /** Promised Date */
-            promised_date?: string | null;
         };
     };
     responses: never;
@@ -6784,7 +6789,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["app__billing__schemas__FollowUpIn"];
+                "application/json": components["schemas"]["ArFollowUpIn"];
             };
         };
         responses: {
@@ -8916,7 +8921,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["app__purchasing__schemas__FollowUpIn"];
+                "application/json": components["schemas"]["FollowUpIn"];
             };
         };
         responses: {

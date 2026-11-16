@@ -21,6 +21,8 @@ import {
   type PoDetail,
   type Purchases,
 } from "./api";
+import { DealChip } from "@/modules/billing/DealChip";
+import { useDealRefs } from "@/modules/billing/api";
 import { PoActionDialog, type DialogAction } from "./PoDialogs";
 
 const ATTENTION: Partial<Record<Po["stage"], { tag: string; tone: "hi" | "md" | "bl" }>> = {
@@ -321,6 +323,8 @@ function PoWindow({ id, onClose }: { id: string; onClose: () => void }) {
 
 function PoFacts({ po }: { po: PoDetail }) {
   const ln = po.lines[0];
+  const { can } = useAuth();
+  const refs = useDealRefs("po", [po.id], can("billing.read"));
   const facts: [string, string][] = [
     ["Status", STAGE[po.stage].label],
     ["Material", ln ? `${ln.code} · ${ln.material}` : "–"],
@@ -339,6 +343,11 @@ function PoFacts({ po }: { po: PoDetail }) {
   ];
   return (
     <div className="flex flex-col gap-5">
+      {refs.data?.[po.id] && (
+        <span className="flex items-center gap-2 text-[13px] text-muted">
+          Deal <DealChip deal={refs.data[po.id]} />
+        </span>
+      )}
       <dl className="m-0 grid grid-cols-2 gap-x-6 gap-y-2.5 text-sm sm:grid-cols-3">
         {facts.map(([k, v]) => (
           <div key={k} className="flex flex-col gap-0.5">
