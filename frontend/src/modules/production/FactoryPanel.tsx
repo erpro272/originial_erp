@@ -5,7 +5,7 @@ import { cn } from "@/lib/cn";
 import { FactoryLayout } from "./FactoryLayout";
 import { STATUS } from "./status";
 
-/** The Factory Layout card (Production tab and Executive Dashboard): Layout / Status view, legend, hover card. */
+/** The Factory Layout card (Production tab and Dashboard): Layout / Status view, legend, hover card. */
 export function FactoryPanel({ id = "factory-h", note }: { id?: string; note?: ReactNode }) {
   const [view, setView] = useState<"layout" | "status">("layout");
   return (

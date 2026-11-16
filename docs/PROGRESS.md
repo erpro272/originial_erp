@@ -128,7 +128,7 @@
 - Production, Factory Layout (2026-11-16, frontend preview on demo data, awaiting owner review): KPI cards,
   floor plan with stages S1-S3, stations, flow arrows and utility strip, hover card per stage / station,
   Layout / Status view, legend, section performance, alerts. No backend yet. Tests: 71 Vitest, 24 Playwright.
-- Executive Dashboard (2026-11-16, awaiting owner review): KPIs, Order Timeline (Gantt / Status view mirroring
+- Dashboard (2026-11-16, awaiting owner review): KPIs, Order Timeline (Gantt / Status view mirroring
   Planning) + Machine Load (Current Plan vs After New Orders, machine detail), Factory Layout (demo), Cash Flow
   (6 months), Customer Health, Alerts & Updates with View All drawer; date range in the URL; owner only.
   Tests: 306 pytest, 72 Vitest, 26 Playwright.

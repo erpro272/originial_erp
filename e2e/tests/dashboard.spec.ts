@@ -1,13 +1,13 @@
 import { expect, test } from "@playwright/test";
 import { signIn } from "./helpers";
 
-test("Executive Dashboard: sections, machine load detail, alerts drawer, date range in the URL", async ({
+test("Dashboard: sections, machine load detail, alerts drawer, date range in the URL", async ({
   page,
 }) => {
   await signIn(page, "owner@demo.example");
   await page
     .getByRole("navigation", { name: "Main" })
-    .getByRole("link", { name: "Executive Dashboard" })
+    .getByRole("link", { name: "Dashboard" })
     .click();
   await expect(
     page.getByRole("heading", { level: 1, name: "Operations Dashboard" }),
@@ -69,7 +69,7 @@ test("Executive Dashboard: sections, machine load detail, alerts drawer, date ra
   ).toBeVisible();
 });
 
-test("Executive Dashboard is the owner's view", async ({ page }) => {
+test("Dashboard is the owner's view", async ({ page }) => {
   await signIn(page, "planner@demo.example");
   await page.goto("/dashboard");
   await expect(

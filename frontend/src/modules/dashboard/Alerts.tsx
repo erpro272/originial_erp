@@ -80,7 +80,7 @@ export function AlertsPanel({ alerts }: { alerts: DashAlert[] }) {
       <Sheet
         open={open}
         onOpenChange={setOpen}
-        eyebrow="Executive Dashboard"
+        eyebrow="Dashboard"
         title="Alerts & Updates"
         description="Each alert opens the record it came from."
         width={620}

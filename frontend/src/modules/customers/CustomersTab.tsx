@@ -86,7 +86,7 @@ export function CustomersTab() {
   const { can } = useAuth();
   const navigate = useNavigate();
   const period = usePeriod();
-  // `?health=high_value` (links from the Executive Dashboard) opens the list filtered
+  // `?health=high_value` (links from the Dashboard) opens the list filtered
   const [params] = useSearchParams();
   const [health, setHealth] = useState<Health | "all">(
     () => (params.get("health") as Health | null) ?? "all",

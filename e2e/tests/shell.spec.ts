@@ -16,7 +16,7 @@ test("sign in, visit every module, sign out", async ({ page }) => {
     "Production",
     "Billing",
     "Finance",
-    "Executive Dashboard",
+    "Dashboard",
   ];
   await expect(nav.getByRole("link")).toHaveText(modules);
   for (const name of modules) {
@@ -26,7 +26,7 @@ test("sign in, visit every module, sign out", async ({ page }) => {
         ? /Order manufacturing plan/
         : name === "Production"
           ? "Factory Layout"
-          : name === "Executive Dashboard"
+          : name === "Dashboard"
             ? "Operations Dashboard"
             : name;
     await expect(
@@ -44,7 +44,7 @@ test("sign in, visit every module, sign out", async ({ page }) => {
       ).toBeVisible();
     else if (name === "Production")
       await expect(page.getByText("Stage 1: Prep").first()).toBeVisible();
-    else if (name === "Executive Dashboard")
+    else if (name === "Dashboard")
       await expect(
         page.getByRole("heading", { name: "Order Timeline" }),
       ).toBeVisible();

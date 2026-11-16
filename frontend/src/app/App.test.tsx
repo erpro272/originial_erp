@@ -32,7 +32,7 @@ test("top nav lists the six modules and Dashboard last", async () => {
     "Production",
     "Billing",
     "Finance",
-    "Executive Dashboard",
+    "Dashboard",
   ]);
 });
 

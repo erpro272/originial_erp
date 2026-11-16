@@ -255,7 +255,7 @@ function CustomerHealth({ d }: { d: Dashboard }) {
   );
 }
 
-/** Executive Dashboard: the owner's consolidated view. Everything is read from the other modules. */
+/** Dashboard: the owner's consolidated view. Everything is read from the other modules. */
 export function DashboardPage() {
   const range = useRange();
   const q = useDashboard(range.from, range.to);

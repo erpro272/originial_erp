@@ -114,7 +114,7 @@ isolation). One company per website: no company picker or switcher in the UI.
   `interactions`, `payable_events`, `deal_events`) are insert-only. Migration 0012. Permissions `billing.read`
   (owner, accountant, purchaser), `billing.write` / `billing.issue` (accountant, owner), `billing.approve` (owner).
   Demo: `seed/billing_demo.py`.
-- `dashboard/` Executive Dashboard (owner only, `dashboard.read`): `service.overview(from, to)` only reads other modules
+- `dashboard/` Dashboard (owner only, `dashboard.read`): `service.overview(from, to)` only reads other modules
   (`planning.dashboard_schedule`, `orders.open_orders` / `cycle_days` / `received_between`, `customers.list_customers`,
   `invoices.ledger.monthly_totals`, `billing.payables.monthly_totals`, receivables / payables / POs for alerts). Stores
   nothing. Current Plan = committed work, After New Orders = + the working plan's orders.
@@ -151,7 +151,7 @@ isolation). One company per website: no company picker or switcher in the UI.
   compare, supplier window, quotes, score rule). `PoDialogs`: Raise PO + one dialog per step.
 - Billing routes: `/billing` (Payments: `?mode=ar|ap`, `customer=`, `supplier=` open the drawers), `/billing/ebill`
   (Invoice / E-bill, `?deal=`), `/billing/gst` (coming next). `DealChip` / `useDealRefs` show TXN chips elsewhere.
-- Executive Dashboard `/dashboard[?from&to]` = `modules/dashboard/DashboardPage` (`OrderTimeline` Gantt + Machine
+- Dashboard `/dashboard[?from&to]` = `modules/dashboard/DashboardPage` (`OrderTimeline` Gantt + Machine
   Load, `CashFlowChart`, `Alerts` + View All `Sheet`). KPI cards / `Panel` / icons shared in `components/kit`; the Factory
   Layout card is `production/FactoryPanel` (same on both pages).
 - Production route `/production` = `ProductionPage` (Factory Layout). FRONTEND PREVIEW ONLY: all numbers are

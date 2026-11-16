@@ -274,7 +274,7 @@ Short records of choices and the reason for each. Newest at the bottom.
     and the page says "Demo data" in a banner. The floor plan is a 1000 x 420 unit space (boxes placed in %,
     walls and arrows in one SVG), so the real layout can later come from factory setup. Status view (extra)
     tints each station by its status. New Order / Upload Document / View Details do nothing yet.
-56. **Executive Dashboard (owner's choices)**: `/dashboard`, owner only (`dashboard.read`). A read-only summary:
+56. **Dashboard (owner's choices)**: `/dashboard`, owner only (`dashboard.read`). A read-only summary:
     the `dashboard` module stores nothing and calls other modules' service functions only. Date range in the URL
     (default this week and next, Mon-Sat; max 92 days). Order Timeline = mirror of Planning: the approved schedule of
     the newest plan in force (as approved); with no approved plan, the work already committed (orders in production /
@@ -295,5 +295,5 @@ Short records of choices and the reason for each. Newest at the bottom.
     PO, awaiting approval, at the gate), Billing (largest overdue receivables, supplier payments awaiting owner
     approval / overdue) and the Production demo alerts (marked demo); each links to its source record; View All opens
     a drawer with a module filter. Factory Layout = the Production tab's demo layout (marked demo). Brand default
-    "Brand" (neutral placeholder again, owner's request; `VITE_BRAND_NAME` overrides); nav label "Executive Dashboard". Orders `?q=` and Customers
+    "Brand" (neutral placeholder again, owner's request; `VITE_BRAND_NAME` overrides); nav label "Dashboard" (owner renamed it from "Executive Dashboard"). Orders `?q=` and Customers
     `?health=` open those lists searched / filtered (dashboard links).

@@ -1,4 +1,4 @@
-/** Soft card / icon / line tones of the Clean Kri KPI cards (Production, Executive Dashboard). */
+/** Soft card / icon / line tones of the Clean Kri KPI cards (Production, Dashboard). */
 export type Tone = "ok" | "bl" | "ai" | "hi" | "md";
 
 export const TONE: Record<Tone, { stroke: string; icon: string; card: string; text: string }> = {
