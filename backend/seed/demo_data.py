@@ -17,7 +17,7 @@ from app.core import clock, counters
 from app.core.db import set_tenant
 from app.core.gst import STATE_CODES, financial_year, gstin_checksum
 from app.customers.models import Customer, CustomerAddress, CustomerContact, CustomerFollowup
-from app.invoices.models import Invoice, InvoiceLine, InvoiceParty
+from app.invoices.models import Invoice, InvoiceLine, InvoiceParty, InvoiceReceipt
 from app.orders.models import Order
 from seed import planning_demo
 
@@ -232,7 +232,14 @@ async def seed_demo(s: AsyncSession, tenant_id: uuid.UUID, owner_id: uuid.UUID) 
         s.add(inv)
         invoices.append((inv, c, prod, qty))
     await s.flush()
+    pay_rng = random.Random(7)  # its own generator: the invoices above stay exactly as before
     for inv, c, prod, qty in invoices:
+        paid = (inv.grand_total_paise or 0) - (inv.balance_due_paise or 0)
+        if paid > 0:  # Billing computes outstanding from receipts: what was paid is a dated receipt
+            assert inv.invoice_date is not None
+            on = min(today, inv.invoice_date + timedelta(days=pay_rng.randint(18, 42)))
+            s.add(InvoiceReceipt(invoice_id=inv.id, kind="opening", amount_paise=paid, received_on=on,
+                                 method="neft", note="Paid before Billing was set up"))  # fmt: skip
         p = prods[prod]
         s.add(InvoiceLine(invoice_id=inv.id, line_no=1, product_id=p.id, product_name=prod, hsn="7318", quantity=qty,
                           uom="PCS", unit_price_paise=p.unit_price_paise, taxable_paise=inv.total_taxable_paise,

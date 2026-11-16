@@ -610,3 +610,54 @@ async def cancel_po(session: AsyncSession, actor: uuid.UUID, po_id: uuid.UUID, r
     await sync_incoming(session, await _materials_of(session, po))
     await _log(session, po, actor, "cancelled", f"Cancelled: {reason}")
     return await _detail(session, po)
+
+
+# ---- for other modules (Billing) -------------------------------------------------------------------
+
+
+async def po_facts(session: AsyncSession, po_ids: list[uuid.UUID]) -> dict[uuid.UUID, dict[str, Any]]:
+    """What Billing needs to match a supplier invoice and show a purchase deal: PO, supplier, material, ordered
+    and QC-accepted quantity, agreed rate, value, gate entries (the goods receipt) and dates."""
+    if not po_ids:
+        return {}
+    out: dict[uuid.UUID, dict[str, Any]] = {}
+    rows = (await session.execute(
+        select(PurchaseOrder, Supplier, PurchaseOrderLine, Material)
+        .join(Supplier, Supplier.id == PurchaseOrder.supplier_id)
+        .join(PurchaseOrderLine, PurchaseOrderLine.po_id == PurchaseOrder.id)
+        .join(Material, Material.id == PurchaseOrderLine.material_id)
+        .where(PurchaseOrder.id.in_(po_ids))
+    )).all()  # fmt: skip
+    for po, sup, ln, m in rows:
+        out.setdefault(po.id, {
+            "id": po.id, "number": po.number, "status": po.status, "supplier_id": sup.id, "supplier": sup.name,
+            "material": m.name, "code": m.code, "unit": ln.unit, "quantity": ln.quantity,
+            "received_qty": ln.received_qty, "rejected_qty": ln.rejected_qty, "rate_paise": ln.price_per_unit_paise,
+            "value_paise": int(ln.quantity * ln.price_per_unit_paise), "created_at": po.created_at,
+            "approved_at": po.approved_at, "expected_date": po.expected_date, "orders": list(po.order_numbers or []),
+            "events": [],
+        })  # fmt: skip
+    for e in (await session.execute(
+        select(PoEvent).where(PoEvent.po_id.in_(list(out))).order_by(PoEvent.created_at)
+    )).scalars():  # fmt: skip
+        out[e.po_id]["events"].append({"kind": e.kind, "summary": e.summary, "at": e.created_at,
+                                       "actor_id": e.actor_id, "data": e.data or {}})  # fmt: skip
+    return out
+
+
+async def all_po_ids(session: AsyncSession) -> list[uuid.UUID]:
+    return list((await session.execute(select(PurchaseOrder.id))).scalars())
+
+
+async def supplier_names(session: AsyncSession, ids: list[uuid.UUID] | None = None) -> dict[uuid.UUID, str]:
+    q = select(Supplier.id, Supplier.name)
+    if ids is not None:
+        q = q.where(Supplier.id.in_(ids))
+    return {i: n for i, n in (await session.execute(q)).all()}
+
+
+async def find_supplier(session: AsyncSession, name: str) -> uuid.UUID | None:
+    from sqlalchemy import func
+
+    q = select(Supplier.id).where(func.lower(Supplier.name) == name.strip().lower())
+    return (await session.execute(q)).scalars().first()

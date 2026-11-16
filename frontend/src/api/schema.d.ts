@@ -106,6 +106,476 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/billing/deal-refs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Deal Refs
+         * @description Order / PO id -> its deal (id, TXN number): the chips on Orders and Purchasing screens.
+         */
+        get: operations["deal_refs_api_billing_deal_refs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/billing/deals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Deals
+         * @description Every deal with KPIs (for `month`, or all months).
+         */
+        get: operations["list_deals_api_billing_deals_get"];
+        put?: never;
+        /**
+         * Create Deal
+         * @description A provisional deal from an enquiry; refuses a duplicate reference, warns on a look-alike.
+         */
+        post: operations["create_deal_api_billing_deals_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/billing/deals/{deal_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Deal */
+        get: operations["get_deal_api_billing_deals__deal_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit Deal */
+        patch: operations["edit_deal_api_billing_deals__deal_id__patch"];
+        trace?: never;
+    };
+    "/api/billing/deals/{deal_id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Archive Deal */
+        post: operations["archive_deal_api_billing_deals__deal_id__archive_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/billing/deals/{deal_id}/interactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Interaction */
+        post: operations["add_interaction_api_billing_deals__deal_id__interactions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/billing/deals/{deal_id}/invoice": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Generate Invoice
+         * @description A draft from the shipped order (never counted as issued).
+         */
+        post: operations["generate_invoice_api_billing_deals__deal_id__invoice_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit Draft */
+        patch: operations["edit_draft_api_billing_deals__deal_id__invoice_patch"];
+        trace?: never;
+    };
+    "/api/billing/deals/{deal_id}/invoice/issue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Issue Invoice
+         * @description Number, lock, receivable and event, in one transaction (owner or accountant).
+         */
+        post: operations["issue_invoice_api_billing_deals__deal_id__invoice_issue_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/billing/deals/{deal_id}/invoice/send": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send Invoice */
+        post: operations["send_invoice_api_billing_deals__deal_id__invoice_send_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/billing/deals/{deal_id}/invoice/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Verify Invoice */
+        post: operations["verify_invoice_api_billing_deals__deal_id__invoice_verify_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/billing/payables": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Payables */
+        get: operations["get_payables_api_billing_payables_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/billing/payables/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Payables */
+        get: operations["export_payables_api_billing_payables_export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/billing/payables/invoices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add Supplier Invoice
+         * @description A supplier invoice arrives: linked to its PO and purchase deal; the three-way match runs.
+         */
+        post: operations["add_supplier_invoice_api_billing_payables_invoices_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/billing/payables/invoices/{invoice_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Approve
+         * @description Owner approval: a decision, separate from scheduling and paying.
+         */
+        post: operations["approve_api_billing_payables_invoices__invoice_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/billing/payables/invoices/{invoice_id}/schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Schedule */
+        post: operations["schedule_api_billing_payables_invoices__invoice_id__schedule_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/billing/payables/invoices/{invoice_id}/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Verify
+         * @description Accounts verification (three-way match must agree).
+         */
+        post: operations["verify_api_billing_payables_invoices__invoice_id__verify_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/billing/payables/invoices/{invoice_id}/{action}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Hold
+         * @description Owner: hold or reject (cancels scheduled payments), or release a hold (back to approval).
+         */
+        post: operations["hold_api_billing_payables_invoices__invoice_id___action__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/billing/payables/payments/{payment_id}/bank-confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bank Confirm
+         * @description The bank statement line matches (UTR, amount): only now the payment counts.
+         */
+        post: operations["bank_confirm_api_billing_payables_payments__payment_id__bank_confirm_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/billing/payables/payments/{payment_id}/execute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Execute
+         * @description Sent from the bank (UTR). The approver can't also execute, unless the owner overrides with a reason.
+         */
+        post: operations["execute_api_billing_payables_payments__payment_id__execute_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/billing/payables/suppliers/{supplier_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Payable Supplier */
+        get: operations["payable_supplier_api_billing_payables_suppliers__supplier_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/billing/receivables": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Receivables
+         * @description Cards + one row per customer, as of the end of `month` (or today).
+         */
+        get: operations["get_receivables_api_billing_receivables_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/billing/receivables/customers/{customer_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Receivable Customer */
+        get: operations["receivable_customer_api_billing_receivables_customers__customer_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/billing/receivables/customers/{customer_id}/follow-ups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Follow Up */
+        post: operations["follow_up_api_billing_receivables_customers__customer_id__follow_ups_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/billing/receivables/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Receivables */
+        get: operations["export_receivables_api_billing_receivables_export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/billing/receivables/invoices/{invoice_id}/promises": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Promise
+         * @description Update commitment: a new promise row; older ones are kept.
+         */
+        post: operations["promise_api_billing_receivables_invoices__invoice_id__promises_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/billing/receivables/invoices/{invoice_id}/receipts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Receipt
+         * @description Money received (or an advance adjusted / a credit note): outstanding is recomputed.
+         */
+        post: operations["receipt_api_billing_receivables_invoices__invoice_id__receipts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/catalog/products": {
         parameters: {
             query?: never;
@@ -1245,6 +1715,29 @@ export interface components {
             /** Label */
             label: string;
         };
+        /** ActivityOut */
+        ActivityOut: {
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** By */
+            by: string | null;
+            /**
+             * Direction
+             * @enum {string}
+             */
+            direction: "incoming" | "outgoing" | "internal";
+            /** Document Key */
+            document_key: string | null;
+            /** Milestone */
+            milestone: boolean;
+            /** Source */
+            source: string;
+            /** Title */
+            title: string;
+        };
         /** AddressIn */
         AddressIn: {
             /** City */
@@ -1286,6 +1779,214 @@ export interface components {
             /** State Code */
             state_code?: string | null;
         };
+        /** ApCards */
+        ApCards: {
+            /** Due Week Paise */
+            due_week_paise: number;
+            /** Overdue Paise */
+            overdue_paise: number;
+            /** Overdue Suppliers */
+            overdue_suppliers: number;
+            /** Paid Paise */
+            paid_paise: number;
+            /** Payments */
+            payments: number;
+            /** Total Invoices */
+            total_invoices: number;
+            /** Total Paise */
+            total_paise: number;
+            /** Total Suppliers */
+            total_suppliers: number;
+            /**
+             * Week From
+             * Format: date
+             */
+            week_from: string;
+            /**
+             * Week To
+             * Format: date
+             */
+            week_to: string;
+        };
+        /** ApEvent */
+        ApEvent: {
+            /** Action */
+            action: string;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** By */
+            by: string | null;
+            /** From Status */
+            from_status: string | null;
+            /** Note */
+            note: string | null;
+            /** To Status */
+            to_status: string | null;
+        };
+        /** ApInvoice */
+        ApInvoice: {
+            /** Days Overdue */
+            days_overdue: number;
+            /** Deal Id */
+            deal_id: string | null;
+            /** Deal Number */
+            deal_number: string | null;
+            /**
+             * Due Date
+             * Format: date
+             */
+            due_date: string;
+            /**
+             * Events
+             * @default []
+             */
+            events: components["schemas"]["ApEvent"][];
+            /** Grn */
+            grn: string | null;
+            /** Gst Paise */
+            gst_paise: number;
+            /** Hold Reason */
+            hold_reason: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Invoice Date
+             * Format: date
+             */
+            invoice_date: string;
+            /** Match */
+            match: components["schemas"]["MatchLine"][];
+            /** Match Ok */
+            match_ok: boolean;
+            /** Number */
+            number: string;
+            /** Outstanding Paise */
+            outstanding_paise: number;
+            /** Paid Paise */
+            paid_paise: number;
+            /**
+             * Payments
+             * @default []
+             */
+            payments: components["schemas"]["ApPayment"][];
+            /** Po Id */
+            po_id: string | null;
+            /** Po Number */
+            po_number: string | null;
+            /** Quantity */
+            quantity: string;
+            /** Rate Paise */
+            rate_paise: number;
+            /** Scheduled Paise */
+            scheduled_paise: number;
+            /** Stage */
+            stage: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending_verif" | "pending_owner" | "approved" | "scheduled" | "paid" | "on_hold" | "rejected";
+            /** Supplier */
+            supplier: string;
+            /**
+             * Supplier Id
+             * Format: uuid
+             */
+            supplier_id: string;
+            /** Taxable Paise */
+            taxable_paise: number;
+            /** Total Paise */
+            total_paise: number;
+            /** Unit */
+            unit: string | null;
+        };
+        /** ApOut */
+        ApOut: {
+            cards: components["schemas"]["ApCards"];
+            /** Counts */
+            counts: {
+                [key: string]: number;
+            };
+            period: components["schemas"]["app__billing__schemas__Period"];
+            /** Rows */
+            rows: components["schemas"]["ApRow"][];
+        };
+        /** ApPayment */
+        ApPayment: {
+            /** Amount Paise */
+            amount_paise: number;
+            /** Confirmed On */
+            confirmed_on: string | null;
+            /** Executed On */
+            executed_on: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Override Reason */
+            override_reason: string | null;
+            /**
+             * Scheduled For
+             * Format: date
+             */
+            scheduled_for: string;
+            /** Status */
+            status: string;
+            /** Utr */
+            utr: string | null;
+        };
+        /** ApRow */
+        ApRow: {
+            /** Days Overdue */
+            days_overdue: number;
+            /** Disputed Paise */
+            disputed_paise: number;
+            /** Due Week */
+            due_week: boolean;
+            /** Earliest Due */
+            earliest_due: string | null;
+            /** Gstin */
+            gstin: string | null;
+            /** Invoices */
+            invoices: number;
+            /** Name */
+            name: string;
+            /** Outstanding Paise */
+            outstanding_paise: number;
+            /** Overdue */
+            overdue: boolean;
+            /** Statuses */
+            statuses: ("pending_verif" | "pending_owner" | "approved" | "scheduled" | "paid" | "on_hold" | "rejected")[];
+            /**
+             * Supplier Id
+             * Format: uuid
+             */
+            supplier_id: string;
+        };
+        /** ApSupplier */
+        ApSupplier: {
+            /** Gstin */
+            gstin: string | null;
+            /** Interactions */
+            interactions: components["schemas"]["InteractionOut"][];
+            /** Invoices */
+            invoices: components["schemas"]["ApInvoice"][];
+            /** Name */
+            name: string;
+            period: components["schemas"]["app__billing__schemas__Period"];
+            /**
+             * Supplier Id
+             * Format: uuid
+             */
+            supplier_id: string;
+        };
         /** Approval */
         Approval: {
             /** Checks */
@@ -1304,6 +2005,147 @@ export interface components {
              * @default false
              */
             raise_open_pos: boolean;
+        };
+        /** ArCards */
+        ArCards: {
+            /** Expected Week Paise */
+            expected_week_paise: number;
+            /** Oldest Overdue Days */
+            oldest_overdue_days: number | null;
+            /** Overdue Customers */
+            overdue_customers: number;
+            /** Overdue Paise */
+            overdue_paise: number;
+            /** Receipts */
+            receipts: number;
+            /** Received Paise */
+            received_paise: number;
+            /** Total Customers */
+            total_customers: number;
+            /** Total Invoices */
+            total_invoices: number;
+            /** Total Paise */
+            total_paise: number;
+            /**
+             * Week From
+             * Format: date
+             */
+            week_from: string;
+            /**
+             * Week To
+             * Format: date
+             */
+            week_to: string;
+        };
+        /** ArCustomer */
+        ArCustomer: {
+            /** City */
+            city: string | null;
+            /**
+             * Customer Id
+             * Format: uuid
+             */
+            customer_id: string;
+            /** Email */
+            email: string | null;
+            /** Gstin */
+            gstin: string | null;
+            /** Interactions */
+            interactions: components["schemas"]["InteractionOut"][];
+            /** Invoices */
+            invoices: components["schemas"]["ArInvoice"][];
+            /** Name */
+            name: string;
+            /** Payment Terms Days */
+            payment_terms_days: number | null;
+            period: components["schemas"]["app__billing__schemas__Period"];
+            /** Phone */
+            phone: string | null;
+        };
+        /** ArInvoice */
+        ArInvoice: {
+            /** Days Overdue */
+            days_overdue: number;
+            /** Deal Id */
+            deal_id: string | null;
+            /** Deal Number */
+            deal_number: string | null;
+            /** Due Date */
+            due_date: string | null;
+            /** Expected On */
+            expected_on: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Invoice Date */
+            invoice_date: string | null;
+            /** Number */
+            number: string | null;
+            /** Outstanding Paise */
+            outstanding_paise: number;
+            /** Part Paid */
+            part_paid: boolean;
+            /** Promised On */
+            promised_on: string | null;
+            /** Promises */
+            promises: components["schemas"]["PromiseOut"][];
+            /** Receipts */
+            receipts: components["schemas"]["ReceiptOut"][];
+            /** Received Paise */
+            received_paise: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "overdue" | "due_week" | "promise" | "not_due";
+            /** Total Paise */
+            total_paise: number;
+        };
+        /** ArOut */
+        ArOut: {
+            cards: components["schemas"]["ArCards"];
+            /** Counts */
+            counts: {
+                [key: string]: number;
+            };
+            period: components["schemas"]["app__billing__schemas__Period"];
+            /** Rows */
+            rows: components["schemas"]["ArRow"][];
+        };
+        /** ArRow */
+        ArRow: {
+            /**
+             * Customer Id
+             * Format: uuid
+             */
+            customer_id: string;
+            /** Days Overdue */
+            days_overdue: number;
+            /** Earliest Due */
+            earliest_due: string | null;
+            /** Gstin */
+            gstin: string | null;
+            /** Latest At */
+            latest_at: string | null;
+            /** Latest Update */
+            latest_update: string | null;
+            /** Name */
+            name: string;
+            /** Open Invoices */
+            open_invoices: number;
+            /** Outstanding Paise */
+            outstanding_paise: number;
+            /** Part Paid */
+            part_paid: boolean;
+            /** Phone */
+            phone: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "overdue" | "due_week" | "promise" | "not_due";
         };
         /** AuditEntryOut */
         AuditEntryOut: {
@@ -1336,6 +2178,18 @@ export interface components {
             request_id: string | null;
             /** Summary */
             summary: string | null;
+        };
+        /** BankConfirmIn */
+        BankConfirmIn: {
+            /** Amount Paise */
+            amount_paise: number;
+            /**
+             * Confirmed On
+             * Format: date
+             */
+            confirmed_on: string;
+            /** Utr */
+            utr: string;
         };
         /** BatchOut */
         BatchOut: {
@@ -1692,7 +2546,7 @@ export interface components {
             /** Offset */
             offset: number;
             overview: components["schemas"]["app__customers__schemas__Overview"];
-            period: components["schemas"]["Period"];
+            period: components["schemas"]["app__customers__schemas__Period"];
             /** Total */
             total: number;
         };
@@ -1821,6 +2675,165 @@ export interface components {
             /** Units Sold */
             units_sold: string;
         };
+        /** DealCreateIn */
+        DealCreateIn: {
+            /** Company */
+            company: string;
+            /** Contact */
+            contact?: string | null;
+            /** Expected Value Paise */
+            expected_value_paise?: number | null;
+            /**
+             * Force
+             * @default false
+             */
+            force: boolean;
+            /** Item */
+            item: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "sale" | "purchase";
+            /** Note */
+            note?: string | null;
+            /** Payment Terms Days */
+            payment_terms_days?: number | null;
+            /** Quantity */
+            quantity?: number | string | null;
+            /** Reference */
+            reference?: string | null;
+            /** Unit */
+            unit?: string | null;
+        };
+        /** DealDetail */
+        DealDetail: {
+            /** Activity */
+            activity: components["schemas"]["ActivityOut"][];
+            /** Billing Basis */
+            billing_basis: string;
+            /** Cancelled Reason */
+            cancelled_reason: string | null;
+            /** Contact */
+            contact: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Customer Id */
+            customer_id: string | null;
+            /** Dispatched Qty */
+            dispatched_qty: string | null;
+            /** Documents */
+            documents: components["schemas"]["DocumentOut"][];
+            /** Hold Reason */
+            hold_reason: string | null;
+            /** Interactions */
+            interactions: components["schemas"]["InteractionOut"][];
+            invoice: components["schemas"]["InvoiceCard"] | null;
+            /** Invoice Block */
+            invoice_block: string | null;
+            /** Item */
+            item: string | null;
+            /** Note */
+            note: string | null;
+            /** On Hold */
+            on_hold: boolean;
+            /** Order Id */
+            order_id: string | null;
+            payable: components["schemas"]["ApInvoice"] | null;
+            /** Payment Terms Days */
+            payment_terms_days: number | null;
+            /** Po Id */
+            po_id: string | null;
+            /** Quantity */
+            quantity: string | null;
+            /** Received Qty */
+            received_qty: string | null;
+            row: components["schemas"]["DealRow"];
+            /** Ship Date */
+            ship_date: string | null;
+            /** Supplier Id */
+            supplier_id: string | null;
+            /** Unit */
+            unit: string | null;
+        };
+        /** DealEditIn */
+        DealEditIn: {
+            /** Contact */
+            contact?: string | null;
+            /** Expected Value Paise */
+            expected_value_paise?: number | null;
+            /** Name */
+            name?: string | null;
+            /** Note */
+            note?: string | null;
+            /** Payment Terms Days */
+            payment_terms_days?: number | null;
+        };
+        /** DealKpis */
+        DealKpis: {
+            /** Active */
+            active: number;
+            /** Awaiting Response */
+            awaiting_response: number;
+            /** Documents Received */
+            documents_received: number;
+            /** Invoices Issued */
+            invoices_issued: number;
+            /** Total */
+            total: number;
+        };
+        /** DealRow */
+        DealRow: {
+            /** Archived */
+            archived: boolean;
+            /** Company */
+            company: string;
+            /** Company Id */
+            company_id: string | null;
+            /** Documents */
+            documents: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "sale" | "purchase";
+            /** Latest Activity */
+            latest_activity: string | null;
+            /** Latest At */
+            latest_at: string | null;
+            /** Latest Direction */
+            latest_direction: string | null;
+            /** Name */
+            name: string;
+            /** Number */
+            number: string;
+            /** Provisional */
+            provisional: boolean;
+            /** Reference */
+            reference: string | null;
+            /** Status */
+            status: string;
+            /** Value Paise */
+            value_paise: number | null;
+        };
+        /** DealsOut */
+        DealsOut: {
+            /** Companies */
+            companies: string[];
+            kpis: components["schemas"]["DealKpis"];
+            /** Rows */
+            rows: components["schemas"]["DealRow"][];
+            /** Statuses */
+            statuses: string[];
+        };
         /** DeliveryOut */
         DeliveryOut: {
             /** Accepted */
@@ -1889,6 +2902,33 @@ export interface components {
             /** Note */
             note?: string | null;
         };
+        /**
+         * DocumentOut
+         * @description A document of the deal: a view of the record that owns it (order, PO, gate entry, invoice, receipt...).
+         */
+        DocumentOut: {
+            /** Amount Paise */
+            amount_paise: number | null;
+            /** Date */
+            date: string | null;
+            /**
+             * Direction
+             * @enum {string}
+             */
+            direction: "incoming" | "outgoing" | "internal";
+            /** Key */
+            key: string;
+            /** Kind */
+            kind: string;
+            /** Name */
+            name: string;
+            /** Number */
+            number: string | null;
+            /** Source */
+            source: string;
+            /** Status */
+            status: string;
+        };
         /** DowntimeIn */
         "DowntimeIn-Input": {
             /**
@@ -1931,6 +2971,17 @@ export interface components {
                 [key: string]: string | null;
             }[] | null;
         };
+        /** DraftEditIn */
+        DraftEditIn: {
+            /** Other Charges Paise */
+            other_charges_paise?: number | null;
+            /** Payment Terms Days */
+            payment_terms_days?: number | null;
+            /** Quantity */
+            quantity?: number | string | null;
+            /** Rate Paise */
+            rate_paise?: number | null;
+        };
         /** DraftSave */
         DraftSave: {
             /** Fields */
@@ -1946,6 +2997,18 @@ export interface components {
              * @default false
              */
             verified: boolean;
+        };
+        /** ExecuteIn */
+        ExecuteIn: {
+            /**
+             * Executed On
+             * Format: date
+             */
+            executed_on: string;
+            /** Override Reason */
+            override_reason?: string | null;
+            /** Utr */
+            utr: string;
         };
         /** Factory */
         "Factory-Input": {
@@ -2093,13 +3156,6 @@ export interface components {
             id: string;
             /** Label */
             label: string;
-        };
-        /** FollowUpIn */
-        FollowUpIn: {
-            /** Note */
-            note: string;
-            /** Promised Date */
-            promised_date?: string | null;
         };
         /** FollowupIn */
         FollowupIn: {
@@ -2319,6 +3375,55 @@ export interface components {
             /** Supplier */
             supplier: string;
         };
+        /** InteractionIn */
+        InteractionIn: {
+            /**
+             * Channel
+             * @enum {string}
+             */
+            channel: "call" | "whatsapp" | "email" | "visit" | "meeting";
+            /** Contact */
+            contact?: string | null;
+            /**
+             * Direction
+             * @default outgoing
+             * @enum {string}
+             */
+            direction: "incoming" | "outgoing";
+            /** Next Follow Up */
+            next_follow_up?: string | null;
+            /** Summary */
+            summary: string;
+        };
+        /** InteractionOut */
+        InteractionOut: {
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** By */
+            by: string | null;
+            /** Channel */
+            channel: string;
+            /** Contact */
+            contact: string | null;
+            /** Deal Number */
+            deal_number: string | null;
+            /** Direction */
+            direction: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Invoice Number */
+            invoice_number: string | null;
+            /** Next Follow Up */
+            next_follow_up: string | null;
+            /** Summary */
+            summary: string;
+        };
         /** InventoryOut */
         InventoryOut: {
             /** Attention */
@@ -2359,6 +3464,50 @@ export interface components {
             status: string;
             /** Upload Id */
             upload_id: string | null;
+        };
+        /** InvoiceCard */
+        InvoiceCard: {
+            /** Cgst Paise */
+            cgst_paise: number;
+            /** Due Date */
+            due_date: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Igst Paise */
+            igst_paise: number;
+            /** Invoice Date */
+            invoice_date: string | null;
+            /** Issued At */
+            issued_at: string | null;
+            /** Number */
+            number: string | null;
+            /** Other Charges Paise */
+            other_charges_paise: number;
+            /** Outstanding Paise */
+            outstanding_paise: number;
+            /** Payment Terms Days */
+            payment_terms_days: number | null;
+            /** Quantity */
+            quantity: string | null;
+            /** Rate Paise */
+            rate_paise: number | null;
+            /** Received Paise */
+            received_paise: number;
+            /** Sent At */
+            sent_at: string | null;
+            /** Sgst Paise */
+            sgst_paise: number;
+            /** Status */
+            status: string;
+            /** Taxable Paise */
+            taxable_paise: number;
+            /** Total Paise */
+            total_paise: number;
+            /** Verified At */
+            verified_at: string | null;
         };
         /** InvoiceView */
         InvoiceView: {
@@ -2506,6 +3655,15 @@ export interface components {
             operators: number;
             /** Shifts Per Day */
             shifts_per_day: number;
+        };
+        /** MatchLine */
+        MatchLine: {
+            /** Check */
+            check: string;
+            /** Ok */
+            ok: boolean;
+            /** Text */
+            text: string;
         };
         /** MaterialCostIn */
         MaterialCostIn: {
@@ -2965,39 +4123,11 @@ export interface components {
             /** Value */
             value: number;
         };
-        /** Period */
-        Period: {
-            /**
-             * Date From
-             * Format: date
-             */
-            date_from: string;
-            /**
-             * Date To
-             * Format: date
-             */
-            date_to: string;
-            /**
-             * Preset
-             * @enum {string}
-             */
-            preset: "this_month" | "this_quarter" | "fytd" | "last_12_months" | "custom";
-            /**
-             * Prev From
-             * Format: date
-             */
-            prev_from: string;
-            /**
-             * Prev To
-             * Format: date
-             */
-            prev_to: string;
-        };
         /**
          * Permission
          * @enum {string}
          */
-        Permission: "audit.read" | "settings.read" | "settings.write" | "users.manage" | "sensitive.view" | "orders.read" | "orders.write" | "customers.read" | "customers.write" | "invoices.write" | "planning.read" | "planning.write" | "planning.approve" | "purchasing.read" | "purchasing.write" | "purchasing.approve" | "finance.read";
+        Permission: "audit.read" | "settings.read" | "settings.write" | "users.manage" | "sensitive.view" | "orders.read" | "orders.write" | "customers.read" | "customers.write" | "invoices.write" | "planning.read" | "planning.write" | "planning.approve" | "purchasing.read" | "purchasing.write" | "purchasing.approve" | "finance.read" | "billing.read" | "billing.write" | "billing.issue" | "billing.approve";
         /** PlanOut */
         PlanOut: {
             /** Approval Note */
@@ -3537,6 +4667,37 @@ export interface components {
             /** Unit Price Paise */
             unit_price_paise: number;
         };
+        /** PromiseIn */
+        PromiseIn: {
+            /** Amount Paise */
+            amount_paise: number;
+            /** Note */
+            note?: string | null;
+            /**
+             * Promised On
+             * Format: date
+             */
+            promised_on: string;
+        };
+        /** PromiseOut */
+        PromiseOut: {
+            /** Amount Paise */
+            amount_paise: number;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** By */
+            by: string | null;
+            /** Note */
+            note: string | null;
+            /**
+             * Promised On
+             * Format: date
+             */
+            promised_on: string;
+        };
         /** PurchaseKpis */
         PurchaseKpis: {
             /** In Transit */
@@ -3791,6 +4952,58 @@ export interface components {
              */
             requirement: number;
         };
+        /** ReasonIn */
+        ReasonIn: {
+            /** Reason */
+            reason: string;
+        };
+        /** ReceiptIn */
+        ReceiptIn: {
+            /** Amount Paise */
+            amount_paise: number;
+            /**
+             * Kind
+             * @default receipt
+             * @enum {string}
+             */
+            kind: "receipt" | "advance" | "credit_note";
+            /** Method */
+            method?: ("neft" | "rtgs" | "imps" | "upi" | "cheque" | "cash") | null;
+            /** Note */
+            note?: string | null;
+            /**
+             * Received On
+             * Format: date
+             */
+            received_on: string;
+            /** Reference */
+            reference?: string | null;
+        };
+        /** ReceiptOut */
+        ReceiptOut: {
+            /** Amount Paise */
+            amount_paise: number;
+            /** By */
+            by: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Kind */
+            kind: string;
+            /** Method */
+            method: string | null;
+            /** Note */
+            note: string | null;
+            /**
+             * Received On
+             * Format: date
+             */
+            received_on: string;
+            /** Reference */
+            reference: string | null;
+        };
         /**
          * Regenerate
          * @description The order set changed after Generate plan: generate again before approval.
@@ -3978,6 +5191,16 @@ export interface components {
              */
             today: string;
         };
+        /** ScheduleIn */
+        ScheduleIn: {
+            /** Amount Paise */
+            amount_paise: number;
+            /**
+             * Scheduled For
+             * Format: date
+             */
+            scheduled_for: string;
+        };
         /**
          * ScoringRules
          * @description How "Best overall" weighs the supplier measures (company setting `supplier-scoring`), and when a
@@ -4081,6 +5304,16 @@ export interface components {
         SendBackIn: {
             /** Note */
             note?: string | null;
+        };
+        /** SendIn */
+        SendIn: {
+            /**
+             * Channel
+             * @enum {string}
+             */
+            channel: "email" | "whatsapp";
+            /** Contact */
+            contact?: string | null;
         };
         /** SeqRow */
         SeqRow: {
@@ -4228,6 +5461,36 @@ export interface components {
             open_pos: string[];
             /** Quotes */
             quotes: components["schemas"]["QuoteOut"][];
+        };
+        /** SupplierInvoiceIn */
+        SupplierInvoiceIn: {
+            /** Due Date */
+            due_date?: string | null;
+            /**
+             * Gst Rate
+             * @default 18
+             */
+            gst_rate: number | string;
+            /**
+             * Invoice Date
+             * Format: date
+             */
+            invoice_date: string;
+            /** Note */
+            note?: string | null;
+            /** Number */
+            number: string;
+            /**
+             * Po Id
+             * Format: uuid
+             */
+            po_id: string;
+            /** Quantity */
+            quantity: number | string;
+            /** Rate Paise */
+            rate_paise: number;
+            /** Supplier Gstin */
+            supplier_gstin?: string | null;
         };
         /**
          * SupplierRow
@@ -4438,6 +5701,45 @@ export interface components {
              */
             to: string;
         };
+        /** FollowUpIn */
+        app__billing__schemas__FollowUpIn: {
+            /**
+             * Channel
+             * @enum {string}
+             */
+            channel: "call" | "whatsapp" | "email" | "visit" | "meeting";
+            /** Contact */
+            contact?: string | null;
+            /**
+             * Direction
+             * @default outgoing
+             * @enum {string}
+             */
+            direction: "incoming" | "outgoing";
+            /** Invoice Id */
+            invoice_id?: string | null;
+            /** Next Follow Up */
+            next_follow_up?: string | null;
+            /** Note */
+            note: string;
+        };
+        /** Period */
+        app__billing__schemas__Period: {
+            /**
+             * As Of
+             * Format: date
+             */
+            as_of: string;
+            /** Live */
+            live: boolean;
+            /** Month */
+            month: string;
+            /**
+             * Start
+             * Format: date
+             */
+            start: string;
+        };
         /** Overview */
         app__customers__schemas__Overview: {
             /** Active Customers */
@@ -4450,6 +5752,34 @@ export interface components {
             total_customers: number;
             /** Units Sold */
             units_sold: string;
+        };
+        /** Period */
+        app__customers__schemas__Period: {
+            /**
+             * Date From
+             * Format: date
+             */
+            date_from: string;
+            /**
+             * Date To
+             * Format: date
+             */
+            date_to: string;
+            /**
+             * Preset
+             * @enum {string}
+             */
+            preset: "this_month" | "this_quarter" | "fytd" | "last_12_months" | "custom";
+            /**
+             * Prev From
+             * Format: date
+             */
+            prev_from: string;
+            /**
+             * Prev To
+             * Format: date
+             */
+            prev_to: string;
         };
         /** Overview */
         app__planning__schemas__Overview: {
@@ -4474,6 +5804,13 @@ export interface components {
             start: string | null;
             /** Utilisation */
             utilisation: number;
+        };
+        /** FollowUpIn */
+        app__purchasing__schemas__FollowUpIn: {
+            /** Note */
+            note: string;
+            /** Promised Date */
+            promised_date?: string | null;
         };
     };
     responses: never;
@@ -4629,6 +5966,936 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TokenResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deal_refs_api_billing_deal_refs_get: {
+        parameters: {
+            query?: {
+                order_id?: string[] | null;
+                po_id?: string[] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_deals_api_billing_deals_get: {
+        parameters: {
+            query?: {
+                month?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DealsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_deal_api_billing_deals_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DealCreateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DealDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_deal_api_billing_deals__deal_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                deal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DealDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    edit_deal_api_billing_deals__deal_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                deal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DealEditIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DealDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    archive_deal_api_billing_deals__deal_id__archive_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                deal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DealDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_interaction_api_billing_deals__deal_id__interactions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                deal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InteractionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InteractionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    generate_invoice_api_billing_deals__deal_id__invoice_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                deal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DealDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    edit_draft_api_billing_deals__deal_id__invoice_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                deal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DraftEditIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DealDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    issue_invoice_api_billing_deals__deal_id__invoice_issue_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                deal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DealDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    send_invoice_api_billing_deals__deal_id__invoice_send_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                deal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DealDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    verify_invoice_api_billing_deals__deal_id__invoice_verify_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                deal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DealDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_payables_api_billing_payables_get: {
+        parameters: {
+            query?: {
+                month?: string | null;
+                q?: string | null;
+                status?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_payables_api_billing_payables_export_get: {
+        parameters: {
+            query?: {
+                month?: string | null;
+                q?: string | null;
+                status?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_supplier_invoice_api_billing_payables_invoices_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SupplierInvoiceIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApInvoice"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_api_billing_payables_invoices__invoice_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApInvoice"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    schedule_api_billing_payables_invoices__invoice_id__schedule_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScheduleIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApInvoice"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    verify_api_billing_payables_invoices__invoice_id__verify_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApInvoice"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    hold_api_billing_payables_invoices__invoice_id___action__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoice_id: string;
+                action: "hold" | "reject" | "release";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApInvoice"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bank_confirm_api_billing_payables_payments__payment_id__bank_confirm_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                payment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BankConfirmIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApInvoice"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    execute_api_billing_payables_payments__payment_id__execute_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                payment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExecuteIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApInvoice"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    payable_supplier_api_billing_payables_suppliers__supplier_id__get: {
+        parameters: {
+            query?: {
+                month?: string | null;
+            };
+            header?: never;
+            path: {
+                supplier_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApSupplier"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_receivables_api_billing_receivables_get: {
+        parameters: {
+            query?: {
+                month?: string | null;
+                q?: string | null;
+                status?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    receivable_customer_api_billing_receivables_customers__customer_id__get: {
+        parameters: {
+            query?: {
+                month?: string | null;
+            };
+            header?: never;
+            path: {
+                customer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArCustomer"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    follow_up_api_billing_receivables_customers__customer_id__follow_ups_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                customer_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["app__billing__schemas__FollowUpIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InteractionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_receivables_api_billing_receivables_export_get: {
+        parameters: {
+            query?: {
+                month?: string | null;
+                q?: string | null;
+                status?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    promise_api_billing_receivables_invoices__invoice_id__promises_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PromiseIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArCustomer"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    receipt_api_billing_receivables_invoices__invoice_id__receipts_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReceiptIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArCustomer"];
                 };
             };
             /** @description Validation Error */
@@ -6649,7 +8916,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["FollowUpIn"];
+                "application/json": components["schemas"]["app__purchasing__schemas__FollowUpIn"];
             };
         };
         responses: {

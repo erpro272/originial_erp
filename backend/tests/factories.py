@@ -8,7 +8,7 @@ from app.catalog.models import Material, MaterialStock, Product, ProductMaterial
 from app.core.db import tenant_session
 from app.core.gst import gstin_checksum
 from app.customers.models import Customer
-from app.invoices.models import Invoice, InvoiceLine
+from app.invoices.models import Invoice, InvoiceLine, InvoiceReceipt
 
 
 def gstin(state: str, pan: str) -> str:
@@ -64,6 +64,11 @@ async def invoice(tid: uuid.UUID, cid: uuid.UUID, day: date, total_rupees: int, 
         await s.flush()
         s.add(InvoiceLine(invoice_id=inv.id, line_no=1, product_name=product_name, quantity=Decimal(qty), uom=uom,
                           total_paise=total_rupees * 100))  # fmt: skip
+        if (
+            total_rupees > balance_rupees
+        ):  # what was paid is a receipt (outstanding is computed from receipts)
+            s.add(InvoiceReceipt(invoice_id=inv.id, kind="opening", amount_paise=(total_rupees - balance_rupees) * 100,
+                                 received_on=day))  # fmt: skip
         return inv.id
 
 

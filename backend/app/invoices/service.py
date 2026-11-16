@@ -30,6 +30,7 @@ from app.invoices.models import (
     InvoiceLine,
     InvoiceParty,
     InvoicePayment,
+    InvoiceReceipt,
     InvoiceTransport,
     InvoiceUpload,
 )
@@ -404,6 +405,11 @@ def _invoice_from_doc(doc: dict[str, Any], customer_id: uuid.UUID, u: InvoiceUpl
 
 
 def _children(session: AsyncSession, inv: Invoice, doc: dict[str, Any], cipher: TenantCipher) -> None:
+    paid = (inv.grand_total_paise or 0) - (inv.balance_due_paise or 0)
+    if paid > 0 and inv.grand_total_paise:  # what the invoice says was paid becomes a receipt (Billing)
+        session.add(InvoiceReceipt(invoice_id=inv.id, kind="opening", amount_paise=paid,
+                                   received_on=inv.invoice_date or clock.today(),
+                                   note="Paid as shown on the uploaded invoice"))  # fmt: skip
     for role in ("seller", "buyer"):
         session.add(InvoiceParty(
             invoice_id=inv.id, role=role, name=v(doc, f"{role}_name"), gstin=v(doc, f"{role}_gstin"),

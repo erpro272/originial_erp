@@ -267,6 +267,7 @@ async def get_detail(
     invoices = await stats.customer_invoices(session, c.id)
     today = clock.today()
     since = date(today.year - 1, today.month, 1)
+    received = await stats.received_by_invoice(session, [i.id for i in invoices])
     return CustomerDetail(
         row=rows[0],
         addresses=[AddressOut.model_validate(a, from_attributes=True) for a in addrs],
@@ -279,12 +280,13 @@ async def get_detail(
         invoices=[
             InvoiceBrief(
                 id=i.id, invoice_number=i.invoice_number, invoice_date=i.invoice_date,
-                grand_total_paise=i.grand_total_paise, balance_due_paise=i.balance_due_paise,
-                status="paid" if not i.balance_due_paise else
-                ("partial" if (i.balance_due_paise or 0) < (i.grand_total_paise or 0) else "unpaid"),
+                grand_total_paise=i.grand_total_paise, balance_due_paise=bal,
+                status="paid" if bal <= 0 else ("partial" if bal < (i.grand_total_paise or 0) else "unpaid"),
                 source=i.source, upload_id=i.upload_id,
             )
             for i in invoices
+            # outstanding = total - receipts (computed; the printed "balance due" is only what the paper said)
+            for bal in [(i.grand_total_paise or 0) - received.get(i.id, 0)]
         ],
         monthly_sales=[MonthPoint(month=m, sales_paise=v) for m, v in await stats.monthly_sales(session, c.id, since)],
         top_products=[ProductBought(**p) for p in await stats.top_products(session, c.id)],
@@ -519,3 +521,30 @@ async def fill_missing_from_invoice(
         if a["kind"] == "billing" and not has_billing:
             session.add(CustomerAddress(customer_id=c.id, kind="billing", line1=a["line1"][:300],
                                         state_code=a.get("state_code")))  # fmt: skip
+
+
+async def briefs(
+    session: AsyncSession, ids: list[uuid.UUID] | None = None
+) -> dict[uuid.UUID, dict[str, Any]]:
+    """Name, GSTIN, phone, email, city and payment terms per customer, for other modules (Billing)."""
+    q = select(Customer)
+    if ids is not None:
+        q = q.where(Customer.id.in_(ids))
+    out: dict[uuid.UUID, dict[str, Any]] = {}
+    for c in (await session.execute(q)).scalars():
+        out[c.id] = {"name": c.name, "gstin": c.gstin, "phone": c.phone, "email": c.email,
+                     "state_code": c.state_code, "payment_terms_days": c.payment_terms_days, "city": None}  # fmt: skip
+    if out:
+        rows = await session.execute(select(CustomerAddress.customer_id, CustomerAddress.city)
+                                     .where(CustomerAddress.customer_id.in_(list(out))))  # fmt: skip
+        for cid, city in rows.all():
+            if city and out[cid]["city"] is None:
+                out[cid]["city"] = city
+    return out
+
+
+async def find_by_name(session: AsyncSession, name: str) -> uuid.UUID | None:
+    q = select(Customer.id).where(
+        func.lower(Customer.name) == name.strip().lower(), Customer.merged_into_id.is_(None)
+    )
+    return (await session.execute(q)).scalars().first()

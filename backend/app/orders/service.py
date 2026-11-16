@@ -534,3 +534,18 @@ async def priorities(session: AsyncSession, numbers: list[str]) -> dict[str, str
         return {}
     q = select(Order.number, Order.priority).where(Order.number.in_(numbers))
     return {n: p for n, p in (await session.execute(q)).all()}
+
+
+async def facts(session: AsyncSession, ids: list[uuid.UUID] | None = None) -> dict[uuid.UUID, dict[str, Any]]:
+    """What Billing needs about orders (the sale deal): number, customer, product, quantity, value, status, dates."""
+    q = select(Order, Product.name).join(Product, Product.id == Order.product_id)
+    if ids is not None:
+        if not ids:
+            return {}
+        q = q.where(Order.id.in_(ids))
+    return {o.id: {"id": o.id, "number": o.number, "customer_id": o.customer_id, "product": pname,
+                   "quantity": o.quantity, "unit": o.unit, "unit_price_paise": o.unit_price_paise,
+                   "sales_paise": o.sales_paise, "status": o.status, "ship_date": o.ship_date,
+                   "promised_date": o.promised_date, "created_at": o.created_at, "closed_at": o.closed_at,
+                   "cancel_reason": o.cancel_reason, "progress_pct": o.progress_pct}
+            for o, pname in (await session.execute(q)).all()}  # fmt: skip

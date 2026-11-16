@@ -30,6 +30,10 @@ class Permission(StrEnum):
     PURCHASING_WRITE = "purchasing.write"
     PURCHASING_APPROVE = "purchasing.approve"
     FINANCE_READ = "finance.read"
+    BILLING_READ = "billing.read"
+    BILLING_WRITE = "billing.write"  # follow-ups, receipts, supplier invoices, verify, schedule, execute
+    BILLING_ISSUE = "billing.issue"  # issue a sales invoice (owner, accountant)
+    BILLING_APPROVE = "billing.approve"  # approve / hold / reject supplier payments (owner only)
 
 
 _ALL = frozenset(Permission)
@@ -55,6 +59,7 @@ ROLE_PERMISSIONS: dict[Role, frozenset[Permission]] = {
             Permission.PLANNING_READ,
             Permission.PURCHASING_READ,
             Permission.PURCHASING_WRITE,
+            Permission.BILLING_READ,
         }
     ),
     Role.ACCOUNTANT: frozenset(
@@ -67,6 +72,9 @@ ROLE_PERMISSIONS: dict[Role, frozenset[Permission]] = {
             Permission.INVOICES_WRITE,
             Permission.FINANCE_READ,
             Permission.PURCHASING_READ,
+            Permission.BILLING_READ,
+            Permission.BILLING_WRITE,
+            Permission.BILLING_ISSUE,
         }
     ),
 }

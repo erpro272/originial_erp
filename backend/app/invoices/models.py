@@ -149,6 +149,16 @@ class Invoice(Base, TenantScoped, TimestampMixin):
     # 9. metadata
     duplicate_flag: Mapped[str] = mapped_column(String(8), default="none")
     overall_confidence: Mapped[Decimal | None] = mapped_column(Numeric(4, 3))
+    # Billing (sales invoices raised in the app). NULL = an invoice issued outside (imported / seed).
+    # draft -> verified -> issued -> sent. A draft is never a receivable; issued invoices are locked.
+    billing_status: Mapped[str | None] = mapped_column(String(10), index=True)
+    deal_id: Mapped[uuid.UUID | None] = mapped_column(index=True)  # Billing's deal (TXN-####)
+    payment_terms_days: Mapped[int | None]
+    verified_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
+    verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    issued_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
+    issued_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class InvoiceParty(Base, TenantScoped):
@@ -223,3 +233,23 @@ class InvoiceTransport(Base, TenantScoped):
     mode: Mapped[str | None] = mapped_column(String(20))
     place_of_dispatch: Mapped[str | None] = mapped_column(String(200))
     place_of_delivery: Mapped[str | None] = mapped_column(String(200))
+
+
+# What an invoice receives: cash receipts, advances adjusted, credit notes, and the opening balance of what was
+# paid before Billing existed. Outstanding = grand total - these (always computed). Insert-only for the app.
+RECEIPT_KINDS = ("receipt", "advance", "credit_note", "opening")
+CASH_KINDS = ("receipt", "opening")  # real money in; advances adjusted are not new cash
+
+
+class InvoiceReceipt(Base, TenantScoped):
+    __tablename__ = "invoice_receipts"
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    invoice_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("invoices.id"), index=True)
+    kind: Mapped[str] = mapped_column(String(12))
+    amount_paise: Mapped[int] = mapped_column(Paise)
+    received_on: Mapped[date] = mapped_column(index=True)
+    method: Mapped[str | None] = mapped_column(String(20))  # neft | rtgs | upi | cheque | cash
+    reference: Mapped[str | None] = mapped_column(String(64))  # UTR / cheque no.
+    note: Mapped[str | None] = mapped_column(Text)
+    actor_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

@@ -19,6 +19,69 @@
         "title": "Action",
         "type": "object"
       },
+      "ActivityOut": {
+        "properties": {
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "By"
+          },
+          "direction": {
+            "enum": [
+              "incoming",
+              "outgoing",
+              "internal"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "document_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Key"
+          },
+          "milestone": {
+            "title": "Milestone",
+            "type": "boolean"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "at",
+          "title",
+          "direction",
+          "source",
+          "by",
+          "milestone",
+          "document_key"
+        ],
+        "title": "ActivityOut",
+        "type": "object"
+      },
       "AddressIn": {
         "properties": {
           "city": {
@@ -169,6 +232,608 @@
         "title": "AddressOut",
         "type": "object"
       },
+      "ApCards": {
+        "properties": {
+          "due_week_paise": {
+            "title": "Due Week Paise",
+            "type": "integer"
+          },
+          "overdue_paise": {
+            "title": "Overdue Paise",
+            "type": "integer"
+          },
+          "overdue_suppliers": {
+            "title": "Overdue Suppliers",
+            "type": "integer"
+          },
+          "paid_paise": {
+            "title": "Paid Paise",
+            "type": "integer"
+          },
+          "payments": {
+            "title": "Payments",
+            "type": "integer"
+          },
+          "total_invoices": {
+            "title": "Total Invoices",
+            "type": "integer"
+          },
+          "total_paise": {
+            "title": "Total Paise",
+            "type": "integer"
+          },
+          "total_suppliers": {
+            "title": "Total Suppliers",
+            "type": "integer"
+          },
+          "week_from": {
+            "format": "date",
+            "title": "Week From",
+            "type": "string"
+          },
+          "week_to": {
+            "format": "date",
+            "title": "Week To",
+            "type": "string"
+          }
+        },
+        "required": [
+          "total_paise",
+          "total_suppliers",
+          "total_invoices",
+          "overdue_paise",
+          "overdue_suppliers",
+          "due_week_paise",
+          "week_from",
+          "week_to",
+          "paid_paise",
+          "payments"
+        ],
+        "title": "ApCards",
+        "type": "object"
+      },
+      "ApEvent": {
+        "properties": {
+          "action": {
+            "title": "Action",
+            "type": "string"
+          },
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "By"
+          },
+          "from_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Status"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "to_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To Status"
+          }
+        },
+        "required": [
+          "action",
+          "from_status",
+          "to_status",
+          "note",
+          "at",
+          "by"
+        ],
+        "title": "ApEvent",
+        "type": "object"
+      },
+      "ApInvoice": {
+        "properties": {
+          "days_overdue": {
+            "title": "Days Overdue",
+            "type": "integer"
+          },
+          "deal_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deal Id"
+          },
+          "deal_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deal Number"
+          },
+          "due_date": {
+            "format": "date",
+            "title": "Due Date",
+            "type": "string"
+          },
+          "events": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ApEvent"
+            },
+            "title": "Events",
+            "type": "array"
+          },
+          "grn": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grn"
+          },
+          "gst_paise": {
+            "title": "Gst Paise",
+            "type": "integer"
+          },
+          "hold_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hold Reason"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "invoice_date": {
+            "format": "date",
+            "title": "Invoice Date",
+            "type": "string"
+          },
+          "match": {
+            "items": {
+              "$ref": "#/components/schemas/MatchLine"
+            },
+            "title": "Match",
+            "type": "array"
+          },
+          "match_ok": {
+            "title": "Match Ok",
+            "type": "boolean"
+          },
+          "number": {
+            "title": "Number",
+            "type": "string"
+          },
+          "outstanding_paise": {
+            "title": "Outstanding Paise",
+            "type": "integer"
+          },
+          "paid_paise": {
+            "title": "Paid Paise",
+            "type": "integer"
+          },
+          "payments": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ApPayment"
+            },
+            "title": "Payments",
+            "type": "array"
+          },
+          "po_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Po Id"
+          },
+          "po_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Po Number"
+          },
+          "quantity": {
+            "title": "Quantity",
+            "type": "string"
+          },
+          "rate_paise": {
+            "title": "Rate Paise",
+            "type": "integer"
+          },
+          "scheduled_paise": {
+            "title": "Scheduled Paise",
+            "type": "integer"
+          },
+          "stage": {
+            "title": "Stage",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "pending_verif",
+              "pending_owner",
+              "approved",
+              "scheduled",
+              "paid",
+              "on_hold",
+              "rejected"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "supplier": {
+            "title": "Supplier",
+            "type": "string"
+          },
+          "supplier_id": {
+            "format": "uuid",
+            "title": "Supplier Id",
+            "type": "string"
+          },
+          "taxable_paise": {
+            "title": "Taxable Paise",
+            "type": "integer"
+          },
+          "total_paise": {
+            "title": "Total Paise",
+            "type": "integer"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "supplier_id",
+          "supplier",
+          "po_id",
+          "po_number",
+          "grn",
+          "deal_id",
+          "deal_number",
+          "invoice_date",
+          "due_date",
+          "quantity",
+          "unit",
+          "rate_paise",
+          "taxable_paise",
+          "gst_paise",
+          "total_paise",
+          "paid_paise",
+          "scheduled_paise",
+          "outstanding_paise",
+          "days_overdue",
+          "status",
+          "stage",
+          "match",
+          "match_ok",
+          "hold_reason"
+        ],
+        "title": "ApInvoice",
+        "type": "object"
+      },
+      "ApOut": {
+        "properties": {
+          "cards": {
+            "$ref": "#/components/schemas/ApCards"
+          },
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Counts",
+            "type": "object"
+          },
+          "period": {
+            "$ref": "#/components/schemas/app__billing__schemas__Period"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/ApRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "period",
+          "cards",
+          "rows",
+          "counts"
+        ],
+        "title": "ApOut",
+        "type": "object"
+      },
+      "ApPayment": {
+        "properties": {
+          "amount_paise": {
+            "title": "Amount Paise",
+            "type": "integer"
+          },
+          "confirmed_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmed On"
+          },
+          "executed_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Executed On"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "override_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Override Reason"
+          },
+          "scheduled_for": {
+            "format": "date",
+            "title": "Scheduled For",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "utr": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Utr"
+          }
+        },
+        "required": [
+          "id",
+          "amount_paise",
+          "scheduled_for",
+          "status",
+          "utr",
+          "executed_on",
+          "confirmed_on",
+          "override_reason"
+        ],
+        "title": "ApPayment",
+        "type": "object"
+      },
+      "ApRow": {
+        "properties": {
+          "days_overdue": {
+            "title": "Days Overdue",
+            "type": "integer"
+          },
+          "disputed_paise": {
+            "title": "Disputed Paise",
+            "type": "integer"
+          },
+          "due_week": {
+            "title": "Due Week",
+            "type": "boolean"
+          },
+          "earliest_due": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Earliest Due"
+          },
+          "gstin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gstin"
+          },
+          "invoices": {
+            "title": "Invoices",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "outstanding_paise": {
+            "title": "Outstanding Paise",
+            "type": "integer"
+          },
+          "overdue": {
+            "title": "Overdue",
+            "type": "boolean"
+          },
+          "statuses": {
+            "items": {
+              "enum": [
+                "pending_verif",
+                "pending_owner",
+                "approved",
+                "scheduled",
+                "paid",
+                "on_hold",
+                "rejected"
+              ],
+              "type": "string"
+            },
+            "title": "Statuses",
+            "type": "array"
+          },
+          "supplier_id": {
+            "format": "uuid",
+            "title": "Supplier Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "supplier_id",
+          "name",
+          "gstin",
+          "outstanding_paise",
+          "invoices",
+          "disputed_paise",
+          "earliest_due",
+          "days_overdue",
+          "statuses",
+          "overdue",
+          "due_week"
+        ],
+        "title": "ApRow",
+        "type": "object"
+      },
+      "ApSupplier": {
+        "properties": {
+          "gstin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gstin"
+          },
+          "interactions": {
+            "items": {
+              "$ref": "#/components/schemas/InteractionOut"
+            },
+            "title": "Interactions",
+            "type": "array"
+          },
+          "invoices": {
+            "items": {
+              "$ref": "#/components/schemas/ApInvoice"
+            },
+            "title": "Invoices",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "period": {
+            "$ref": "#/components/schemas/app__billing__schemas__Period"
+          },
+          "supplier_id": {
+            "format": "uuid",
+            "title": "Supplier Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "supplier_id",
+          "name",
+          "gstin",
+          "period",
+          "invoices",
+          "interactions"
+        ],
+        "title": "ApSupplier",
+        "type": "object"
+      },
       "Approval": {
         "properties": {
           "checks": {
@@ -216,6 +881,476 @@
           }
         },
         "title": "ApproveIn",
+        "type": "object"
+      },
+      "ArCards": {
+        "properties": {
+          "expected_week_paise": {
+            "title": "Expected Week Paise",
+            "type": "integer"
+          },
+          "oldest_overdue_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Oldest Overdue Days"
+          },
+          "overdue_customers": {
+            "title": "Overdue Customers",
+            "type": "integer"
+          },
+          "overdue_paise": {
+            "title": "Overdue Paise",
+            "type": "integer"
+          },
+          "receipts": {
+            "title": "Receipts",
+            "type": "integer"
+          },
+          "received_paise": {
+            "title": "Received Paise",
+            "type": "integer"
+          },
+          "total_customers": {
+            "title": "Total Customers",
+            "type": "integer"
+          },
+          "total_invoices": {
+            "title": "Total Invoices",
+            "type": "integer"
+          },
+          "total_paise": {
+            "title": "Total Paise",
+            "type": "integer"
+          },
+          "week_from": {
+            "format": "date",
+            "title": "Week From",
+            "type": "string"
+          },
+          "week_to": {
+            "format": "date",
+            "title": "Week To",
+            "type": "string"
+          }
+        },
+        "required": [
+          "total_paise",
+          "total_customers",
+          "total_invoices",
+          "overdue_paise",
+          "overdue_customers",
+          "oldest_overdue_days",
+          "expected_week_paise",
+          "week_from",
+          "week_to",
+          "received_paise",
+          "receipts"
+        ],
+        "title": "ArCards",
+        "type": "object"
+      },
+      "ArCustomer": {
+        "properties": {
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "customer_id": {
+            "format": "uuid",
+            "title": "Customer Id",
+            "type": "string"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "gstin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gstin"
+          },
+          "interactions": {
+            "items": {
+              "$ref": "#/components/schemas/InteractionOut"
+            },
+            "title": "Interactions",
+            "type": "array"
+          },
+          "invoices": {
+            "items": {
+              "$ref": "#/components/schemas/ArInvoice"
+            },
+            "title": "Invoices",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "payment_terms_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Terms Days"
+          },
+          "period": {
+            "$ref": "#/components/schemas/app__billing__schemas__Period"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          }
+        },
+        "required": [
+          "customer_id",
+          "name",
+          "gstin",
+          "phone",
+          "email",
+          "city",
+          "payment_terms_days",
+          "period",
+          "invoices",
+          "interactions"
+        ],
+        "title": "ArCustomer",
+        "type": "object"
+      },
+      "ArInvoice": {
+        "properties": {
+          "days_overdue": {
+            "title": "Days Overdue",
+            "type": "integer"
+          },
+          "deal_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deal Id"
+          },
+          "deal_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deal Number"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "expected_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected On"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "invoice_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invoice Date"
+          },
+          "number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Number"
+          },
+          "outstanding_paise": {
+            "title": "Outstanding Paise",
+            "type": "integer"
+          },
+          "part_paid": {
+            "title": "Part Paid",
+            "type": "boolean"
+          },
+          "promised_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Promised On"
+          },
+          "promises": {
+            "items": {
+              "$ref": "#/components/schemas/PromiseOut"
+            },
+            "title": "Promises",
+            "type": "array"
+          },
+          "receipts": {
+            "items": {
+              "$ref": "#/components/schemas/ReceiptOut"
+            },
+            "title": "Receipts",
+            "type": "array"
+          },
+          "received_paise": {
+            "title": "Received Paise",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "overdue",
+              "due_week",
+              "promise",
+              "not_due"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "total_paise": {
+            "title": "Total Paise",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "invoice_date",
+          "due_date",
+          "total_paise",
+          "received_paise",
+          "outstanding_paise",
+          "days_overdue",
+          "promised_on",
+          "expected_on",
+          "status",
+          "part_paid",
+          "deal_id",
+          "deal_number",
+          "promises",
+          "receipts"
+        ],
+        "title": "ArInvoice",
+        "type": "object"
+      },
+      "ArOut": {
+        "properties": {
+          "cards": {
+            "$ref": "#/components/schemas/ArCards"
+          },
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Counts",
+            "type": "object"
+          },
+          "period": {
+            "$ref": "#/components/schemas/app__billing__schemas__Period"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/ArRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "period",
+          "cards",
+          "rows",
+          "counts"
+        ],
+        "title": "ArOut",
+        "type": "object"
+      },
+      "ArRow": {
+        "properties": {
+          "customer_id": {
+            "format": "uuid",
+            "title": "Customer Id",
+            "type": "string"
+          },
+          "days_overdue": {
+            "title": "Days Overdue",
+            "type": "integer"
+          },
+          "earliest_due": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Earliest Due"
+          },
+          "gstin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gstin"
+          },
+          "latest_at": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest At"
+          },
+          "latest_update": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Update"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "open_invoices": {
+            "title": "Open Invoices",
+            "type": "integer"
+          },
+          "outstanding_paise": {
+            "title": "Outstanding Paise",
+            "type": "integer"
+          },
+          "part_paid": {
+            "title": "Part Paid",
+            "type": "boolean"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "status": {
+            "enum": [
+              "overdue",
+              "due_week",
+              "promise",
+              "not_due"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "customer_id",
+          "name",
+          "gstin",
+          "phone",
+          "outstanding_paise",
+          "open_invoices",
+          "earliest_due",
+          "days_overdue",
+          "status",
+          "part_paid",
+          "latest_update",
+          "latest_at"
+        ],
+        "title": "ArRow",
         "type": "object"
       },
       "AuditEntryOut": {
@@ -332,6 +1467,33 @@
           "request_id"
         ],
         "title": "AuditEntryOut",
+        "type": "object"
+      },
+      "BankConfirmIn": {
+        "properties": {
+          "amount_paise": {
+            "exclusiveMinimum": 0.0,
+            "title": "Amount Paise",
+            "type": "integer"
+          },
+          "confirmed_on": {
+            "format": "date",
+            "title": "Confirmed On",
+            "type": "string"
+          },
+          "utr": {
+            "maxLength": 40,
+            "minLength": 4,
+            "title": "Utr",
+            "type": "string"
+          }
+        },
+        "required": [
+          "utr",
+          "amount_paise",
+          "confirmed_on"
+        ],
+        "title": "BankConfirmIn",
         "type": "object"
       },
       "BatchOut": {
@@ -1420,7 +2582,7 @@
             "$ref": "#/components/schemas/app__customers__schemas__Overview"
           },
           "period": {
-            "$ref": "#/components/schemas/Period"
+            "$ref": "#/components/schemas/app__customers__schemas__Period"
           },
           "total": {
             "title": "Total",
@@ -2018,6 +3180,670 @@
         "title": "CustomerRow",
         "type": "object"
       },
+      "DealCreateIn": {
+        "properties": {
+          "company": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Company",
+            "type": "string"
+          },
+          "contact": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact"
+          },
+          "expected_value_paise": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Value Paise"
+          },
+          "force": {
+            "default": false,
+            "title": "Force",
+            "type": "boolean"
+          },
+          "item": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Item",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "sale",
+              "purchase"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "payment_terms_days": {
+            "anyOf": [
+              {
+                "maximum": 365.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Terms Days"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          }
+        },
+        "required": [
+          "kind",
+          "company",
+          "item"
+        ],
+        "title": "DealCreateIn",
+        "type": "object"
+      },
+      "DealDetail": {
+        "properties": {
+          "activity": {
+            "items": {
+              "$ref": "#/components/schemas/ActivityOut"
+            },
+            "title": "Activity",
+            "type": "array"
+          },
+          "billing_basis": {
+            "title": "Billing Basis",
+            "type": "string"
+          },
+          "cancelled_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancelled Reason"
+          },
+          "contact": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "customer_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Id"
+          },
+          "dispatched_qty": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dispatched Qty"
+          },
+          "documents": {
+            "items": {
+              "$ref": "#/components/schemas/DocumentOut"
+            },
+            "title": "Documents",
+            "type": "array"
+          },
+          "hold_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hold Reason"
+          },
+          "interactions": {
+            "items": {
+              "$ref": "#/components/schemas/InteractionOut"
+            },
+            "title": "Interactions",
+            "type": "array"
+          },
+          "invoice": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InvoiceCard"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "invoice_block": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invoice Block"
+          },
+          "item": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "on_hold": {
+            "title": "On Hold",
+            "type": "boolean"
+          },
+          "order_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Id"
+          },
+          "payable": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ApInvoice"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "payment_terms_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Terms Days"
+          },
+          "po_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Po Id"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "received_qty": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Received Qty"
+          },
+          "row": {
+            "$ref": "#/components/schemas/DealRow"
+          },
+          "ship_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ship Date"
+          },
+          "supplier_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Id"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          }
+        },
+        "required": [
+          "row",
+          "customer_id",
+          "supplier_id",
+          "order_id",
+          "po_id",
+          "item",
+          "quantity",
+          "unit",
+          "dispatched_qty",
+          "received_qty",
+          "payment_terms_days",
+          "billing_basis",
+          "contact",
+          "note",
+          "on_hold",
+          "hold_reason",
+          "cancelled_reason",
+          "created_at",
+          "ship_date",
+          "invoice",
+          "invoice_block",
+          "payable",
+          "documents",
+          "interactions",
+          "activity"
+        ],
+        "title": "DealDetail",
+        "type": "object"
+      },
+      "DealEditIn": {
+        "properties": {
+          "contact": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact"
+          },
+          "expected_value_paise": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Value Paise"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "payment_terms_days": {
+            "anyOf": [
+              {
+                "maximum": 365.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Terms Days"
+          }
+        },
+        "title": "DealEditIn",
+        "type": "object"
+      },
+      "DealKpis": {
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "integer"
+          },
+          "awaiting_response": {
+            "title": "Awaiting Response",
+            "type": "integer"
+          },
+          "documents_received": {
+            "title": "Documents Received",
+            "type": "integer"
+          },
+          "invoices_issued": {
+            "title": "Invoices Issued",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "active",
+          "total",
+          "awaiting_response",
+          "documents_received",
+          "invoices_issued"
+        ],
+        "title": "DealKpis",
+        "type": "object"
+      },
+      "DealRow": {
+        "properties": {
+          "archived": {
+            "title": "Archived",
+            "type": "boolean"
+          },
+          "company": {
+            "title": "Company",
+            "type": "string"
+          },
+          "company_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Id"
+          },
+          "documents": {
+            "title": "Documents",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "sale",
+              "purchase"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "latest_activity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Activity"
+          },
+          "latest_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest At"
+          },
+          "latest_direction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Direction"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "number": {
+            "title": "Number",
+            "type": "string"
+          },
+          "provisional": {
+            "title": "Provisional",
+            "type": "boolean"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "value_paise": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value Paise"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "kind",
+          "name",
+          "reference",
+          "company_id",
+          "company",
+          "documents",
+          "latest_activity",
+          "latest_at",
+          "latest_direction",
+          "value_paise",
+          "status",
+          "provisional",
+          "archived"
+        ],
+        "title": "DealRow",
+        "type": "object"
+      },
+      "DealsOut": {
+        "properties": {
+          "companies": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Companies",
+            "type": "array"
+          },
+          "kpis": {
+            "$ref": "#/components/schemas/DealKpis"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/DealRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "statuses": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Statuses",
+            "type": "array"
+          }
+        },
+        "required": [
+          "kpis",
+          "rows",
+          "companies",
+          "statuses"
+        ],
+        "title": "DealsOut",
+        "type": "object"
+      },
       "DeliveryOut": {
         "properties": {
           "accepted": {
@@ -2284,6 +4110,87 @@
         "title": "DispatchIn",
         "type": "object"
       },
+      "DocumentOut": {
+        "description": "A document of the deal: a view of the record that owns it (order, PO, gate entry, invoice, receipt...).",
+        "properties": {
+          "amount_paise": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount Paise"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "direction": {
+            "enum": [
+              "incoming",
+              "outgoing",
+              "internal"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Number"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "kind",
+          "name",
+          "number",
+          "direction",
+          "status",
+          "date",
+          "amount_paise",
+          "source"
+        ],
+        "title": "DocumentOut",
+        "type": "object"
+      },
       "DowntimeIn-Input": {
         "properties": {
           "day": {
@@ -2427,6 +4334,64 @@
         "title": "Draft",
         "type": "object"
       },
+      "DraftEditIn": {
+        "properties": {
+          "other_charges_paise": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Other Charges Paise"
+          },
+          "payment_terms_days": {
+            "anyOf": [
+              {
+                "maximum": 365.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Terms Days"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "rate_paise": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rate Paise"
+          }
+        },
+        "title": "DraftEditIn",
+        "type": "object"
+      },
       "DraftSave": {
         "properties": {
           "fields": {
@@ -2474,6 +4439,39 @@
           }
         },
         "title": "DraftSave",
+        "type": "object"
+      },
+      "ExecuteIn": {
+        "properties": {
+          "executed_on": {
+            "format": "date",
+            "title": "Executed On",
+            "type": "string"
+          },
+          "override_reason": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Override Reason"
+          },
+          "utr": {
+            "maxLength": 40,
+            "minLength": 4,
+            "title": "Utr",
+            "type": "string"
+          }
+        },
+        "required": [
+          "utr",
+          "executed_on"
+        ],
+        "title": "ExecuteIn",
         "type": "object"
       },
       "Factory-Input": {
@@ -2879,33 +4877,6 @@
           "cost"
         ],
         "title": "FixCost",
-        "type": "object"
-      },
-      "FollowUpIn": {
-        "properties": {
-          "note": {
-            "maxLength": 2000,
-            "minLength": 1,
-            "title": "Note",
-            "type": "string"
-          },
-          "promised_date": {
-            "anyOf": [
-              {
-                "format": "date",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Promised Date"
-          }
-        },
-        "required": [
-          "note"
-        ],
-        "title": "FollowUpIn",
         "type": "object"
       },
       "FollowupIn": {
@@ -3441,6 +5412,162 @@
         "title": "Incoming",
         "type": "object"
       },
+      "InteractionIn": {
+        "properties": {
+          "channel": {
+            "enum": [
+              "call",
+              "whatsapp",
+              "email",
+              "visit",
+              "meeting"
+            ],
+            "title": "Channel",
+            "type": "string"
+          },
+          "contact": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact"
+          },
+          "direction": {
+            "default": "outgoing",
+            "enum": [
+              "incoming",
+              "outgoing"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "next_follow_up": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Follow Up"
+          },
+          "summary": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "channel",
+          "summary"
+        ],
+        "title": "InteractionIn",
+        "type": "object"
+      },
+      "InteractionOut": {
+        "properties": {
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "By"
+          },
+          "channel": {
+            "title": "Channel",
+            "type": "string"
+          },
+          "contact": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact"
+          },
+          "deal_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deal Number"
+          },
+          "direction": {
+            "title": "Direction",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "invoice_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invoice Number"
+          },
+          "next_follow_up": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Follow Up"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "channel",
+          "direction",
+          "contact",
+          "summary",
+          "next_follow_up",
+          "invoice_number",
+          "deal_number",
+          "at",
+          "by"
+        ],
+        "title": "InteractionOut",
+        "type": "object"
+      },
       "InventoryOut": {
         "properties": {
           "attention": {
@@ -3583,6 +5710,178 @@
           "upload_id"
         ],
         "title": "InvoiceBrief",
+        "type": "object"
+      },
+      "InvoiceCard": {
+        "properties": {
+          "cgst_paise": {
+            "title": "Cgst Paise",
+            "type": "integer"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "igst_paise": {
+            "title": "Igst Paise",
+            "type": "integer"
+          },
+          "invoice_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invoice Date"
+          },
+          "issued_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issued At"
+          },
+          "number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Number"
+          },
+          "other_charges_paise": {
+            "title": "Other Charges Paise",
+            "type": "integer"
+          },
+          "outstanding_paise": {
+            "title": "Outstanding Paise",
+            "type": "integer"
+          },
+          "payment_terms_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Terms Days"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "rate_paise": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rate Paise"
+          },
+          "received_paise": {
+            "title": "Received Paise",
+            "type": "integer"
+          },
+          "sent_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sent At"
+          },
+          "sgst_paise": {
+            "title": "Sgst Paise",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "taxable_paise": {
+            "title": "Taxable Paise",
+            "type": "integer"
+          },
+          "total_paise": {
+            "title": "Total Paise",
+            "type": "integer"
+          },
+          "verified_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verified At"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "status",
+          "invoice_date",
+          "due_date",
+          "quantity",
+          "rate_paise",
+          "taxable_paise",
+          "cgst_paise",
+          "sgst_paise",
+          "igst_paise",
+          "other_charges_paise",
+          "total_paise",
+          "received_paise",
+          "outstanding_paise",
+          "payment_terms_days",
+          "verified_at",
+          "issued_at",
+          "sent_at"
+        ],
+        "title": "InvoiceCard",
         "type": "object"
       },
       "InvoiceView": {
@@ -3977,6 +6276,29 @@
           "night_shift_cost_per_hour_paise"
         ],
         "title": "MachineIn",
+        "type": "object"
+      },
+      "MatchLine": {
+        "properties": {
+          "check": {
+            "title": "Check",
+            "type": "string"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "check",
+          "ok",
+          "text"
+        ],
+        "title": "MatchLine",
         "type": "object"
       },
       "MaterialCostIn": {
@@ -5246,50 +7568,6 @@
         "title": "PenaltyRule",
         "type": "object"
       },
-      "Period": {
-        "properties": {
-          "date_from": {
-            "format": "date",
-            "title": "Date From",
-            "type": "string"
-          },
-          "date_to": {
-            "format": "date",
-            "title": "Date To",
-            "type": "string"
-          },
-          "preset": {
-            "enum": [
-              "this_month",
-              "this_quarter",
-              "fytd",
-              "last_12_months",
-              "custom"
-            ],
-            "title": "Preset",
-            "type": "string"
-          },
-          "prev_from": {
-            "format": "date",
-            "title": "Prev From",
-            "type": "string"
-          },
-          "prev_to": {
-            "format": "date",
-            "title": "Prev To",
-            "type": "string"
-          }
-        },
-        "required": [
-          "preset",
-          "date_from",
-          "date_to",
-          "prev_from",
-          "prev_to"
-        ],
-        "title": "Period",
-        "type": "object"
-      },
       "Permission": {
         "enum": [
           "audit.read",
@@ -5308,7 +7586,11 @@
           "purchasing.read",
           "purchasing.write",
           "purchasing.approve",
-          "finance.read"
+          "finance.read",
+          "billing.read",
+          "billing.write",
+          "billing.issue",
+          "billing.approve"
         ],
         "title": "Permission",
         "type": "string"
@@ -6840,6 +9122,87 @@
         "title": "ProductOut",
         "type": "object"
       },
+      "PromiseIn": {
+        "properties": {
+          "amount_paise": {
+            "exclusiveMinimum": 0.0,
+            "title": "Amount Paise",
+            "type": "integer"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "promised_on": {
+            "format": "date",
+            "title": "Promised On",
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount_paise",
+          "promised_on"
+        ],
+        "title": "PromiseIn",
+        "type": "object"
+      },
+      "PromiseOut": {
+        "properties": {
+          "amount_paise": {
+            "title": "Amount Paise",
+            "type": "integer"
+          },
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "By"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "promised_on": {
+            "format": "date",
+            "title": "Promised On",
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount_paise",
+          "promised_on",
+          "note",
+          "at",
+          "by"
+        ],
+        "title": "PromiseOut",
+        "type": "object"
+      },
       "PurchaseKpis": {
         "properties": {
           "in_transit": {
@@ -7496,6 +9859,172 @@
         "title": "RankingWeights",
         "type": "object"
       },
+      "ReasonIn": {
+        "properties": {
+          "reason": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "title": "ReasonIn",
+        "type": "object"
+      },
+      "ReceiptIn": {
+        "properties": {
+          "amount_paise": {
+            "exclusiveMinimum": 0.0,
+            "title": "Amount Paise",
+            "type": "integer"
+          },
+          "kind": {
+            "default": "receipt",
+            "enum": [
+              "receipt",
+              "advance",
+              "credit_note"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "method": {
+            "anyOf": [
+              {
+                "enum": [
+                  "neft",
+                  "rtgs",
+                  "imps",
+                  "upi",
+                  "cheque",
+                  "cash"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Method"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "received_on": {
+            "format": "date",
+            "title": "Received On",
+            "type": "string"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          }
+        },
+        "required": [
+          "amount_paise",
+          "received_on"
+        ],
+        "title": "ReceiptIn",
+        "type": "object"
+      },
+      "ReceiptOut": {
+        "properties": {
+          "amount_paise": {
+            "title": "Amount Paise",
+            "type": "integer"
+          },
+          "by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "By"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Method"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "received_on": {
+            "format": "date",
+            "title": "Received On",
+            "type": "string"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "amount_paise",
+          "received_on",
+          "method",
+          "reference",
+          "note",
+          "by"
+        ],
+        "title": "ReceiptOut",
+        "type": "object"
+      },
       "Regenerate": {
         "description": "The order set changed after Generate plan: generate again before approval.",
         "properties": {
@@ -7920,6 +10449,26 @@
         "title": "Schedule",
         "type": "object"
       },
+      "ScheduleIn": {
+        "properties": {
+          "amount_paise": {
+            "exclusiveMinimum": 0.0,
+            "title": "Amount Paise",
+            "type": "integer"
+          },
+          "scheduled_for": {
+            "format": "date",
+            "title": "Scheduled For",
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount_paise",
+          "scheduled_for"
+        ],
+        "title": "ScheduleIn",
+        "type": "object"
+      },
       "ScoringRules": {
         "description": "How \"Best overall\" weighs the supplier measures (company setting `supplier-scoring`), and when a\nsupplier gets a risk flag.",
         "properties": {
@@ -8181,6 +10730,35 @@
           }
         },
         "title": "SendBackIn",
+        "type": "object"
+      },
+      "SendIn": {
+        "properties": {
+          "channel": {
+            "enum": [
+              "email",
+              "whatsapp"
+            ],
+            "title": "Channel",
+            "type": "string"
+          },
+          "contact": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact"
+          }
+        },
+        "required": [
+          "channel"
+        ],
+        "title": "SendIn",
         "type": "object"
       },
       "SeqRow": {
@@ -8557,6 +11135,102 @@
           "open_pos"
         ],
         "title": "SupplierDetail",
+        "type": "object"
+      },
+      "SupplierInvoiceIn": {
+        "properties": {
+          "due_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "gst_rate": {
+            "anyOf": [
+              {
+                "maximum": 28.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "default": "18",
+            "title": "Gst Rate"
+          },
+          "invoice_date": {
+            "format": "date",
+            "title": "Invoice Date",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "number": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Number",
+            "type": "string"
+          },
+          "po_id": {
+            "format": "uuid",
+            "title": "Po Id",
+            "type": "string"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "rate_paise": {
+            "exclusiveMinimum": 0.0,
+            "title": "Rate Paise",
+            "type": "integer"
+          },
+          "supplier_gstin": {
+            "anyOf": [
+              {
+                "maxLength": 15,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Gstin"
+          }
+        },
+        "required": [
+          "po_id",
+          "number",
+          "invoice_date",
+          "quantity",
+          "rate_paise"
+        ],
+        "title": "SupplierInvoiceIn",
         "type": "object"
       },
       "SupplierRow": {
@@ -9149,6 +11823,108 @@
         "title": "WaitSpan",
         "type": "object"
       },
+      "app__billing__schemas__FollowUpIn": {
+        "properties": {
+          "channel": {
+            "enum": [
+              "call",
+              "whatsapp",
+              "email",
+              "visit",
+              "meeting"
+            ],
+            "title": "Channel",
+            "type": "string"
+          },
+          "contact": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact"
+          },
+          "direction": {
+            "default": "outgoing",
+            "enum": [
+              "incoming",
+              "outgoing"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "invoice_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invoice Id"
+          },
+          "next_follow_up": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Follow Up"
+          },
+          "note": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "channel",
+          "note"
+        ],
+        "title": "FollowUpIn",
+        "type": "object"
+      },
+      "app__billing__schemas__Period": {
+        "properties": {
+          "as_of": {
+            "format": "date",
+            "title": "As Of",
+            "type": "string"
+          },
+          "live": {
+            "title": "Live",
+            "type": "boolean"
+          },
+          "month": {
+            "title": "Month",
+            "type": "string"
+          },
+          "start": {
+            "format": "date",
+            "title": "Start",
+            "type": "string"
+          }
+        },
+        "required": [
+          "month",
+          "start",
+          "as_of",
+          "live"
+        ],
+        "title": "Period",
+        "type": "object"
+      },
       "app__customers__schemas__Overview": {
         "properties": {
           "active_customers": {
@@ -9180,6 +11956,50 @@
           "units_sold"
         ],
         "title": "Overview",
+        "type": "object"
+      },
+      "app__customers__schemas__Period": {
+        "properties": {
+          "date_from": {
+            "format": "date",
+            "title": "Date From",
+            "type": "string"
+          },
+          "date_to": {
+            "format": "date",
+            "title": "Date To",
+            "type": "string"
+          },
+          "preset": {
+            "enum": [
+              "this_month",
+              "this_quarter",
+              "fytd",
+              "last_12_months",
+              "custom"
+            ],
+            "title": "Preset",
+            "type": "string"
+          },
+          "prev_from": {
+            "format": "date",
+            "title": "Prev From",
+            "type": "string"
+          },
+          "prev_to": {
+            "format": "date",
+            "title": "Prev To",
+            "type": "string"
+          }
+        },
+        "required": [
+          "preset",
+          "date_from",
+          "date_to",
+          "prev_from",
+          "prev_to"
+        ],
+        "title": "Period",
         "type": "object"
       },
       "app__planning__schemas__Overview": {
@@ -9249,6 +12069,33 @@
           "parallel"
         ],
         "title": "Overview",
+        "type": "object"
+      },
+      "app__purchasing__schemas__FollowUpIn": {
+        "properties": {
+          "note": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Note",
+            "type": "string"
+          },
+          "promised_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Promised Date"
+          }
+        },
+        "required": [
+          "note"
+        ],
+        "title": "FollowUpIn",
         "type": "object"
       }
     },
@@ -9571,6 +12418,1697 @@
         "summary": "Refresh",
         "tags": [
           "auth"
+        ]
+      }
+    },
+    "/api/billing/deal-refs": {
+      "get": {
+        "description": "Order / PO id -> its deal (id, TXN number): the chips on Orders and Purchasing screens.",
+        "operationId": "deal_refs_api_billing_deal_refs_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "order_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Order Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "po_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Po Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  },
+                  "title": "Response Deal Refs Api Billing Deal Refs Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Deal Refs",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/billing/deals": {
+      "get": {
+        "description": "Every deal with KPIs (for `month`, or all months).",
+        "operationId": "list_deals_api_billing_deals_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "month",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Month"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DealsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Deals",
+        "tags": [
+          "billing"
+        ]
+      },
+      "post": {
+        "description": "A provisional deal from an enquiry; refuses a duplicate reference, warns on a look-alike.",
+        "operationId": "create_deal_api_billing_deals_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DealCreateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DealDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Deal",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/billing/deals/{deal_id}": {
+      "get": {
+        "operationId": "get_deal_api_billing_deals__deal_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "deal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Deal Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DealDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Deal",
+        "tags": [
+          "billing"
+        ]
+      },
+      "patch": {
+        "operationId": "edit_deal_api_billing_deals__deal_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "deal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Deal Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DealEditIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DealDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Edit Deal",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/billing/deals/{deal_id}/archive": {
+      "post": {
+        "operationId": "archive_deal_api_billing_deals__deal_id__archive_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "deal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Deal Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DealDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Archive Deal",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/billing/deals/{deal_id}/interactions": {
+      "post": {
+        "operationId": "add_interaction_api_billing_deals__deal_id__interactions_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "deal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Deal Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InteractionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InteractionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Add Interaction",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/billing/deals/{deal_id}/invoice": {
+      "patch": {
+        "operationId": "edit_draft_api_billing_deals__deal_id__invoice_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "deal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Deal Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DraftEditIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DealDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Edit Draft",
+        "tags": [
+          "billing"
+        ]
+      },
+      "post": {
+        "description": "A draft from the shipped order (never counted as issued).",
+        "operationId": "generate_invoice_api_billing_deals__deal_id__invoice_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "deal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Deal Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DealDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Generate Invoice",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/billing/deals/{deal_id}/invoice/issue": {
+      "post": {
+        "description": "Number, lock, receivable and event, in one transaction (owner or accountant).",
+        "operationId": "issue_invoice_api_billing_deals__deal_id__invoice_issue_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "deal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Deal Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DealDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Issue Invoice",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/billing/deals/{deal_id}/invoice/send": {
+      "post": {
+        "operationId": "send_invoice_api_billing_deals__deal_id__invoice_send_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "deal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Deal Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DealDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Send Invoice",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/billing/deals/{deal_id}/invoice/verify": {
+      "post": {
+        "operationId": "verify_invoice_api_billing_deals__deal_id__invoice_verify_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "deal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Deal Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DealDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Verify Invoice",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/billing/payables": {
+      "get": {
+        "operationId": "get_payables_api_billing_payables_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "month",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^\\d{4}-\\d{2}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Month"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Payables",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/billing/payables/export": {
+      "get": {
+        "operationId": "export_payables_api_billing_payables_export_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "month",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^\\d{4}-\\d{2}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Month"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Export Payables",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/billing/payables/invoices": {
+      "post": {
+        "description": "A supplier invoice arrives: linked to its PO and purchase deal; the three-way match runs.",
+        "operationId": "add_supplier_invoice_api_billing_payables_invoices_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupplierInvoiceIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApInvoice"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Add Supplier Invoice",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/billing/payables/invoices/{invoice_id}/approve": {
+      "post": {
+        "description": "Owner approval: a decision, separate from scheduling and paying.",
+        "operationId": "approve_api_billing_payables_invoices__invoice_id__approve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "invoice_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Invoice Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApInvoice"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Approve",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/billing/payables/invoices/{invoice_id}/schedule": {
+      "post": {
+        "operationId": "schedule_api_billing_payables_invoices__invoice_id__schedule_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "invoice_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Invoice Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScheduleIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApInvoice"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Schedule",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/billing/payables/invoices/{invoice_id}/verify": {
+      "post": {
+        "description": "Accounts verification (three-way match must agree).",
+        "operationId": "verify_api_billing_payables_invoices__invoice_id__verify_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "invoice_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Invoice Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApInvoice"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Verify",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/billing/payables/invoices/{invoice_id}/{action}": {
+      "post": {
+        "description": "Owner: hold or reject (cancels scheduled payments), or release a hold (back to approval).",
+        "operationId": "hold_api_billing_payables_invoices__invoice_id___action__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "invoice_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Invoice Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "action",
+            "required": true,
+            "schema": {
+              "enum": [
+                "hold",
+                "reject",
+                "release"
+              ],
+              "title": "Action",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReasonIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApInvoice"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Hold",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/billing/payables/payments/{payment_id}/bank-confirm": {
+      "post": {
+        "description": "The bank statement line matches (UTR, amount): only now the payment counts.",
+        "operationId": "bank_confirm_api_billing_payables_payments__payment_id__bank_confirm_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "payment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Payment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BankConfirmIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApInvoice"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Bank Confirm",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/billing/payables/payments/{payment_id}/execute": {
+      "post": {
+        "description": "Sent from the bank (UTR). The approver can't also execute, unless the owner overrides with a reason.",
+        "operationId": "execute_api_billing_payables_payments__payment_id__execute_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "payment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Payment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecuteIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApInvoice"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Execute",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/billing/payables/suppliers/{supplier_id}": {
+      "get": {
+        "operationId": "payable_supplier_api_billing_payables_suppliers__supplier_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "supplier_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Supplier Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "month",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^\\d{4}-\\d{2}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Month"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApSupplier"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Payable Supplier",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/billing/receivables": {
+      "get": {
+        "description": "Cards + one row per customer, as of the end of `month` (or today).",
+        "operationId": "get_receivables_api_billing_receivables_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "month",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^\\d{4}-\\d{2}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Month"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Receivables",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/billing/receivables/customers/{customer_id}": {
+      "get": {
+        "operationId": "receivable_customer_api_billing_receivables_customers__customer_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "customer_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Customer Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "month",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^\\d{4}-\\d{2}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Month"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArCustomer"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Receivable Customer",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/billing/receivables/customers/{customer_id}/follow-ups": {
+      "post": {
+        "operationId": "follow_up_api_billing_receivables_customers__customer_id__follow_ups_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "customer_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Customer Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/app__billing__schemas__FollowUpIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InteractionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Follow Up",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/billing/receivables/export": {
+      "get": {
+        "operationId": "export_receivables_api_billing_receivables_export_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "month",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^\\d{4}-\\d{2}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Month"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Export Receivables",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/billing/receivables/invoices/{invoice_id}/promises": {
+      "post": {
+        "description": "Update commitment: a new promise row; older ones are kept.",
+        "operationId": "promise_api_billing_receivables_invoices__invoice_id__promises_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "invoice_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Invoice Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromiseIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArCustomer"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Promise",
+        "tags": [
+          "billing"
+        ]
+      }
+    },
+    "/api/billing/receivables/invoices/{invoice_id}/receipts": {
+      "post": {
+        "description": "Money received (or an advance adjusted / a credit note): outstanding is recomputed.",
+        "operationId": "receipt_api_billing_receivables_invoices__invoice_id__receipts_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "invoice_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Invoice Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReceiptIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArCustomer"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Receipt",
+        "tags": [
+          "billing"
         ]
       }
     },
@@ -13168,7 +17706,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/FollowUpIn"
+                "$ref": "#/components/schemas/app__purchasing__schemas__FollowUpIn"
               }
             }
           },
