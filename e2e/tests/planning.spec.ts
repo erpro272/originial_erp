@@ -6,12 +6,13 @@ import {
 } from "@playwright/test";
 import { PASSWORD, signIn } from "./helpers";
 
-/** Planning opens on the plans dashboard: open the plan being worked on. Returns its path. */
+/** Planning opens straight on the one active plan (the demo has one). Returns its path. */
 async function openWorkingPlan(page: Page): Promise<string> {
   await page.goto("/planning");
-  await page.getByText("Continue planning →").click();
-  await page.waitForURL(/\/planning\/[0-9a-f-]{36}/);
-  return new URL(page.url()).pathname;
+  await expect(
+    page.getByRole("tab", { name: /Selected orders/ }),
+  ).toBeVisible();
+  return "/planning";
 }
 
 async function auth(
@@ -69,11 +70,19 @@ test("Selected orders: sent from Orders, on the timeline, synced back, options s
     .getByRole("checkbox")
     .check();
   await page.getByRole("button", { name: "Send to Planning" }).click();
-  await expect(page.getByText(/1 sent to Planning/).first()).toBeVisible();
+  // it goes into the one active plan, named in the message and on the order
+  await expect(page.getByText(/1 added to PLAN-\d+/).first()).toBeVisible();
+  await expect(
+    page
+      .getByRole("row", { name: new RegExp(order.number) })
+      .getByText(/^In PLAN-\d+$/),
+  ).toBeVisible();
 
   // Planning: ticked in the table, and on the timeline under "Your selection".
   await page.getByRole("link", { name: "Planning", exact: true }).click();
-  await expect(page.getByText("Manufacturing plans")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { level: 1, name: /Order manufacturing plan/ }),
+  ).toBeVisible();
   const planPath = await openWorkingPlan(page);
   await expect(page.getByLabel(`Include ${order.number}`)).toBeChecked();
   const yours = page.getByRole("button", { name: "Highlight Your selection" });
@@ -325,19 +334,22 @@ test("Final plan approval: checklist, send back to edit, approve popup (not appr
   }
 });
 
-test("Plans dashboard: stages, the plan being worked on, open it and come back", async ({
+test("Plan history: one active plan, previous plans behind a link", async ({
   page,
 }) => {
   await signIn(page, "owner@demo.example");
   await page.goto("/planning");
   await expect(
-    page.getByRole("heading", { level: 1, name: "Manufacturing plans" }),
+    page.getByRole("tab", { name: /Selected orders/ }),
+  ).toBeVisible();
+  await page.getByRole("link", { name: "Plan history →" }).click();
+  await expect(page).toHaveURL(/\/planning\/history$/);
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Plan history" }),
   ).toBeVisible();
   const chips = page.getByRole("group", { name: "Plan status" });
   for (const s of [
     "All",
-    "Draft",
-    "Awaiting approval",
     "Approved",
     "Needs re-approval",
     "Completed",
@@ -346,20 +358,12 @@ test("Plans dashboard: stages, the plan being worked on, open it and come back",
     await expect(
       chips.getByRole("button", { name: new RegExp(`^${s}`) }),
     ).toBeVisible();
-  await expect(page.getByRole("button", { name: "+ New plan" })).toBeVisible();
-  // the plan being worked on is listed and opens on its 5 steps
-  const row = page
-    .getByRole("row")
-    .filter({ hasText: /PLAN-\d+/ })
-    .first();
-  await expect(row).toBeVisible();
-  const path = await openWorkingPlan(page);
+  // only one active plan: it is a card on top, and no "+ New plan" while it is open
+  await expect(page.getByText(/Active plan: PLAN-\d+/)).toBeVisible();
+  await expect(page.getByRole("button", { name: "+ New plan" })).toHaveCount(0);
+  await page.getByText(/Active plan: PLAN-\d+/).click();
+  await expect(page).toHaveURL(/\/planning$/);
   await expect(
     page.getByRole("tab", { name: /Selected orders/ }),
   ).toBeVisible();
-  await page.getByRole("link", { name: "← All plans" }).click();
-  await expect(page).toHaveURL(/\/planning$/);
-  // + New plan while one is being worked on opens that one (no second plan)
-  await page.getByRole("button", { name: "+ New plan" }).click();
-  await expect(page).toHaveURL(new RegExp(`${path}$`));
 });

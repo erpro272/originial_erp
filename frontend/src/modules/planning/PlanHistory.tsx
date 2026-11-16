@@ -1,6 +1,6 @@
 import { createColumnHelper } from "@tanstack/react-table";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ApiError } from "@/api/client";
 import { useAuth } from "@/auth/AuthContext";
 import { DataTable } from "@/components/data-table/DataTable";
@@ -17,17 +17,11 @@ import { plural, range } from "./format";
 import { DELETABLE_STATUSES, STAGES, type Stage } from "./status";
 
 type Filter = "all" | Stage;
-const ORDER: Stage[] = [
-  "draft",
-  "awaiting",
-  "approved",
-  "needs_reapproval",
-  "completed",
-  "cancelled",
-];
+const ORDER: Stage[] = ["approved", "needs_reapproval", "completed", "cancelled"];
 
-/** Every plan, by stage. Opening one shows its 5 steps (approved ones exactly as approved). */
-export function PlansDashboard() {
+/** Plan history: every plan except the active one. Approved plans open exactly as approved (read-only);
+ * a plan that needs re-approval is a revision of the same plan. */
+export function PlanHistory() {
   const { can } = useAuth();
   const plans = usePlans();
   const create = useCreatePlan();
@@ -35,23 +29,15 @@ export function PlansDashboard() {
   const { toast } = useToast();
   const [filter, setFilter] = useState<Filter>("all");
   const [deleting, setDeleting] = useState<PlanSummary | null>(null);
-  const rows = plans.data ?? [];
+  const all = plans.data ?? [];
+  const working = all.find((r) => r.stage === "draft" || r.stage === "awaiting");
+  const rows = all.filter((r) => r !== working);
   const shown = filter === "all" ? rows : rows.filter((r) => r.stage === filter);
-  const working = rows.find((r) => r.stage === "draft" || r.stage === "awaiting");
 
   const newPlan = async () => {
-    if (working) {
-      // one plan is worked on at a time: open it instead of starting a second
-      toast({
-        title: `${working.number} is still being worked on`,
-        description: "Approve or cancel it to start the next one.",
-      });
-      navigate(`/planning/${working.id}`);
-      return;
-    }
     try {
-      const p = await create.mutateAsync();
-      navigate(`/planning/${p.id}`);
+      await create.mutateAsync();
+      navigate("/planning");
     } catch (e) {
       toast({ title: e instanceof ApiError ? e.message : "Couldn't start a plan.", tone: "error" });
     }
@@ -82,10 +68,16 @@ export function PlansDashboard() {
       meta: { label: "Status" },
       cell: (c) => {
         const s = STAGES[c.getValue() as Stage];
+        const r = c.row.original;
         return (
-          <Tag tone={s.tone} size="sm">
-            {s.label}
-          </Tag>
+          <span className="flex flex-col items-start gap-1">
+            <Tag tone={s.tone} size="sm">
+              {r.revision ? `Rev ${r.revision} · ${s.label.toLowerCase()}` : s.label}
+            </Tag>
+            {r.reapproval_reason && (
+              <span className="max-w-[280px] text-xs text-muted">{r.reapproval_reason}</span>
+            )}
+          </span>
         );
       },
     }),
@@ -148,24 +140,29 @@ export function PlansDashboard() {
   return (
     <div className="flex flex-col gap-7">
       <PageActions>
-        {can("planning.write") && (
+        {can("planning.write") && !working && !plans.isLoading && (
           <Button onClick={newPlan} disabled={create.isPending}>
             + New plan
           </Button>
         )}
       </PageActions>
-      <PageHeader
-        title="Manufacturing plans"
-        subtitle="Every plan: what's being worked on, what's approved and what's done. Open one to see its orders, schedule, money and approval."
-      />
+      <div className="flex flex-col gap-3">
+        <Link to="/planning" className="text-[13px] no-underline">
+          ← Active plan
+        </Link>
+        <PageHeader
+          title="Plan history"
+          subtitle="Previous plans with their orders, schedule, money, fixes and approval record. Approved plans open exactly as approved."
+        />
+      </div>
       {working && (
         <button
           type="button"
-          onClick={() => navigate(`/planning/${working.id}`)}
+          onClick={() => navigate("/planning")}
           className="flex cursor-pointer flex-wrap items-center justify-between gap-3 rounded-card border border-bl-line bg-surface-blue px-5 py-4 text-left text-sm"
         >
           <span>
-            <b className="font-mono">{working.number}</b> is being worked on ·{" "}
+            Active plan: <b className="font-mono">{working.number}</b> ·{" "}
             {STAGES[working.stage as Stage].label.toLowerCase()} · {plural(working.orders, "order")}
           </span>
           <span className="text-link">Continue planning →</span>
@@ -187,7 +184,7 @@ export function PlansDashboard() {
       {deleting && <DeletePlanDialog plan={deleting} onClose={() => setDeleting(null)} />}
       <DataTable<PlanSummary>
         tableId="planning-plans"
-        title="Plans"
+        title="Previous plans"
         columns={columns}
         data={shown}
         getRowId={(r) => r.id}
@@ -198,10 +195,9 @@ export function PlansDashboard() {
         empty={{
           title:
             filter === "all"
-              ? "No plans yet"
+              ? "No previous plans yet"
               : `No ${STAGES[filter as Stage].label.toLowerCase()} plans`,
-          description:
-            "Send accepted orders to Planning from Orders received, or start a plan with + New plan.",
+          description: "Approved, completed and cancelled plans are kept here.",
         }}
       />
     </div>

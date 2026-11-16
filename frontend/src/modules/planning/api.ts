@@ -43,10 +43,7 @@ export function usePlan(planId: string | undefined, view?: PlanView) {
 export function usePlans() {
   return useQuery({
     queryKey: ["planning", "plans"],
-    queryFn: async () => {
-      unwrap(await api.GET("/api/planning/plan"));
-      return unwrap(await api.GET("/api/planning/plans"));
-    },
+    queryFn: async () => unwrap(await api.GET("/api/planning/plans")),
   });
 }
 

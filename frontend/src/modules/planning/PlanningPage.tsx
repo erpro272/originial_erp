@@ -12,6 +12,7 @@ import { Tag } from "@/components/ui/Tag";
 import { useToast } from "@/components/ui/Toast";
 import { cn } from "@/lib/cn";
 import { useCancelPlan, useGenerate, usePlan, type Plan } from "./api";
+import { RevisionPanel } from "./RevisionPanel";
 import { DeletePlanDialog } from "./DeletePlan";
 import { generatedLabel, plural } from "./format";
 import { DELETABLE_STATUSES, isWorking, planStatus } from "./status";
@@ -30,11 +31,12 @@ const STEPS = [
 ];
 const BUILT = ["1", "2", "3", "4", "5"];
 
-/** One plan, in 5 steps. Opened from the plans dashboard (`/planning/:planId?step=1..5`). Draft and
- * awaiting plans can be edited; approved ones open on their frozen approved version (`view=live` shows the
- * recalculation); completed and cancelled plans are history. */
-export function PlanningPage() {
-  const { planId } = useParams();
+/** One plan, in 5 steps. The active plan opens at `/planning` (PlanningHome); history plans at
+ * `/planning/:planId?step=1..5`. Draft and awaiting plans can be edited; approved ones open on their frozen
+ * approved version (`view=live` shows the recalculation); completed and cancelled plans are history. */
+export function PlanningPage({ planId: active }: { planId?: string } = {}) {
+  const { planId: routeId } = useParams();
+  const planId = active ?? routeId;
   const [params, setParams] = useSearchParams();
   const step = params.get("step") ?? "1";
   const view = params.get("view") === "live" ? "live" : undefined;
@@ -64,9 +66,20 @@ export function PlanningPage() {
   return (
     <div className="flex flex-col gap-7">
       <div className="flex flex-col gap-3">
-        <Link to="/planning" className="text-[13px] no-underline">
-          ← All plans
-        </Link>
+        <span className="flex justify-between gap-4 text-[13px]">
+          {p && isWorking(p) ? (
+            <span />
+          ) : (
+            <Link to="/planning/history" className="no-underline">
+              ← Plan history
+            </Link>
+          )}
+          {p && isWorking(p) && (
+            <Link to="/planning/history" className="no-underline">
+              Plan history →
+            </Link>
+          )}
+        </span>
         <PageHeader
           title={
             <span className="flex flex-wrap items-center gap-3">
@@ -87,14 +100,15 @@ export function PlanningPage() {
           title="Plan not found"
           description="It may belong to another company, or the link is wrong."
           actions={
-            <Link to="/planning">
-              <Button variant="pill">All plans</Button>
+            <Link to="/planning/history">
+              <Button variant="pill">Plan history</Button>
             </Link>
           }
         />
       ) : (
         <>
           <PlanBanner plan={p} view={view} onView={setView} go={go} />
+          {p.status === "approved" && <RevisionPanel plan={p} />}
           <StepTabs
             label="Plan steps"
             active={step}
@@ -163,15 +177,20 @@ function PlanBanner({
     </>
   );
   if (isWorking(p)) {
-    return owner ? (
-      <div className="-mt-3 flex justify-end gap-5">
-        <button type="button" className={link} onClick={() => setCancelling(true)}>
-          Cancel this plan
-        </button>
-        {deleteLink}
-        {cancelling && <CancelDialog plan={p} onClose={() => setCancelling(false)} />}
-      </div>
-    ) : null;
+    return (
+      <>
+        {p.regenerate && <RegenerateBanner plan={p} />}
+        {owner && (
+          <div className="-mt-3 flex justify-end gap-5">
+            <button type="button" className={link} onClick={() => setCancelling(true)}>
+              Cancel this plan
+            </button>
+            {deleteLink}
+            {cancelling && <CancelDialog plan={p} onClose={() => setCancelling(false)} />}
+          </div>
+        )}
+      </>
+    );
   }
   const box =
     "flex flex-wrap items-center justify-between gap-3 rounded-card border px-5 py-3 text-sm";
@@ -230,12 +249,53 @@ function PlanBanner({
         </b>
         , exactly as approved and read-only.
         {p.needs_reapproval
-          ? " Orders, stock or factory data have changed since: it needs re-approval."
+          ? ` Rev ${p.revision?.number ?? 2} needs re-approval: see what changed below.`
           : ""}
       </span>
       <button type="button" className={link} onClick={() => onView("live")}>
         {p.needs_reapproval ? "See what changed →" : "Recalculate with today's data →"}
       </button>
+    </div>
+  );
+}
+
+/** Orders were added or removed after Generate plan: generate again before it can be approved. */
+function RegenerateBanner({ plan }: { plan: Plan }) {
+  const { can } = useAuth();
+  const generate = useGenerate(plan.id);
+  const { toast } = useToast();
+  const r = plan.regenerate!;
+  const parts = [
+    r.added.length ? `${r.added.join(", ")} added` : "",
+    r.removed.length ? `${r.removed.join(", ")} removed` : "",
+  ].filter(Boolean);
+  return (
+    <div
+      role="status"
+      className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-hi-line bg-hi-wash px-5 py-3 text-sm"
+    >
+      <span>
+        <b>Orders changed since the plan was generated</b> ({parts.join("; ")}). It is back to
+        draft: generate it again before approval.
+      </span>
+      {can("planning.write") && (
+        <Button
+          disabled={generate.isPending}
+          onClick={async () => {
+            try {
+              await generate.mutateAsync();
+              toast({ title: "Plan generated again", tone: "success" });
+            } catch (e) {
+              toast({
+                title: e instanceof ApiError ? e.message : "Couldn't generate.",
+                tone: "error",
+              });
+            }
+          }}
+        >
+          Generate again
+        </Button>
+      )}
     </div>
   );
 }

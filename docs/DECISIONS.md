@@ -199,3 +199,21 @@ Short records of choices and the reason for each. Newest at the bottom.
     confirmed -> received; cancelling sends them back to requested. Migration 0008 turns existing
     on-hand into opening balances and existing next arrivals into confirmed POs, so nothing is lost.
     Raw Material Purchase and Supplier Comparison tabs come next.
+50. **One active plan; approved plans are history (owner's rules, supersedes the dashboard landing of 47)**:
+    one draft / awaiting plan per company, enforced by a partial unique index (`uq_plans_one_active`) and a
+    per-company advisory lock. Nothing starts a plan by itself: only "+ New plan" or Send to Planning (which
+    adds the orders to the active plan, or starts it). Approval freezes the snapshot, plans the orders
+    (promised dates, "sent to Planning" mark cleared) and leaves no active plan. Orders of an approved plan
+    in force can't be sent to another plan (the refusal names the plan). Orders added / removed after
+    Generate send the plan back to draft ("generate again"; undoing it restores awaiting approval).
+    `/planning` opens the active plan straight away (or "No active plan" + "+ New plan"); `/planning/history`
+    lists the rest. Re-approval is a revision of the same plan (Rev N = approved versions + 1), checked for
+    every approved plan in force against its last approved version (`planning/revision.py`, pure): only
+    significant changes ask for it (later / newly late, newly short material, machine over capacity, order
+    cancelled or quantity / price / ship date changed, contribution down more than the company's
+    `reapproval_margin_drop_pct`, default 5%); improvements are shown "for information". Each change lists
+    why: the data changes (`_basis` stored in every result: orders, materials, machines, downtime,
+    competing orders, rules) that touch the same orders, materials or machines, and penalties / costs for
+    money. The approved version stays in force (promised dates) until re-approved. An approved plan is
+    recalculated around plans approved before it, never after, so a later plan can't disturb it.
+

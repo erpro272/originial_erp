@@ -14,7 +14,8 @@ import { ReviewPage } from "@/modules/invoices/ReviewPage";
 import { OrdersLayout } from "@/modules/orders/OrdersLayout";
 import { OrdersReceivedTab } from "@/modules/orders/OrdersReceivedTab";
 import { PlanningPage } from "@/modules/planning/PlanningPage";
-import { PlansDashboard } from "@/modules/planning/PlansDashboard";
+import { PlanHistory } from "@/modules/planning/PlanHistory";
+import { PlanningHome } from "@/modules/planning/PlanningHome";
 import { PurchasingPage } from "@/modules/purchasing/PurchasingPage";
 import { MODULES } from "./nav";
 
@@ -56,7 +57,8 @@ export function App() {
           />
           <Route path="customers/:id" element={<CustomerProfile />} />
         </Route>
-        <Route path="/planning" element={<PlansDashboard />} />
+        <Route path="/planning" element={<PlanningHome />} />
+        <Route path="/planning/history" element={<PlanHistory />} />
         <Route path="/planning/:planId" element={<PlanningPage />} />
         <Route path="/purchasing" element={<PurchasingPage />} />
         <Route path="/purchasing/purchase" element={<PurchasingPage />} />

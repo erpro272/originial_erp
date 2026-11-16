@@ -1,5 +1,6 @@
 import { createColumnHelper, type SortingState } from "@tanstack/react-table";
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { ApiError, api, unwrap } from "@/api/client";
 import { useAuth } from "@/auth/AuthContext";
 import { DataTable } from "@/components/data-table/DataTable";
@@ -224,15 +225,14 @@ export function OrdersTable({ onOpen }: { onOpen: (o: Order) => void }) {
         cell: (c) => longDate(c.getValue()),
         meta: { label: "Created", defaultHidden: true },
       }),
-      h.accessor("marked_for_planning", {
+      h.accessor((o) => o.plan?.number ?? "", {
         id: "planning",
-        header: "Planning",
+        header: "Plan",
         enableSorting: false,
-        cell: (c) => (c.getValue() ? <Tag tone="bl">In planning</Tag> : ""),
+        cell: (c) => <PlanTag order={c.row.original} />,
         meta: {
-          label: "Sent to Planning",
-          defaultHidden: true,
-          csv: (o) => (o.marked_for_planning ? "yes" : ""),
+          label: "Plan",
+          csv: (o) => o.plan?.number ?? (o.marked_for_planning ? "In planning" : ""),
         },
       }),
     ],
@@ -245,7 +245,13 @@ export function OrdersTable({ onOpen }: { onOpen: (o: Order) => void }) {
         await api.POST("/api/orders/planning-selection", { body: { order_ids: selected, marked } }),
       );
       toast({
-        title: marked ? `${r.updated} sent to Planning` : `${r.updated} removed from Planning`,
+        title: !marked
+          ? `${r.updated} removed from Planning`
+          : r.plan
+            ? r.created
+              ? `${r.plan.number} started with ${r.updated} order${r.updated === 1 ? "" : "s"}`
+              : `${r.updated} added to ${r.plan.number}`
+            : `${r.updated} sent to Planning`,
         tone: "success",
       });
       setSelected([]);
@@ -556,5 +562,28 @@ function SaveViewModal({
         Open this view by default
       </label>
     </Modal>
+  );
+}
+
+/** Which plan an order is in: the active plan (being planned) or an approved / finished one. */
+function PlanTag({ order }: { order: Order }) {
+  const p = order.plan;
+  if (!p) return order.marked_for_planning ? <Tag tone="bl">In planning</Tag> : null;
+  const active = p.stage === "draft" || p.stage === "awaiting";
+  const tone = active
+    ? "bl"
+    : p.stage === "needs_reapproval"
+      ? "hi"
+      : p.stage === "approved"
+        ? "ok"
+        : "lo";
+  return (
+    <Link
+      to={active ? "/planning" : `/planning/${p.id}`}
+      onClick={(e) => e.stopPropagation()}
+      className="no-underline"
+    >
+      <Tag tone={tone}>{active ? `In ${p.number}` : p.number}</Tag>
+    </Link>
   );
 }

@@ -8,7 +8,7 @@ import { cn } from "@/lib/cn";
 import { rupees } from "@/lib/format";
 import { usePutRules, useRules, type Rules } from "./api";
 
-export type RuleKey = "penalty" | "min_margin" | "overhead" | "packaging";
+export type RuleKey = "penalty" | "min_margin" | "overhead" | "packaging" | "reapproval";
 
 const RULES: Record<RuleKey, { title: string; help: string }> = {
   penalty: {
@@ -26,6 +26,10 @@ const RULES: Record<RuleKey, { title: string; help: string }> = {
   packaging: {
     title: "Packaging & logistics",
     help: "Cost per piece for packing and dispatch.",
+  },
+  reapproval: {
+    title: "Re-approval limit",
+    help: "An approved plan needs your approval again when its contribution falls by more than this. Later deliveries, new shortages, machines over capacity and changed orders always need it.",
   },
 };
 
@@ -180,6 +184,17 @@ function RuleDialog({
               inputMode="decimal"
               defaultValue={v.min_margin_pct}
               onChange={(e) => setV({ ...v, min_margin_pct: num(e.target.value) })}
+            />
+          </label>
+        )}
+        {rule === "reapproval" && (
+          <label className="flex flex-col gap-1.5 text-[13px] font-medium text-ink-2">
+            Contribution drop that needs re-approval (%)
+            <input
+              className={field}
+              inputMode="decimal"
+              defaultValue={v.reapproval_margin_drop_pct}
+              onChange={(e) => setV({ ...v, reapproval_margin_drop_pct: num(e.target.value) })}
             />
           </label>
         )}

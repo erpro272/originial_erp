@@ -19,7 +19,7 @@ from typing import Any
 
 EPS = 1e-6
 # Bump when the engine's logic changes, so saved plan results are recalculated (part of the fingerprint).
-ENGINE_VERSION = 13
+ENGINE_VERSION = 14
 FULL_POOL = 10  # orders the fully optimized option searches exhaustively (2^N subsets)
 FULL_REFINE = 8  # best subsets whose sequence is then improved by pairwise swaps
 HORIZON_DAYS = 400

@@ -26,11 +26,12 @@ export function planStatus(plan: Plan): { tone: "md" | "ok" | "hi" | "lo" | "bl"
   if (plan.status === "cancelled") return { tone: "lo", text: "Cancelled" };
   if (plan.status === "approved")
     return plan.needs_reapproval
-      ? { tone: "hi", text: "Needs re-approval" }
+      ? { tone: "hi", text: `Rev ${plan.revision?.number ?? 2} · needs re-approval` }
       : {
           tone: "ok",
           text: `Approved${plan.approved_at ? ` · ${generatedLabel(plan.approved_at)}` : ""}`,
         };
+  if (plan.regenerate) return { tone: "hi", text: "Orders changed · generate again" };
   if (plan.changes_requested) return { tone: "hi", text: "Changes requested" };
   return { tone: "md", text: "Awaiting owner approval" };
 }

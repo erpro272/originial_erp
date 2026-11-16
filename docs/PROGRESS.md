@@ -104,6 +104,10 @@
   (raise -> owner approves -> confirmed -> received / cancelled), stock ledger, reorder levels, KPIs,
   "Needs attention" cards, inventory table (filters, column picker), open POs; links to Planning's
   purchase requests and deliveries. Tests: 282 pytest, 56 Vitest, 18 Playwright.
+- Planning cycle (2026-11-16, awaiting owner review): one active plan, Send to Planning fills it (or starts
+  it), approved plans in Plan history, no plan started by itself, no double booking, "generate again" after
+  order changes, re-approval as a revision with what changed and why (significant changes only).
+  Orders show the plan each order is in. Tests: 289 pytest, 57 Vitest, 18 Playwright.
 
 ## Next
 - Planning v1 archived in `archive/planning-v1/` (owner request). Rebuild in progress:

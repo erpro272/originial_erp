@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { useState, type ReactNode } from "react";
 import { ApiError } from "@/api/client";
 import { useAuth } from "@/auth/AuthContext";
@@ -39,6 +40,7 @@ export function ApprovalStep({ plan, go }: { plan: Plan; go: (step: string) => v
   const [note, setNote] = useState(plan.approval_note ?? "");
   const [confirm, setConfirm] = useState(false);
   const approve = useApprove(plan.id);
+  const navigate = useNavigate();
   const sendBack = useSendBack(plan.id);
   const raisePo = useRaisePo(plan.id);
   const history = useHistory(plan.id, plan.version);
@@ -53,6 +55,7 @@ export function ApprovalStep({ plan, go }: { plan: Plan; go: (step: string) => v
     try {
       await approve.mutateAsync({ note: note.trim() || null, raise_open_pos: openPos.length > 0 });
       setConfirm(false);
+      navigate(`/planning/${plan.id}?step=5`); // approved = Plan history; there is no active plan now
       toast({
         title: "Plan approved",
         description: `${openPos.length ? `${plural(openPos.length, "PO")} sent to Purchasing · ` : ""}promised dates added to ${plural(seq.rows.length, "order")}`,

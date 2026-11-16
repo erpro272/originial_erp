@@ -3,7 +3,8 @@ import { useState, type ReactNode } from "react";
 import { expect, test } from "vitest";
 import { PageActionsSlotProvider } from "@/components/layout/PageActions";
 import { json, ME, mockApi, renderApp, route } from "@/test/utils";
-import { PlansDashboard } from "./PlansDashboard";
+import { PlanHistory } from "./PlanHistory";
+import { PlanningHome } from "./PlanningHome";
 
 const row = (number: string, stage: string, extra: Record<string, unknown> = {}) => ({
   id: number,
@@ -28,7 +29,10 @@ const row = (number: string, stage: string, extra: Record<string, unknown> = {})
 });
 const PLANS = [
   row("PLAN-005", "draft"),
-  row("PLAN-004", "needs_reapproval"),
+  row("PLAN-004", "needs_reapproval", {
+    revision: 2,
+    reapproval_reason: "ORD-1041 now finishes 26 Nov",
+  }),
   row("PLAN-003", "approved"),
   row("PLAN-002", "completed"),
   row("PLAN-001", "cancelled"),
@@ -57,45 +61,31 @@ const signedIn = () => [
   route("GET", "/api/planning/plan", () => json(null)),
 ];
 
-test("lists every plan with its stage, money and approval; filters by stage", async () => {
+test("history lists previous plans; the active plan is one card on top", async () => {
   mockApi(
     ...signedIn(),
     route("GET", "/api/planning/plans", () => json(PLANS)),
   );
   renderApp(
     <WithTopBar>
-      <PlansDashboard />
+      <PlanHistory />
     </WithTopBar>,
   );
-  expect(await screen.findByText("PLAN-004")).toBeInTheDocument();
-  expect(screen.getAllByText("Needs re-approval").length).toBeGreaterThan(0);
+  const table = await screen.findByRole("table");
+  expect(await within(table).findByText("PLAN-004")).toBeInTheDocument();
+  expect(within(table).queryByText("PLAN-005")).toBeNull(); // the active plan isn't history
+  expect(screen.getByText(/Active plan:/)).toBeInTheDocument();
+  expect(within(table).getByText("Rev 2 · needs re-approval")).toBeInTheDocument();
+  expect(within(table).getByText("ORD-1041 now finishes 26 Nov")).toBeInTheDocument();
   expect(screen.getByText(/· v2/)).toBeInTheDocument(); // the approved version the money comes from
-  expect(screen.getByText("Continue planning →")).toBeInTheDocument(); // the draft being worked on
+  // only one active plan: no "+ New plan" while PLAN-005 is open
+  expect(screen.queryByRole("button", { name: "+ New plan" })).toBeNull();
   fireEvent.click(screen.getByRole("button", { name: /^Completed/ }));
-  const table = screen.getByRole("table");
   expect(within(table).getByText("PLAN-002")).toBeInTheDocument();
   expect(within(table).queryByText("PLAN-003")).toBeNull();
 });
 
-test("+ New plan opens the plan being worked on instead of starting a second", async () => {
-  const { calls } = mockApi(
-    ...signedIn(),
-    route("GET", "/api/planning/plans", () => json(PLANS)),
-  );
-  renderApp(
-    <WithTopBar>
-      <PlansDashboard />
-    </WithTopBar>,
-  );
-  expect(await screen.findByText("PLAN-004")).toBeInTheDocument(); // the list has loaded
-  fireEvent.click(screen.getByRole("button", { name: "+ New plan" }));
-  expect(await screen.findByText("PLAN-005 is still being worked on")).toBeInTheDocument();
-  expect(calls.some((c) => c.method === "POST" && c.url.endsWith("/api/planning/plans"))).toBe(
-    false,
-  );
-});
-
-test("+ New plan starts one when nothing is being worked on", async () => {
+test("+ New plan starts one when there is no active plan", async () => {
   const { calls } = mockApi(
     ...signedIn(),
     route("GET", "/api/planning/plans", () => json(PLANS.slice(1))),
@@ -105,7 +95,7 @@ test("+ New plan starts one when nothing is being worked on", async () => {
   );
   renderApp(
     <WithTopBar>
-      <PlansDashboard />
+      <PlanHistory />
     </WithTopBar>,
   );
   fireEvent.click(await screen.findByRole("button", { name: "+ New plan" }));
@@ -116,6 +106,25 @@ test("+ New plan starts one when nothing is being worked on", async () => {
   );
 });
 
+test("Planning with no active plan: start one or open history; never starts one by itself", async () => {
+  const { calls } = mockApi(
+    ...signedIn(),
+    route("GET", "/api/planning/plans", () => json(PLANS.slice(1))),
+  );
+  renderApp(<PlanningHome />);
+  expect(await screen.findByText("No active plan")).toBeInTheDocument();
+  expect(await screen.findByText(/PLAN-004/)).toBeInTheDocument();
+  expect(
+    screen.getByText(/Rev 2 needs re-approval: ORD-1041 now finishes 26 Nov/),
+  ).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "+ New plan" })).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "Plan history" })).toHaveAttribute(
+    "href",
+    "/planning/history",
+  );
+  expect(calls.some((c) => c.method === "POST" && c.url.includes("/api/planning/"))).toBe(false);
+});
+
 test("Delete is offered only for never-approved plans and asks first", async () => {
   const { calls } = mockApi(
     ...signedIn(),
@@ -124,12 +133,11 @@ test("Delete is offered only for never-approved plans and asks first", async () 
   );
   renderApp(
     <WithTopBar>
-      <PlansDashboard />
+      <PlanHistory />
     </WithTopBar>,
   );
   expect(await screen.findByText("PLAN-004")).toBeInTheDocument();
-  // draft and cancelled: yes; approved, needs re-approval, completed: never
-  expect(screen.getByRole("button", { name: "Delete PLAN-005" })).toBeInTheDocument();
+  // cancelled: yes; approved, needs re-approval, completed: never
   expect(screen.getByRole("button", { name: "Delete PLAN-001" })).toBeInTheDocument();
   for (const n of ["PLAN-004", "PLAN-003", "PLAN-002"])
     expect(screen.queryByRole("button", { name: `Delete ${n}` })).toBeNull();

@@ -124,8 +124,13 @@ test("status tag", () => {
     planStatus(makePlan({ changes_requested: { note: "x", at: new Date().toISOString() } })).text,
   ).toBe("Changes requested");
   expect(planStatus(makePlan({ status: "approved", needs_reapproval: true })).text).toBe(
-    "Needs re-approval",
+    "Rev 2 · needs re-approval",
   );
+  expect(
+    planStatus(
+      makePlan({ status: "draft", regenerate: { added: ["ORD-1050"], removed: [], at: "" } }),
+    ).text,
+  ).toBe("Orders changed · generate again");
 });
 
 test("summary, deliveries, fixes, checklist and history", async () => {

@@ -39,7 +39,14 @@ def _num(v: float) -> str:
 
 
 def _rupees(p: int) -> str:
-    return f"₹{p / 100:,.0f}"
+    """Indian grouping: ₹10,07,711."""
+    n = round(abs(p) / 100)
+    head, tail = str(n)[:-3], str(n)[-3:]
+    groups: list[str] = []
+    while len(head) > 2:
+        head, groups = head[:-2], [head[-2:], *groups]
+    body = ",".join([g for g in [head, *groups] if g] + [tail])
+    return f"{'-' if p < 0 else ''}₹{body}"
 
 
 def basis(
@@ -398,7 +405,24 @@ def compare(approved: dict[str, Any], live: dict[str, Any], margin_drop_pct: flo
 
     oc = (approved.get("finance", {}).get("with") or {}).get("contribution", 0)
     nc = (live.get("finance", {}).get("with") or {}).get("contribution", 0)
+    money_why: list[str] = []
     if nc != oc:
+        # where the money moved, per order: late penalties, fixes, costs
+        orows = {r["id"]: r for r in (approved.get("finance", {}).get("with") or {}).get("rows", [])}
+        for r in (live.get("finance", {}).get("with") or {}).get("rows", []):
+            o = orows.get(r["id"])
+            if o is None:
+                continue
+            name = num.get(r["id"], "An order")
+            if r["penalty"] != o["penalty"]:
+                late = f" ({_late(r['late_days'])})" if r.get("late_days") else ""
+                money_why.append(
+                    f"{name} late penalty {_rupees(o['penalty'])} → {_rupees(r['penalty'])}{late}"
+                )
+            if r["fix_cost"] != o["fix_cost"]:
+                money_why.append(f"{name} fix cost {_rupees(o['fix_cost'])} → {_rupees(r['fix_cost'])}")
+            if r["cost"] != o["cost"]:
+                money_why.append(f"{name} cost {_rupees(o['cost'])} → {_rupees(r['cost'])}")
         drop = (oc - nc) / abs(oc) * 100 if oc else (100.0 if nc < oc else 0.0)
         big = drop > margin_drop_pct
         word = "down" if nc < oc else "up"
@@ -424,6 +448,8 @@ def compare(approved: dict[str, Any], live: dict[str, Any], margin_drop_pct: flo
             or (mc_ & set(c["machines"]))
             or (money and c["money"])
         ]
+        if ch["kind"] == "money":
+            hits = money_why[:4] + hits
         ch["why"] = hits[:6] or ([] if why else ["Stock, factory or order data changed since approval"])
     significant = [c for c in out if c["significant"]]
     return {
