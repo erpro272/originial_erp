@@ -94,6 +94,9 @@ class Plan(Base, TenantScoped, TimestampMixin):
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     cancelled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     cancel_reason: Mapped[str | None] = mapped_column(Text)
+    # deleted by the owner (never-approved plans only): hidden from every screen, kept as a trace
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    deleted_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
 
 
 class PlanSnapshot(Base, TenantScoped, TimestampMixin):

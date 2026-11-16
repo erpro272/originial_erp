@@ -180,3 +180,8 @@ Short records of choices and the reason for each. Newest at the bottom.
     (Production carries it out). A plan completes itself when all its orders are shipped (or
     cancelled). The owner can cancel a draft / awaiting plan with a reason; its orders go back to
     accepted, not in planning. Approved plans can't be cancelled.
+48. **Deleting plans (owner's choices)**: only never-approved plans (draft, awaiting approval, cancelled),
+    by the owner (`planning.approve`). Approved / needs re-approval / completed plans and their snapshots
+    are never deleted (no button; the API refuses). Delete hides the plan from every screen and API
+    read (`plans.deleted_at` / `deleted_by` kept in the row), writes an audit entry, and sends a deleted
+    draft's orders back to accepted, not in planning. Plan numbers are never reused.

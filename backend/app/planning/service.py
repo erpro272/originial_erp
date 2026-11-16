@@ -382,7 +382,7 @@ async def _out(session: AsyncSession, plan: Plan, snapshot: PlanSnapshot | None 
 
 async def current_plan(session: AsyncSession) -> Plan | None:
     """The working plan, or else the latest approved one (cancelled and completed plans are history)."""
-    q = (select(Plan).where(Plan.status.in_((*WORKING, "approved")))
+    q = (select(Plan).where(Plan.status.in_((*WORKING, "approved")), Plan.deleted_at.is_(None))
          .order_by(Plan.status.in_(WORKING).desc(), Plan.created_at.desc()).limit(1))  # fmt: skip
     return (await session.execute(q)).scalar_one_or_none()
 
@@ -400,7 +400,7 @@ async def get_current(session: AsyncSession) -> PlanOut | None:
 
 async def _get(session: AsyncSession, plan_id: uuid.UUID) -> Plan:
     plan = await session.get(Plan, plan_id, with_for_update=True)
-    if plan is None:
+    if plan is None or plan.deleted_at is not None:
         raise NotFound("Plan not found.")
     return plan
 
@@ -698,12 +698,14 @@ def _stage(plan: Plan) -> str:
 
 async def list_plans(session: AsyncSession) -> list[PlanSummary]:
     """Every plan, newest first. Approved / completed plans show the money of their latest approved version."""
-    q = select(Plan).where(Plan.status == "approved").order_by(Plan.created_at.desc()).limit(1)
+    q = (select(Plan).where(Plan.status == "approved", Plan.deleted_at.is_(None))
+         .order_by(Plan.created_at.desc()).limit(1))  # fmt: skip
     cur = (await session.execute(q)).scalar_one_or_none()
     if cur is not None:
         # the latest approved plan is the one still in force: check whether data has changed since approval
         await _refresh(session, cur, clock.today())
-    plans = list((await session.execute(select(Plan).order_by(Plan.created_at.desc()))).scalars())
+    plans = list((await session.execute(
+        select(Plan).where(Plan.deleted_at.is_(None)).order_by(Plan.created_at.desc()))).scalars())  # fmt: skip
     out = []
     for p in plans:
         await _maybe_complete(session, p)
@@ -725,7 +727,7 @@ async def get_plan(session: AsyncSession, plan_id: uuid.UUID, view: str | None) 
     """One plan. Approved / completed plans open on their frozen approved version unless view == "live"
     (the recalculation that shows what changed since approval)."""
     plan = await session.get(Plan, plan_id)
-    if plan is None:
+    if plan is None or plan.deleted_at is not None:
         raise NotFound("Plan not found.")
     if plan.status in ("approved", "completed") and view != "live":
         await _maybe_complete(session, plan)
@@ -749,6 +751,26 @@ async def cancel(session: AsyncSession, actor: uuid.UUID, plan_id: uuid.UUID, re
                        summary=f"{plan.number} cancelled: {reason}")  # fmt: skip
     await session.flush()
     return await _out(session, plan)
+
+
+DELETABLE = ("draft", "generated", "cancelled")
+
+
+async def delete_plan(session: AsyncSession, actor: uuid.UUID, plan_id: uuid.UUID) -> None:
+    """Owner: remove a plan that was never approved (draft, awaiting, cancelled) from every screen.
+    Approved and completed plans (and their snapshots) are never deleted. The row stays, hidden, with who
+    and when, plus an audit entry; a deleted draft's orders go back to accepted, not in planning."""
+    plan = await _get(session, plan_id)
+    if plan.status not in DELETABLE:
+        raise DomainError("Approved and completed plans are kept for good and can't be deleted.")
+    if plan.status in WORKING:
+        await _write_ticks_to_orders(session, actor, list(plan.selected), [])
+    plan.deleted_at, plan.deleted_by = datetime.now(UTC), actor
+    session.add(PlanEvent(plan_id=plan.id, kind="deleted", tabs=[], actor_id=actor, created_at=datetime.now(UTC),
+                          summary=f"Plan deleted ({plan.status})"))  # fmt: skip
+    await audit.record(session, actor_id=actor, action="delete", entity_type="plan", entity_id=plan.id,
+                       summary=f"{plan.number} deleted (was {plan.status})")  # fmt: skip
+    await session.flush()
 
 
 async def send_back(session: AsyncSession, actor: uuid.UUID, plan_id: uuid.UUID, note: str | None) -> PlanOut:

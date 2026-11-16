@@ -241,3 +241,20 @@ export function useRaisePo(planId: string | undefined) {
     ),
   );
 }
+
+/** Owner: delete a draft, awaiting or cancelled plan (approved / completed plans are kept for good). */
+export function useDeletePlan() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (planId: string) => {
+      const r = await api.DELETE("/api/planning/plans/{plan_id}", {
+        params: { path: { plan_id: planId } },
+      });
+      if (!r.response.ok) unwrap(r); // 204 = deleted; anything else carries the API error (throws)
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["planning"] });
+      void qc.invalidateQueries({ queryKey: ["orders"] }); // a deleted draft's orders leave planning
+    },
+  });
+}

@@ -115,3 +115,28 @@ test("+ New plan starts one when nothing is being worked on", async () => {
     ),
   );
 });
+
+test("Delete is offered only for never-approved plans and asks first", async () => {
+  const { calls } = mockApi(
+    ...signedIn(),
+    route("GET", "/api/planning/plans", () => json(PLANS)),
+    route("DELETE", "/api/planning/plans/PLAN-001", () => new Response(null, { status: 204 })),
+  );
+  renderApp(
+    <WithTopBar>
+      <PlansDashboard />
+    </WithTopBar>,
+  );
+  expect(await screen.findByText("PLAN-004")).toBeInTheDocument();
+  // draft and cancelled: yes; approved, needs re-approval, completed: never
+  expect(screen.getByRole("button", { name: "Delete PLAN-005" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Delete PLAN-001" })).toBeInTheDocument();
+  for (const n of ["PLAN-004", "PLAN-003", "PLAN-002"])
+    expect(screen.queryByRole("button", { name: `Delete ${n}` })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Delete PLAN-001" }));
+  const dialog = await screen.findByRole("dialog");
+  expect(within(dialog).getByText("Delete PLAN-001?")).toBeInTheDocument();
+  fireEvent.click(within(dialog).getByRole("button", { name: "Delete plan" }));
+  await waitFor(() => expect(calls.some((c) => c.method === "DELETE")).toBe(true));
+  expect(await screen.findByText("PLAN-001 deleted")).toBeInTheDocument();
+});

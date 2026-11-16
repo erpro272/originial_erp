@@ -132,3 +132,49 @@ async def test_plan_completes_when_all_its_orders_are_shipped(client: AsyncClien
     assert out["status"] == "completed" and out["view"] == "snapshot"
     hist = (await client.get(f"/planning/plans/{pid}/history", headers=h)).json()
     assert hist[0]["kind"] == "completed"
+
+
+async def test_delete_never_approved_plans_only_and_keep_a_trace(client: AsyncClient) -> None:
+    h = await _demo(client, "dash-del")
+    plan = (await client.get("/planning/plan", headers=h)).json()
+    pid, picked = plan["id"], plan["result"]["selection"]["selected"]
+
+    # a draft: deleted, hidden everywhere, its orders back to accepted, not in planning
+    assert (await client.delete(f"/planning/plans/{pid}", headers=h)).status_code == 204
+    assert (await client.get("/planning/plans", headers=h)).json() == []
+    assert (await client.get(f"/planning/plans/{pid}", headers=h)).status_code == 404
+    assert (
+        await client.patch(f"/planning/plans/{pid}", json={"rule": "deadline"}, headers=h)
+    ).status_code == 404
+    assert (await client.get("/planning/plan", headers=h)).json() is None
+    for oid in picked:
+        o = (await client.get(f"/orders/{oid}", headers=h)).json()
+        assert o["status"] == "accepted" and not o["marked_for_planning"]
+    audit = (await client.get("/audit-log?entity_type=plan", headers=h)).json()
+    items = audit["items"] if isinstance(audit, dict) else audit
+    assert any(a["summary"] == "PLAN-001 deleted (was draft)" for a in items)
+
+    # a cancelled plan can be deleted too; numbers are never reused
+    p2 = (await client.post("/planning/plans", headers=h)).json()
+    assert p2["number"] == "PLAN-002"
+    await client.post(f"/planning/plans/{p2['id']}/cancel", json={"reason": "not needed"}, headers=h)
+    assert (await client.delete(f"/planning/plans/{p2['id']}", headers=h)).status_code == 204
+
+    # an approved plan is kept for good
+    p3 = (await client.post("/planning/plans", headers=h)).json()
+    assert p3["number"] == "PLAN-003"
+    await client.patch(f"/planning/plans/{p3['id']}", json={"selected": picked}, headers=h)
+    await _approve(client, h, p3["id"])
+    bad = await client.delete(f"/planning/plans/{p3['id']}", headers=h)
+    assert bad.status_code == 400 and "can't be deleted" in bad.json()["error"]["message"]
+    assert [r["number"] for r in (await client.get("/planning/plans", headers=h)).json()] == ["PLAN-003"]
+
+
+async def test_planner_cannot_delete_a_plan(client: AsyncClient) -> None:
+    from tests.conftest import headers_for, make_company
+
+    co = await make_company("dash-del-perm")
+    owner = await headers_for(client, co)
+    planner = await headers_for(client, co, "planner")
+    pid = (await client.post("/planning/plans", headers=owner)).json()["id"]
+    assert (await client.delete(f"/planning/plans/{pid}", headers=planner)).status_code == 403

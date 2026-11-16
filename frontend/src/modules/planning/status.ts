@@ -34,3 +34,6 @@ export function planStatus(plan: Plan): { tone: "md" | "ok" | "hi" | "lo" | "bl"
   if (plan.changes_requested) return { tone: "hi", text: "Changes requested" };
   return { tone: "md", text: "Awaiting owner approval" };
 }
+
+/** Plans the owner may delete: never approved (draft, awaiting approval, cancelled). */
+export const DELETABLE_STATUSES = ["draft", "generated", "cancelled"];

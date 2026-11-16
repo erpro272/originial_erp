@@ -12,8 +12,9 @@ import { Tag } from "@/components/ui/Tag";
 import { useToast } from "@/components/ui/Toast";
 import { rupeesCompact, shortDate } from "@/lib/format";
 import { useCreatePlan, usePlans, type PlanSummary } from "./api";
+import { DeletePlanDialog } from "./DeletePlan";
 import { plural, range } from "./format";
-import { STAGES, type Stage } from "./status";
+import { DELETABLE_STATUSES, STAGES, type Stage } from "./status";
 
 type Filter = "all" | Stage;
 const ORDER: Stage[] = [
@@ -33,6 +34,7 @@ export function PlansDashboard() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [filter, setFilter] = useState<Filter>("all");
+  const [deleting, setDeleting] = useState<PlanSummary | null>(null);
   const rows = plans.data ?? [];
   const shown = filter === "all" ? rows : rows.filter((r) => r.stage === filter);
   const working = rows.find((r) => r.stage === "draft" || r.stage === "awaiting");
@@ -120,6 +122,27 @@ export function PlansDashboard() {
       meta: { label: "Margin", align: "right" },
       cell: (c) => `${c.getValue().toFixed(1)}%`,
     }),
+    col.display({
+      id: "actions",
+      header: "",
+      meta: { label: "Actions", alwaysVisible: true },
+      cell: (c) => {
+        const r = c.row.original;
+        return can("planning.approve") && DELETABLE_STATUSES.includes(r.status) ? (
+          <button
+            type="button"
+            aria-label={`Delete ${r.number}`}
+            onClick={(e) => {
+              e.stopPropagation(); // not "open the plan"
+              setDeleting(r);
+            }}
+            className="cursor-pointer border-0 bg-transparent p-0 text-[13px] text-hi hover:underline"
+          >
+            Delete
+          </button>
+        ) : null;
+      },
+    }),
   ];
 
   return (
@@ -161,6 +184,7 @@ export function PlansDashboard() {
           })),
         ]}
       />
+      {deleting && <DeletePlanDialog plan={deleting} onClose={() => setDeleting(null)} />}
       <DataTable<PlanSummary>
         tableId="planning-plans"
         title="Plans"

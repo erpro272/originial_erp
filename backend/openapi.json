@@ -9656,6 +9656,46 @@
       }
     },
     "/api/planning/plans/{plan_id}": {
+      "delete": {
+        "description": "Owner: delete a draft, awaiting or cancelled plan (approved / completed plans are kept for good).",
+        "operationId": "delete_plan_api_planning_plans__plan_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plan_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plan Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete Plan",
+        "tags": [
+          "planning"
+        ]
+      },
       "get": {
         "description": "One plan. Approved / completed plans: their frozen approved version, or `view=live` (recalculated now).",
         "operationId": "get_plan_api_planning_plans__plan_id__get",

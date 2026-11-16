@@ -12,8 +12,9 @@ import { Tag } from "@/components/ui/Tag";
 import { useToast } from "@/components/ui/Toast";
 import { cn } from "@/lib/cn";
 import { useCancelPlan, useGenerate, usePlan, type Plan } from "./api";
+import { DeletePlanDialog } from "./DeletePlan";
 import { generatedLabel, plural } from "./format";
-import { isWorking, planStatus } from "./status";
+import { DELETABLE_STATUSES, isWorking, planStatus } from "./status";
 import { SelectedOrders } from "./SelectedOrders";
 import { ApprovalStep } from "./ApprovalStep";
 import { FinanceStep } from "./FinanceStep";
@@ -143,13 +144,31 @@ function PlanBanner({
 }) {
   const { can } = useAuth();
   const [cancelling, setCancelling] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const navigate = useNavigate();
   const link = "cursor-pointer border-0 bg-transparent p-0 text-[13px] text-link";
+  const owner = can("planning.approve");
+  const deleteLink = owner && DELETABLE_STATUSES.includes(p.status) && (
+    <>
+      <button type="button" className={cn(link, "text-hi")} onClick={() => setDeleting(true)}>
+        Delete this plan
+      </button>
+      {deleting && (
+        <DeletePlanDialog
+          plan={p}
+          onClose={() => setDeleting(false)}
+          onDeleted={() => navigate("/planning")}
+        />
+      )}
+    </>
+  );
   if (isWorking(p)) {
-    return can("planning.approve") ? (
-      <div className="-mt-3 flex justify-end">
+    return owner ? (
+      <div className="-mt-3 flex justify-end gap-5">
         <button type="button" className={link} onClick={() => setCancelling(true)}>
           Cancel this plan
         </button>
+        {deleteLink}
         {cancelling && <CancelDialog plan={p} onClose={() => setCancelling(false)} />}
       </div>
     ) : null;
@@ -164,6 +183,7 @@ function PlanBanner({
           {p.cancel_reason ? ` · “${p.cancel_reason}”` : ""}. Kept as history, read-only; its orders
           went back to Orders received.
         </span>
+        {deleteLink}
       </div>
     );
   if (p.status === "completed")

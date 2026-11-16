@@ -49,6 +49,12 @@ async def get_plan(
     return await service.get_plan(db, plan_id, view)
 
 
+@router.delete("/plans/{plan_id}", status_code=204)
+async def delete_plan(db: TenantDB, p: Approver, plan_id: uuid.UUID) -> None:
+    """Owner: delete a draft, awaiting or cancelled plan (approved / completed plans are kept for good)."""
+    await service.delete_plan(db, p.user_id, plan_id)
+
+
 @router.post("/plans/{plan_id}/cancel")
 async def cancel(db: TenantDB, p: Approver, plan_id: uuid.UUID, body: CancelIn) -> PlanOut:
     return await service.cancel(db, p.user_id, plan_id, body.reason)
