@@ -12,7 +12,7 @@ os.environ.setdefault(
 )
 os.environ.setdefault("ERP_REDIS_URL", "redis://localhost:6379/15")
 os.environ["ERP_JOBS_INLINE"] = "true"
-os.environ.pop("ANTHROPIC_API_KEY", None)  # tests always run the AI in mock mode
+os.environ.pop("LLM_API_KEY", None)  # tests always run the AI in mock mode
 
 import uuid
 from collections.abc import AsyncIterator

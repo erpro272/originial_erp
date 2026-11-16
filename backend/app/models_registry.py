@@ -1,5 +1,6 @@
 """Import every module's models so SQLAlchemy metadata (and Alembic) see all tables."""
 
+import app.ai.assistant.models
 import app.billing.models
 import app.catalog.models
 import app.core.models

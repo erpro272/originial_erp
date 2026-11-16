@@ -38,8 +38,10 @@ database**):
 docker compose exec api python -m seed.run --reset
 ```
 
-To use the real AI for invoice extraction, put `ANTHROPIC_API_KEY=...` in a `.env` file
-next to `docker-compose.yml`. Without it the AI runs in mock mode.
+To use the real AI (the AI Assistant and invoice reading), create a free Groq account at
+console.groq.com, make an API key (API Keys -> Create API key) and put `LLM_API_KEY=gsk_...` in a `.env`
+file next to `docker-compose.yml` (or in `backend/.env` when running `make api` / `make worker`), then restart
+the API and the worker. Without it all AI runs in mock mode (scripted answers / fixtures).
 
 ## Develop
 

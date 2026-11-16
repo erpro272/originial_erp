@@ -132,8 +132,16 @@
   Planning) + Machine Load (Current Plan vs After New Orders, machine detail), Factory Layout (demo), Cash Flow
   (6 months), Customer Health, Alerts & Updates with View All drawer; date range in the URL; owner only.
   Tests: 306 pytest, 72 Vitest, 26 Playwright.
+- AI Assistant, handover A (2026-11-16, awaiting owner review): ✦ in the top bar opens the full-screen workspace
+  (`/assistant`): history (Today / Yesterday / This week / Earlier, search), chat with live steps, widgets (schedule /
+  order / plan tables, load charts, delay analysis), recommended actions (apply comes in C), related records, ERP
+  context cards, quick actions and prompts. 16 read / dry-run tools across Planning, Orders, Purchasing and Billing;
+  Groq free LLM (mock without a key). Invoice reading moved to Groq's vision model. Tests: 315 pytest, 74 Vitest,
+  28 Playwright.
 
 ## Next
+- AI Assistant handover B: document upload + hybrid RAG (pgvector + full text, citations). Handover C: approved
+  actions (plan fixes, raise PO, follow-ups) with re-validation and idempotency.
 - Production backend: real stations from factory setup, live status/output from the plant floor.
 - Billing round 2: document intake + review queue, quotation versions and compare, e-invoice / IRN,
   credit notes and advances screens, GST filing tab, Gmail / WhatsApp / bank feeds.

@@ -45,9 +45,15 @@ class Settings(BaseSettings):
     # 32 bytes, base64. Replace the KeyProvider with a KMS in production.
     master_key: SecretStr = SecretStr("ZGV2LW9ubHktbWFzdGVyLWtleS0zMi1ieXRlcyEhISE=")
 
-    # AI. When unset the AI service runs in mock mode (fixture responses).
-    anthropic_api_key: SecretStr | None = Field(default=None, validation_alias="ANTHROPIC_API_KEY")
-    ai_extraction_model: str = "claude-sonnet-5-5"
+    # AI: any OpenAI-compatible endpoint, Groq's free tier by default (owner's choice). When LLM_API_KEY is
+    # unset everything runs in mock mode (fixture / scripted responses, used by all tests).
+    llm_api_key: SecretStr | None = Field(default=None, validation_alias="LLM_API_KEY")
+    llm_base_url: str = Field(default="https://api.groq.com/openai/v1", validation_alias="LLM_BASE_URL")
+    llm_primary_model: str = Field(default="llama-3.3-70b-versatile", validation_alias="LLM_PRIMARY_MODEL")
+    llm_fallback_model: str = Field(default="llama-3.1-8b-instant", validation_alias="LLM_FALLBACK_MODEL")
+    llm_vision_model: str = Field(default="meta-llama/llama-4-scout-17b-16e-instruct",
+                                  validation_alias="LLM_VISION_MODEL")  # fmt: skip
+    llm_timeout_seconds: float = 60.0
 
     cors_origins: list[str] = ["http://localhost:5173"]
 

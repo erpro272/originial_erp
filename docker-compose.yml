@@ -14,7 +14,7 @@ x-backend-env: &backend-env
   ERP_S3_PUBLIC_ENDPOINT_URL: http://localhost:9000
   ERP_CORS_ORIGINS: '["http://localhost:5173"]'
   # Optional: set in a .env file next to this compose file to use the real AI.
-  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+  LLM_API_KEY: ${LLM_API_KEY:-}
 
 services:
   postgres:

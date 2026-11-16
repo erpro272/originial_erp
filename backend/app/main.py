@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app import models_registry  # noqa: F401  (all tables known to SQLAlchemy)
+from app.ai.assistant.router import router as ai_router
 from app.billing.router import router as billing_router
 from app.catalog.router import router as catalog_router
 from app.core.config import get_settings
@@ -100,6 +101,7 @@ def create_app() -> FastAPI:
         purchasing_router,
         billing_router,
         dashboard_router,
+        ai_router,
         invoices_router,
         files_router,
     ):

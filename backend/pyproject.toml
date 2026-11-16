@@ -18,13 +18,14 @@ dependencies = [
   "arq>=0.26",
   "redis>=5.2",
   "boto3>=1.35",
-  "anthropic>=2.8,<3",
   "python-multipart>=0.0.18",
   "rapidfuzz>=3.14.6",
   "zxing-cpp>=3.1.1",
   "pillow>=13.0.0",
   "pillow-heif>=1.8.1",
   "pypdfium2>=5.15.2",
+  "langgraph>=0.6",
+  "httpx>=0.28",
 ]
 
 [dependency-groups]

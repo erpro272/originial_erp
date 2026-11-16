@@ -4,6 +4,80 @@
  */
 
 export interface paths {
+    "/api/ai/chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Chat
+         * @description One turn, streamed as typed Server-Sent Events: start, tool_start, tool_result, ui_widget, token,
+         *     approval_required, related_records, context_update, error, done.
+         */
+        post: operations["chat_api_ai_chat_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/conversations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Conversations */
+        get: operations["conversations_api_ai_conversations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/conversations/{cid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Conversation */
+        get: operations["conversation_api_ai_conversations__cid__get"];
+        put?: never;
+        post?: never;
+        /** Delete */
+        delete: operations["delete_api_ai_conversations__cid__delete"];
+        options?: never;
+        head?: never;
+        /** Rename */
+        patch: operations["rename_api_ai_conversations__cid__patch"];
+        trace?: never;
+    };
+    "/api/ai/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Status */
+        get: operations["status_api_ai_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/audit-log": {
         parameters: {
             query?: never;
@@ -2217,6 +2291,15 @@ export interface components {
              */
             status: "overdue" | "due_week" | "promise" | "not_due";
         };
+        /** AssistantStatus */
+        AssistantStatus: {
+            /** Mode */
+            mode: string;
+            /** Model */
+            model: string;
+            /** Tools */
+            tools: string[];
+        };
         /** AuditEntryOut */
         AuditEntryOut: {
             /** Action */
@@ -2362,6 +2445,13 @@ export interface components {
             at: string;
             /** Note */
             note: string;
+        };
+        /** ChatIn */
+        ChatIn: {
+            /** Conversation Id */
+            conversation_id?: string | null;
+            /** Message */
+            message: string;
         };
         /** Check */
         Check: {
@@ -2511,6 +2601,38 @@ export interface components {
             name: string;
             /** Phone */
             phone?: string | null;
+        };
+        /** ConversationDetail */
+        ConversationDetail: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Last Message At
+             * Format: date-time
+             */
+            last_message_at: string;
+            /** Messages */
+            messages: components["schemas"]["MessageOut"][];
+            /** Title */
+            title: string;
+        };
+        /** ConversationOut */
+        ConversationOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Last Message At
+             * Format: date-time
+             */
+            last_message_at: string;
+            /** Title */
+            title: string;
         };
         /** Created */
         Created: {
@@ -3998,6 +4120,49 @@ export interface components {
              */
             source_id: string;
         };
+        /** MessageOut */
+        MessageOut: {
+            /** Actions */
+            actions: {
+                [key: string]: unknown;
+            }[];
+            /** Citations */
+            citations: {
+                [key: string]: unknown;
+            }[];
+            /** Content */
+            content: string;
+            /** Context */
+            context: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Error */
+            error: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Related */
+            related: {
+                [key: string]: unknown;
+            }[];
+            /** Role */
+            role: string;
+            /** Tools */
+            tools: {
+                [key: string]: unknown;
+            }[];
+            /** Widgets */
+            widgets: {
+                [key: string]: unknown;
+            }[];
+        };
         /** MonthPoint */
         MonthPoint: {
             /**
@@ -4308,7 +4473,7 @@ export interface components {
          * Permission
          * @enum {string}
          */
-        Permission: "audit.read" | "settings.read" | "settings.write" | "users.manage" | "sensitive.view" | "orders.read" | "orders.write" | "customers.read" | "customers.write" | "invoices.write" | "planning.read" | "planning.write" | "planning.approve" | "purchasing.read" | "purchasing.write" | "purchasing.approve" | "finance.read" | "billing.read" | "billing.write" | "billing.issue" | "billing.approve" | "dashboard.read";
+        Permission: "audit.read" | "settings.read" | "settings.write" | "users.manage" | "sensitive.view" | "orders.read" | "orders.write" | "customers.read" | "customers.write" | "invoices.write" | "planning.read" | "planning.write" | "planning.approve" | "purchasing.read" | "purchasing.write" | "purchasing.approve" | "finance.read" | "billing.read" | "billing.write" | "billing.issue" | "billing.approve" | "ai.use" | "dashboard.read";
         /** PlanOut */
         PlanOut: {
             /** Approval Note */
@@ -5256,6 +5421,11 @@ export interface components {
             /** File Name */
             file_name: string;
         };
+        /** RenameIn */
+        RenameIn: {
+            /** Title */
+            title: string;
+        };
         /**
          * Revision
          * @description An approved plan recalculated now vs its last approved version.
@@ -6092,6 +6262,185 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    chat_api_ai_chat_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChatIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    conversations_api_ai_conversations_get: {
+        parameters: {
+            query?: {
+                q?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    conversation_api_ai_conversations__cid__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_api_ai_conversations__cid__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rename_api_ai_conversations__cid__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RenameIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    status_api_ai_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssistantStatus"];
+                };
+            };
+        };
+    };
     audit_log_api_audit_log_get: {
         parameters: {
             query?: {

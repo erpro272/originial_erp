@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ApiError, api, unwrap } from "@/api/client";
 import { Button } from "@/components/ui/Button";
@@ -11,6 +11,7 @@ import { LoadingState } from "@/components/ui/Skeleton";
 import { Tag } from "@/components/ui/Tag";
 import { useToast } from "@/components/ui/Toast";
 import { cn } from "@/lib/cn";
+import { useDebounced } from "@/lib/useDebounced";
 import { longDate, rupees } from "@/lib/format";
 import { STATES } from "@/lib/gst";
 import { CustomerFormModal } from "../customers/CustomerFormModal";
@@ -34,15 +35,6 @@ interface Focus {
   path: string;
   page: number | null;
   bbox: Cell["bbox"];
-}
-
-function useDebounced<T>(value: T, ms = 400): T {
-  const [v, setV] = useState(value);
-  useEffect(() => {
-    const t = setTimeout(() => setV(value), ms);
-    return () => clearTimeout(t);
-  }, [value, ms]);
-  return v;
 }
 
 function shown(type: string, value: unknown): string | null {
@@ -110,7 +102,7 @@ function Review({ detail, spec }: { detail: UploadDetail; spec: FieldSpec }) {
   );
 
   const draft = useMemo(() => ({ fields: edits, lines: lines ?? undefined }), [edits, lines]);
-  const debounced = useDebounced(draft);
+  const debounced = useDebounced(draft, 400);
   const dirty = Object.keys(edits).length > 0 || lines !== null;
   const check = useQuery({
     queryKey: [

@@ -17,7 +17,7 @@ Dashboard tab at the end of the nav, added later). Built **one feature at a time
 
 ## Stack
 - **Backend** `backend/`: Python 3.12, FastAPI, Pydantic v2, SQLAlchemy 2 (async, asyncpg),
-  Alembic, ARQ worker on Redis, boto3 → S3/MinIO, Anthropic SDK (`app/ai/`). uv for deps.
+  Alembic, ARQ worker on Redis, boto3 → S3/MinIO, LangGraph + httpx for the AI (`app/ai/`). uv for deps.
 - **DB**: PostgreSQL 16. Money = integer **paise** (`BIGINT`), never float. JSONB for
   owner-customisable settings.
 - **Frontend** `frontend/`: React 18 + TS (Vite 8), React Router 6, TanStack Query/Table/
@@ -63,9 +63,11 @@ isolation). One company per website: no company picker or switcher in the UI.
 - **Permissions**: check `Depends(require(Permission.X))`, never raw roles. Matrix in
   `core/permissions.py`.
 - Use `TenantDB` (dependency with `scope="function"`) so commits finish before the response.
-- AI: only through `app/ai/service.get_ai_client()`. Mock mode (fixtures in
-  `app/ai/fixtures/<task>/`) when `ANTHROPIC_API_KEY` is unset; tests always use mock.
-  Extraction model: `claude-sonnet-5-5` (owner's choice). AI never does maths; code does.
+- AI: one OpenAI-compatible provider, Groq's free tier (owner's choice): `app/ai/llm.py` (`get_llm()`, chat + tools,
+  429 -> fallback model) and `app/ai/service.get_ai_client()` (invoice extraction on the vision model). Settings
+  `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_PRIMARY_MODEL`, `LLM_FALLBACK_MODEL`, `LLM_VISION_MODEL`. Without a key: mocks
+  (scripted assistant `app/ai/mock.py`, invoice fixtures `app/ai/fixtures/<task>/`); tests always use mocks.
+  AI never does maths; code does. No Anthropic SDK.
 - Never log secrets/PII: logging has a redacting filter; don't put bank numbers in messages.
 - Tests: `backend/tests`, real Postgres DB `erp_test` (recreated per run), seed via
   `seed.run.seed()`. Use helpers in `tests/conftest.py` (`login`, `owner`, `planner`).
@@ -118,6 +120,10 @@ isolation). One company per website: no company picker or switcher in the UI.
   (`planning.dashboard_schedule`, `orders.open_orders` / `cycle_days` / `received_between`, `customers.list_customers`,
   `invoices.ledger.monthly_totals`, `billing.payables.monthly_totals`, receivables / payables / POs for alerts). Stores
   nothing. Current Plan = committed work, After New Orders = + the working plan's orders.
+- `ai/assistant/` AI Assistant: `graph.py` (LangGraph agent <-> tools, parallel tools in their own tenant sessions,
+  timeouts), `tools.py` (read / dry-run tools calling module services; each has a permission; returns summary + data
+  + widgets / related / context / actions), `service.py` (conversations private to the user, `chat()` streams typed SSE),
+  models `ai_conversations`, `ai_messages`, `ai_action_proposals` (handover C), migration 0013, permission `ai.use`.
 - Seed: `seed/demo_data.py` (dates relative to today; mirrors the Orders mockup). Planning demo:
   `seed/planning_demo.py` (idempotent upsert; `python -m seed.planning_demo` fixes an old DB in place).
   Bump `engine.ENGINE_VERSION` whenever engine logic changes (saved results then recalculate). Startup
@@ -154,6 +160,9 @@ isolation). One company per website: no company picker or switcher in the UI.
 - Dashboard `/dashboard[?from&to]` = `modules/dashboard/DashboardPage` (`OrderTimeline` Gantt + Machine
   Load, `CashFlowChart`, `Alerts` + View All `Sheet`). KPI cards / `Panel` / icons shared in `components/kit`; the Factory
   Layout card is `production/FactoryPanel` (same on both pages).
+- AI Assistant `/assistant[?c=<conversation>]` = `modules/assistant/AssistantPage` (full screen, no content column;
+  opened by the ✦ button in `TopNav`): `Sidebar` (history), chat (`Widgets.tsx` renders only known widget types),
+  `ContextPanel` (ERP context cards, quick actions / prompts). `streamChat()` reads the SSE stream via `apiFetch`.
 - Production route `/production` = `ProductionPage` (Factory Layout). FRONTEND PREVIEW ONLY: all numbers are
   placeholders in `modules/production/demoData.ts` (owner's request; replace with API data when the backend is
   built). `FactoryLayout` places boxes in a 1000 x 420 plan space; hover / focus shows the stage or station card.

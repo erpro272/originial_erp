@@ -17,6 +17,7 @@ import { PlanningPage } from "@/modules/planning/PlanningPage";
 import { BillingPage } from "@/modules/billing/BillingPage";
 import { ProductionPage } from "@/modules/production/ProductionPage";
 import { DashboardPage } from "@/modules/dashboard/DashboardPage";
+import { AssistantPage } from "@/modules/assistant/AssistantPage";
 import { PlanHistory } from "@/modules/planning/PlanHistory";
 import { PlanningHome } from "@/modules/planning/PlanningHome";
 import { PurchasingPage } from "@/modules/purchasing/PurchasingPage";
@@ -61,6 +62,14 @@ export function App() {
           <Route path="customers/:id" element={<CustomerProfile />} />
         </Route>
         <Route path="/production" element={<ProductionPage />} />
+        <Route
+          path="/assistant"
+          element={
+            <RequirePermission permission="ai.use">
+              <AssistantPage />
+            </RequirePermission>
+          }
+        />
         <Route
           path="/dashboard"
           element={

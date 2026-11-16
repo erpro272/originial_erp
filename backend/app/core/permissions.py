@@ -34,6 +34,7 @@ class Permission(StrEnum):
     BILLING_WRITE = "billing.write"  # follow-ups, receipts, supplier invoices, verify, schedule, execute
     BILLING_ISSUE = "billing.issue"  # issue a sales invoice (owner, accountant)
     BILLING_APPROVE = "billing.approve"  # approve / hold / reject supplier payments (owner only)
+    AI_USE = "ai.use"  # the AI Assistant (every role; each tool still checks its own module permission)
     DASHBOARD_READ = "dashboard.read"  # Executive Dashboard (owner only: it shows cash and every module)
 
 
@@ -50,6 +51,7 @@ ROLE_PERMISSIONS: dict[Role, frozenset[Permission]] = {
             Permission.PLANNING_READ,
             Permission.PLANNING_WRITE,
             Permission.PURCHASING_READ,
+            Permission.AI_USE,
         }
     ),
     Role.PURCHASER: frozenset(
@@ -61,6 +63,7 @@ ROLE_PERMISSIONS: dict[Role, frozenset[Permission]] = {
             Permission.PURCHASING_READ,
             Permission.PURCHASING_WRITE,
             Permission.BILLING_READ,
+            Permission.AI_USE,
         }
     ),
     Role.ACCOUNTANT: frozenset(
@@ -76,6 +79,7 @@ ROLE_PERMISSIONS: dict[Role, frozenset[Permission]] = {
             Permission.BILLING_READ,
             Permission.BILLING_WRITE,
             Permission.BILLING_ISSUE,
+            Permission.AI_USE,
         }
     ),
 }

@@ -1,7 +1,8 @@
-"""AI service with a real (Anthropic) client and a mock client.
+"""Document extraction (invoices) with a real client (a vision model on the OpenAI-compatible endpoint, Groq's
+free Llama 4 Scout by default) and a mock client.
 
-The mock is used automatically when ``ANTHROPIC_API_KEY`` is not set, so the app and
-the tests run without a key. It returns fixture JSON from ``app/ai/fixtures/<task>/``.
+The mock is used automatically when ``LLM_API_KEY`` is not set, so the app and the tests run without a key.
+It returns fixture JSON from ``app/ai/fixtures/<task>/``. The assistant's chat client is ``app.ai.llm``.
 """
 
 import base64
@@ -12,8 +13,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, Literal, Protocol
 
-import anthropic
-
+from app.ai.llm import LLMError, OpenAICompatibleLLM
 from app.core.config import get_settings
 
 log = logging.getLogger(__name__)
@@ -61,21 +61,21 @@ class AIClient(Protocol):
     ) -> AIResult: ...
 
 
-def _content_block(f: InputFile) -> dict[str, Any]:
+MAX_IMAGES = 5  # Groq vision models accept up to 5 images per request
+
+
+def _image_part(f: InputFile) -> dict[str, Any]:
     data = base64.standard_b64encode(f.data).decode()
-    if f.media_type == "application/pdf":
-        return {
-            "type": "document",
-            "source": {"type": "base64", "media_type": f.media_type, "data": data},
-        }
-    return {"type": "image", "source": {"type": "base64", "media_type": f.media_type, "data": data}}
+    return {"type": "image_url", "image_url": {"url": f"data:{f.media_type};base64,{data}"}}
 
 
-class AnthropicAIClient:
+class VisionAIClient:
+    """Reads page images with a vision model and returns JSON (JSON mode + the schema in the prompt)."""
+
     mode: Literal["live", "mock", "template"] = "live"
 
-    def __init__(self, api_key: str, model: str) -> None:
-        self._client = anthropic.AsyncAnthropic(api_key=api_key, max_retries=3)
+    def __init__(self, llm: OpenAICompatibleLLM, model: str) -> None:
+        self._llm = llm
         self.model = model
 
     async def extract_json(
@@ -88,43 +88,24 @@ class AnthropicAIClient:
         files: list[InputFile],
         fixture_hint: str | None = None,
     ) -> AIResult:
-        content: list[dict[str, Any]] = [
-            *(_content_block(f) for f in files),
-            {"type": "text", "text": instructions},
-        ]
-        messages: Any = [{"role": "user", "content": content}]
+        images = [f for f in files if f.media_type != "application/pdf"][:MAX_IMAGES]
+        if not images:
+            raise AIError("Nothing readable to send to the AI (no page images).")
+        prompt = (f"{instructions}\n\nReply with one JSON object only, matching this JSON schema "
+                  f"(no prose, no code fences):\n{json.dumps(schema, separators=(',', ':'))}")  # fmt: skip
+        messages: list[dict[str, Any]] = [{"role": "system", "content": system},
+                    {"role": "user", "content": [*(_image_part(f) for f in images), {"type": "text", "text": prompt}]}]  # fmt: skip
         try:
-            # Streaming avoids HTTP timeouts on large multi-page documents.
-            async with self._client.beta.messages.stream(
-                model=self.model,
-                max_tokens=32000,
-                system=system,
-                messages=messages,
-                output_config={"format": {"type": "json_schema", "schema": schema}},
-                # On a policy decline, the API retries on a fallback model in the same call.
-                betas=["server-side-fallback-2026-07-01"],
-                fallbacks="default",
-            ) as stream:
-                msg = await stream.get_final_message()
-        except anthropic.RateLimitError as exc:
-            raise AIError("AI rate limit reached, retry later") from exc
-        except anthropic.APIStatusError as exc:
-            raise AIError(f"AI API error {exc.status_code}") from exc
-        except anthropic.APIConnectionError as exc:
-            raise AIError("Could not reach the AI service") from exc
-
-        text = "".join(b.text for b in msg.content if b.type == "text")
-        usage = {"input_tokens": msg.usage.input_tokens, "output_tokens": msg.usage.output_tokens}
-        if msg.stop_reason == "refusal":
-            log.warning("AI task %s refused", task)
-            return AIResult(None, text, msg.model, "live", msg.stop_reason, usage)
-        if msg.stop_reason == "max_tokens":
-            raise AIError("AI output was cut off (document too long)")
+            res = await self._llm.chat(messages, json_mode=True, model=self.model, max_tokens=8000)
+        except LLMError as exc:
+            raise AIError(str(exc)) from exc
         try:
-            data = json.loads(text)
+            data = json.loads(res.content)
         except json.JSONDecodeError as exc:
             raise AIError("AI returned invalid JSON") from exc
-        return AIResult(data, text, msg.model, "live", msg.stop_reason, usage)
+        if not isinstance(data, dict):
+            raise AIError("AI returned invalid JSON")
+        return AIResult(data, res.content, res.model or self.model, "live", "stop", res.usage)
 
 
 class MockAIClient:
@@ -158,6 +139,8 @@ class MockAIClient:
 @lru_cache
 def get_ai_client() -> AIClient:
     s = get_settings()
-    if s.anthropic_api_key and s.anthropic_api_key.get_secret_value():
-        return AnthropicAIClient(s.anthropic_api_key.get_secret_value(), s.ai_extraction_model)
+    if s.llm_api_key and s.llm_api_key.get_secret_value():
+        llm = OpenAICompatibleLLM(s.llm_base_url, s.llm_api_key.get_secret_value(), s.llm_vision_model, "",
+                                  s.llm_timeout_seconds * 2)  # fmt: skip
+        return VisionAIClient(llm, s.llm_vision_model)
     return MockAIClient()

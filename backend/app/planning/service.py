@@ -1233,6 +1233,7 @@ async def dashboard_schedule(session: AsyncSession) -> dict[str, Any]:
         if draft else None,
         "source": source if base["rows"] else None,
         "rows": rows,
+        "all_rows": base["rows"],  # every scheduled order, the working plan's new ones too (Assistant)
         "load": load,
         "hours": hours,
         "added": sorted(added),

@@ -297,3 +297,23 @@ Short records of choices and the reason for each. Newest at the bottom.
     a drawer with a module filter. Factory Layout = the Production tab's demo layout (marked demo). Brand default
     "Brand" (neutral placeholder again, owner's request; `VITE_BRAND_NAME` overrides); nav label "Dashboard" (owner renamed it from "Executive Dashboard"). Orders `?q=` and Customers
     `?health=` open those lists searched / filtered (dashboard links).
+57. **AI Assistant, handover A (owner's choices)**: one free LLM provider for all AI: Groq's OpenAI-compatible API
+    (`app/ai/llm.py`; assistant `llama-3.3-70b-versatile`, falls back to `llama-3.1-8b-instant` on a 429 free-tier rate
+    limit; invoice reading moved from Claude to the vision model `meta-llama/llama-4-scout-17b-16e-instruct`, PDFs sent as
+    their rendered pages, max 5 images). The Anthropic SDK is removed. Without `LLM_API_KEY` everything runs on mocks:
+    the assistant on a scripted model (`app/ai/mock.py`: picks tools by rules and answers with the tools' own
+    summaries; all tests and e2e use it), invoices on the fixtures. The sandbox can't reach Groq, so live answers are
+    tested on the owner's machine. Assistant = LangGraph (agent <-> tools, max 4 rounds, last 8 messages): no separate
+    classifier call; order / machine ids picked out by regex as hints; the model picks tools natively; independent
+    tools run in parallel (`asyncio.gather`, own tenant-bound transaction each, 25 s timeout, failures isolated); no DB
+    connection is held while the model thinks. Tools (`assistant/tools.py`) only call module services, return compact
+    pre-aggregated data + a one-line summary for the model, and widgets / related-record chips / context cards /
+    recommended actions for the screen; the model never computes numbers. Tools are filtered by the user's permissions
+    and checked again when run. Conversations are private to their user (and company, RLS); stored in our own tables
+    (`ai_conversations`, `ai_messages`) instead of LangGraph's Postgres checkpointer, whose tables have no tenant column
+    and would break the RLS rule; `ai_action_proposals` is ready for handover C. Typed SSE (`POST /api/ai/chat`,
+    schema_version 1): start, tool_start, tool_result, ui_widget, token, approval_required, related_records,
+    context_update, error, done; the UI renders only known widget types. `ai.use` for every role. Recommended actions are
+    shown but "Apply" is off until handover C (approval, re-validation, idempotent execution); write actions allowed
+    then: plan fixes / sequence, raise a PO, log a follow-up or promise. No Finance module yet: cost questions use
+    supplier bills, payments and plan costs and say so. Next: B = documents + hybrid RAG (pgvector), C = approved actions.

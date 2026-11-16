@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { createColumnHelper, type SortingState } from "@tanstack/react-table";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { api, unwrap } from "@/api/client";
 import { useAuth } from "@/auth/AuthContext";
@@ -14,6 +14,7 @@ import { MultiSelect } from "@/components/ui/MultiSelect";
 import { StatGrid } from "@/components/ui/StatGrid";
 import { Tag } from "@/components/ui/Tag";
 import { cn } from "@/lib/cn";
+import { useDebounced } from "@/lib/useDebounced";
 import { longDate, parseRupeesToPaise, qty, rupees } from "@/lib/format";
 import { STATES } from "@/lib/gst";
 import {
@@ -57,15 +58,6 @@ const NO_FILTERS: Filters = {
   max_sales: "",
   followups_due: false,
 };
-
-function useDebounced<T>(value: T, ms = 300): T {
-  const [v, setV] = useState(value);
-  useEffect(() => {
-    const t = setTimeout(() => setV(value), ms);
-    return () => clearTimeout(t);
-  }, [value, ms]);
-  return v;
-}
 
 const money = (p: number) => rupees(p);
 const plainCol = (

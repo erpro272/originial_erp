@@ -59,14 +59,15 @@ async def extract_invoice(_ctx: dict[str, Any], tenant_id: str, upload_id: str) 
                 stop_reason=None,
             )
         else:
-            ai_file = (
-                InputFile(data, "application/pdf")
+            # vision models read page images (a PDF is sent as its rendered pages)
+            ai_files = (
+                [InputFile(files.png_bytes(p), "image/png") for p in pages]
                 if fmt == "pdf"
-                else InputFile(files.ai_image(data), "image/jpeg")
+                else [InputFile(files.ai_image(data), "image/jpeg")]
             )
             client = get_ai_client()
             result = await client.extract_json(task="invoice", system=SYSTEM_PROMPT, instructions=instructions(),
-                                               schema=ai_schema(), files=[ai_file], fixture_hint=fixture_hint(name))  # fmt: skip
+                                               schema=ai_schema(), files=ai_files, fixture_hint=fixture_hint(name))  # fmt: skip
         if result.data is None:
             raise AIError("The AI declined to read this document.")
         doc = build_document(result.data, qr)

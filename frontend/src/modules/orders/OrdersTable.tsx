@@ -1,5 +1,5 @@
 import { createColumnHelper, type SortingState } from "@tanstack/react-table";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { DealChip } from "@/modules/billing/DealChip";
 import { useDealRefs } from "@/modules/billing/api";
@@ -25,6 +25,7 @@ import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Tag, toneText, type TagTone } from "@/components/ui/Tag";
 import { useToast } from "@/components/ui/Toast";
 import { cn } from "@/lib/cn";
+import { useDebounced } from "@/lib/useDebounced";
 import { longDate, qty, rupees, shortDate } from "@/lib/format";
 import {
   fetchOrders,
@@ -61,15 +62,6 @@ const SORT_IDS: Record<string, OrderQuery["sort"]> = {
   profit: "profit", margin: "margin", processing_days: "processing_days", ship_date: "ship_date",
   priority: "priority", status: "status", created: "created",
 }; // prettier-ignore
-
-function useDebounced<T>(value: T, ms = 300): T {
-  const [v, setV] = useState(value);
-  useEffect(() => {
-    const t = setTimeout(() => setV(value), ms);
-    return () => clearTimeout(t);
-  }, [value, ms]);
-  return v;
-}
 
 function toQuery(f: OrderFilters, sorting: SortingState, offset: number, limit = PAGE): OrderQuery {
   const s = sorting[0];
