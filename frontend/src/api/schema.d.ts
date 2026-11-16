@@ -510,7 +510,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Planning Selection */
+        /**
+         * Planning Selection
+         * @description Send to / Remove from Planning: the orders go into the one draft plan (started if there is none).
+         */
         post: operations["planning_selection_api_orders_planning_selection_post"];
         delete?: never;
         options?: never;
@@ -2484,6 +2487,7 @@ export interface components {
             notes: string | null;
             /** Number */
             number: string;
+            plan?: components["schemas"]["OrderPlanRef"] | null;
             /**
              * Priority
              * @enum {string}
@@ -2540,6 +2544,21 @@ export interface components {
             offset: number;
             /** Total */
             total: number;
+        };
+        /**
+         * OrderPlanRef
+         * @description The plan an order is in (filled by Planning).
+         */
+        OrderPlanRef: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Number */
+            number: string;
+            /** Stage */
+            stage: string;
         };
         /** OrderUpdate */
         OrderUpdate: {
@@ -2654,7 +2673,9 @@ export interface components {
             needs_reapproval: boolean;
             /** Number */
             number: string;
+            regenerate?: components["schemas"]["Regenerate"] | null;
             result: components["schemas"]["PlanResult"];
+            revision?: components["schemas"]["Revision"] | null;
             /** Rule */
             rule: string;
             /** Schedule Saved At */
@@ -2762,6 +2783,10 @@ export interface components {
             number: string;
             /** Orders */
             orders: number;
+            /** Reapproval Reason */
+            reapproval_reason?: string | null;
+            /** Revision */
+            revision?: number | null;
             /** Snapshot Version */
             snapshot_version?: number | null;
             /**
@@ -2836,6 +2861,11 @@ export interface components {
              * @default 0.5
              */
             penalty_percent: number;
+            /**
+             * Reapproval Margin Drop Pct
+             * @default 5
+             */
+            reapproval_margin_drop_pct: number;
         };
         /** PlanningSelection */
         PlanningSelection: {
@@ -2843,6 +2873,17 @@ export interface components {
             marked: boolean;
             /** Order Ids */
             order_ids: string[];
+        };
+        /** PlanningSelectionOut */
+        PlanningSelectionOut: {
+            /**
+             * Created
+             * @default false
+             */
+            created: boolean;
+            plan?: components["schemas"]["OrderPlanRef"] | null;
+            /** Updated */
+            updated: number;
         };
         /** PoLine */
         PoLine: {
@@ -3120,6 +3161,21 @@ export interface components {
             /** Quantity */
             quantity: number | string;
         };
+        /**
+         * Regenerate
+         * @description The order set changed after Generate plan: generate again before approval.
+         */
+        Regenerate: {
+            /** Added */
+            added: string[];
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Removed */
+            removed: string[];
+        };
         /** RejectIn */
         RejectIn: {
             /** Reason */
@@ -3131,6 +3187,33 @@ export interface components {
             error: string;
             /** File Name */
             file_name: string;
+        };
+        /**
+         * Revision
+         * @description An approved plan recalculated now vs its last approved version.
+         */
+        Revision: {
+            /** Against */
+            against: number;
+            /** Causes */
+            causes: string[];
+            /** Changes */
+            changes: components["schemas"]["RevisionChange"][];
+            /** Needed */
+            needed: boolean;
+            /** Number */
+            number: number;
+        };
+        /** RevisionChange */
+        RevisionChange: {
+            /** Kind */
+            kind: string;
+            /** Significant */
+            significant: boolean;
+            /** Title */
+            title: string;
+            /** Why */
+            why: string[];
         };
         /**
          * Role
@@ -4695,9 +4778,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: number;
-                    };
+                    "application/json": components["schemas"]["PlanningSelectionOut"];
                 };
             };
             /** @description Validation Error */

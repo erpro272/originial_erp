@@ -5,7 +5,18 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
 
-from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, Numeric, String, Text, UniqueConstraint
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Index,
+    Numeric,
+    String,
+    Text,
+    UniqueConstraint,
+    text,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
@@ -74,7 +85,12 @@ class Plan(Base, TenantScoped, TimestampMixin):
     """One working plan at a time. `inputs` = what the owner chose; `result` = what the engine computed."""
 
     __tablename__ = "plans"
-    __table_args__ = (UniqueConstraint("tenant_id", "number"),)
+    # one active plan (draft or awaiting approval) per company
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "number"),
+        Index("uq_plans_one_active", "tenant_id", unique=True,
+              postgresql_where=text("status IN ('draft', 'generated') AND deleted_at IS NULL")),
+    )  # fmt: skip
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     number: Mapped[str] = mapped_column(String(32))  # PLAN-001
     status: Mapped[str] = mapped_column(String(16), default="draft", index=True)

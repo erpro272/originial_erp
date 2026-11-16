@@ -249,9 +249,29 @@ async def upsert(s: AsyncSession, tenant_id: uuid.UUID) -> dict[str, Any]:
         mat = next((m for m in materials.values() if m.id == ln.material_id), None)
         if mat is not None:
             ln.price_per_unit_paise = mat.price_per_unit_paise
+    await _ensure_draft(s, tenant_id, [str(orders[n].id) for n, (marked, _) in CANDIDATES.items() if marked])
     await _set_version(s, tenant_id, DEMO_VERSION)
     await s.flush()
     return {"machines": len(machines), "candidates": len(CANDIDATES), "running": len(RUNNING)}
+
+
+async def _ensure_draft(s: AsyncSession, tenant_id: uuid.UUID, sent: list[str]) -> None:
+    """The demo orders were sent to Planning, so the one active plan exists (as Send to Planning would do).
+    Inserted directly: the seed role bypasses RLS, so the planning service (which relies on it) isn't used here.
+    The plan's numbers are calculated on its first read."""
+    from app.core import counters
+    from app.planning.models import Plan
+
+    active = (await s.execute(select(Plan.id).where(
+        Plan.tenant_id == tenant_id, Plan.status.in_(("draft", "generated")), Plan.deleted_at.is_(None)))).first()  # fmt: skip
+    if active is not None or not sent:
+        return
+    today = clock.today()
+    start = today + timedelta(days=1) if today.weekday() == 6 else today  # Sundays are off
+    n = await counters.next_value(s, "plan", start=0)
+    s.add(Plan(tenant_id=tenant_id, number=f"PLAN-{n:03d}", status="draft", rule="value", start_date=start,
+               selected=sent, inputs={"base": sent}))  # fmt: skip
+    await s.flush()
 
 
 async def _set_stock(s: AsyncSession, tenant_id: uuid.UUID, mat: Material, target: Decimal) -> None:

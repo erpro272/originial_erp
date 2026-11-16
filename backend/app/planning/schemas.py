@@ -349,6 +349,31 @@ class SendBackIn(BaseModel):
     note: str | None = Field(default=None, max_length=2000)
 
 
+class RevisionChange(BaseModel):
+    kind: str  # order_later | order_late | order_removed | order_changed | material_short | machine_over | money | ...
+    significant: bool  # True: this is why the plan needs re-approval
+    title: str
+    why: list[str]  # the data changes behind it
+
+
+class Revision(BaseModel):
+    """An approved plan recalculated now vs its last approved version."""
+
+    number: int  # the revision being worked on (approved versions + 1)
+    against: int  # the approved version it is compared with
+    needed: bool  # significant changes: approve again
+    changes: list[RevisionChange]
+    causes: list[str]  # every data change since approval
+
+
+class Regenerate(BaseModel):
+    """The order set changed after Generate plan: generate again before approval."""
+
+    added: list[str]
+    removed: list[str]
+    at: datetime
+
+
 class SnapshotInfo(BaseModel):
     version: int
     approved_at: datetime
@@ -374,6 +399,8 @@ class PlanSummary(BaseModel):
     contribution: int = 0
     margin: float = 0.0
     snapshot_version: int | None = None  # the approved version the money comes from
+    revision: int | None = None  # needs re-approval: the revision number (approved versions + 1)
+    reapproval_reason: str | None = None  # the first significant change
 
 
 class CancelIn(BaseModel):
@@ -402,6 +429,8 @@ class PlanOut(BaseModel):
     completed_at: datetime | None = None
     cancelled_at: datetime | None = None
     cancel_reason: str | None = None
+    revision: Revision | None = None  # approved plans: changes since the last approved version
+    regenerate: Regenerate | None = None
 
 
 class Diff(BaseModel):
@@ -472,6 +501,8 @@ class PlanningRules(BaseModel):
     overhead_pct: float = Field(default=7.0, ge=0, le=100)
     packaging_paise_per_unit: int = Field(default=5, ge=0)
     min_margin_pct: float = Field(default=18.0, ge=0, le=100)
+    # an approved plan needs re-approval when its contribution falls by more than this
+    reapproval_margin_drop_pct: float = Field(default=5.0, ge=0, le=100)
 
 
 Criterion = Literal["late", "idle", "per_day", "contribution", "bottlenecks", "days"]

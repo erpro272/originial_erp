@@ -112,7 +112,7 @@ async def test_bulk_planning_selection(client: AsyncClient, co: Company, data) -
     r = await client.post(
         "/orders/planning-selection", headers=h, json={"order_ids": [a["id"], b["id"]], "marked": True}
     )
-    assert r.json() == {"updated": 2}
+    assert r.json()["updated"] == 2 and r.json()["plan"]["stage"] in ("draft", "awaiting")
     assert (await client.get(f"/orders/{b['id']}", headers=h)).json()["status"] == "accepted"
     page = (await client.get("/orders", headers=h, params={"planning_only": True})).json()
     assert sorted(o["number"] for o in page["items"]) == sorted([a["number"], b["number"]])

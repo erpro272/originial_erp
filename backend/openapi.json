@@ -4415,6 +4415,16 @@
             "title": "Number",
             "type": "string"
           },
+          "plan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OrderPlanRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "priority": {
             "enum": [
               "high",
@@ -4585,6 +4595,31 @@
           "offset"
         ],
         "title": "OrderPage",
+        "type": "object"
+      },
+      "OrderPlanRef": {
+        "description": "The plan an order is in (filled by Planning).",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "number": {
+            "title": "Number",
+            "type": "string"
+          },
+          "stage": {
+            "title": "Stage",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "stage"
+        ],
+        "title": "OrderPlanRef",
         "type": "object"
       },
       "OrderUpdate": {
@@ -4996,8 +5031,28 @@
             "title": "Number",
             "type": "string"
           },
+          "regenerate": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Regenerate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "result": {
             "$ref": "#/components/schemas/PlanResult"
+          },
+          "revision": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Revision"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "rule": {
             "title": "Rule",
@@ -5349,6 +5404,28 @@
             "title": "Orders",
             "type": "integer"
           },
+          "reapproval_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reapproval Reason"
+          },
+          "revision": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revision"
+          },
           "snapshot_version": {
             "anyOf": [
               {
@@ -5483,6 +5560,13 @@
             "minimum": 0.0,
             "title": "Penalty Percent",
             "type": "number"
+          },
+          "reapproval_margin_drop_pct": {
+            "default": 5.0,
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Reapproval Margin Drop Pct",
+            "type": "number"
           }
         },
         "title": "PlanningRules",
@@ -5510,6 +5594,34 @@
           "marked"
         ],
         "title": "PlanningSelection",
+        "type": "object"
+      },
+      "PlanningSelectionOut": {
+        "properties": {
+          "created": {
+            "default": false,
+            "title": "Created",
+            "type": "boolean"
+          },
+          "plan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OrderPlanRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "updated": {
+            "title": "Updated",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "updated"
+        ],
+        "title": "PlanningSelectionOut",
         "type": "object"
       },
       "PoLine": {
@@ -6184,6 +6296,37 @@
         "title": "ReceiveIn",
         "type": "object"
       },
+      "Regenerate": {
+        "description": "The order set changed after Generate plan: generate again before approval.",
+        "properties": {
+          "added": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Added",
+            "type": "array"
+          },
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "removed": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Removed",
+            "type": "array"
+          }
+        },
+        "required": [
+          "added",
+          "removed",
+          "at"
+        ],
+        "title": "Regenerate",
+        "type": "object"
+      },
       "RejectIn": {
         "properties": {
           "reason": {
@@ -6215,6 +6358,77 @@
           "error"
         ],
         "title": "RejectedFile",
+        "type": "object"
+      },
+      "Revision": {
+        "description": "An approved plan recalculated now vs its last approved version.",
+        "properties": {
+          "against": {
+            "title": "Against",
+            "type": "integer"
+          },
+          "causes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Causes",
+            "type": "array"
+          },
+          "changes": {
+            "items": {
+              "$ref": "#/components/schemas/RevisionChange"
+            },
+            "title": "Changes",
+            "type": "array"
+          },
+          "needed": {
+            "title": "Needed",
+            "type": "boolean"
+          },
+          "number": {
+            "title": "Number",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "number",
+          "against",
+          "needed",
+          "changes",
+          "causes"
+        ],
+        "title": "Revision",
+        "type": "object"
+      },
+      "RevisionChange": {
+        "properties": {
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "significant": {
+            "title": "Significant",
+            "type": "boolean"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "why": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Why",
+            "type": "array"
+          }
+        },
+        "required": [
+          "kind",
+          "significant",
+          "title",
+          "why"
+        ],
+        "title": "RevisionChange",
         "type": "object"
       },
       "Role": {
@@ -9673,6 +9887,7 @@
     },
     "/api/orders/planning-selection": {
       "post": {
+        "description": "Send to / Remove from Planning: the orders go into the one draft plan (started if there is none).",
         "operationId": "planning_selection_api_orders_planning_selection_post",
         "requestBody": {
           "content": {
@@ -9689,11 +9904,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": {
-                    "type": "integer"
-                  },
-                  "title": "Response Planning Selection Api Orders Planning Selection Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/PlanningSelectionOut"
                 }
               }
             },

@@ -13,7 +13,7 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.catalog.models import Material, MaterialStock, Product, ProductMaterial
@@ -24,6 +24,7 @@ from app.customers.models import Customer
 from app.orders import service as orders_service
 from app.orders.models import Order
 from app.planning import engine as eng
+from app.planning import revision as rev
 from app.planning.models import (
     Department,
     Downtime,
@@ -48,6 +49,7 @@ from app.planning.schemas import (
     PlanSummary,
     PreviewOut,
     PurchaseRequestOut,
+    Revision,
     SnapshotInfo,
 )
 
@@ -145,8 +147,24 @@ async def _jobs(
         .where(Order.status.in_(("accepted", "planned", "in_production")))
         .order_by(Order.number)
     )).all()  # fmt: skip
+    # an approved plan was planned around plans approved before it, not after: their orders are left out
+    later: set[str] = set()
+    taken: set[str] = set()  # orders of approved plans in force (never candidates of another plan)
+    if plan is not None:
+        for other in await _active_plans(session, plan.id):
+            if other.status == "approved":
+                taken |= set(other.selected)
+                if (
+                    plan.status == "approved"
+                    and plan.approved_at
+                    and other.approved_at
+                    and other.approved_at > plan.approved_at
+                ):
+                    later |= set(other.selected)
     cands, running, by_id = [], [], {}
     for o, c, p in rows:
+        if str(o.id) in later and str(o.id) not in mine:
+            continue
         qty = o.quantity
         approved_here = plan is not None and plan.status == "approved" and str(o.id) in mine
         job = eng.Job(
@@ -162,11 +180,21 @@ async def _jobs(
         approved_plan = plan is not None and plan.status == "approved"
         if approved_plan and o.status == "accepted" and str(o.id) not in mine:
             continue  # new orders belong to the next plan, not to an approved one
-        if o.status == "accepted" or (o.status == "planned" and str(o.id) in mine) or approved_here:
+        if str(o.id) in taken and str(o.id) not in mine:
+            running.append(job)  # booked by an approved plan
+        elif o.status == "accepted" or (o.status == "planned" and str(o.id) in mine) or approved_here:
             cands.append(job)
         else:
             running.append(job)
     return cands, running, by_id
+
+
+async def _active_plans(session: AsyncSession, exclude: uuid.UUID | None = None) -> list[Plan]:
+    """Plans being worked on or approved and in force (not completed / cancelled / deleted)."""
+    q = select(Plan).where(Plan.status.in_((*WORKING, "approved")), Plan.deleted_at.is_(None))
+    if exclude is not None:
+        q = q.where(Plan.id != exclude)
+    return list((await session.execute(q.order_by(Plan.created_at))).scalars())
 
 
 async def _requested(session: AsyncSession, plan: Plan) -> dict[str, dict[str, Any]]:
@@ -215,7 +243,7 @@ async def _compute(session: AsyncSession, plan: Plan, today: date) -> tuple[dict
     f = await load_factory(session)
     rules = await get_rules(session)
     objective = await get_objective(session)
-    cands, running, _ = await _jobs(session, plan)
+    cands, running, by_id = await _jobs(session, plan)
     requested = await _requested(session, plan)
     inp = _inputs(plan)
     base = list((plan.inputs or {}).get("base", plan.selected))
@@ -234,13 +262,22 @@ async def _compute(session: AsyncSession, plan: Plan, today: date) -> tuple[dict
     # plan doesn't need re-approval because a day passed or its orders moved into production.
     mine = sorted(((j.id, j.qty, j.value, j.deadline, j.steps, j.materials) for j in cands if j.id in plan.selected),
                   key=lambda x: x[0])  # fmt: skip
+    booked = sorted((j.id, j.qty, j.steps) for j in running)  # orders competing for the same machines
+    result["_basis"] = rev.basis(f, [j for j in cands if j.id in plan.selected], running, rules.model_dump(),
+                                 {k: o.status for k, o in by_id.items()})  # fmt: skip
     if plan.status == "approved" and plan.selected:
         statuses = (await session.execute(
             select(Order.status).where(Order.id.in_([uuid.UUID(i) for i in plan.selected])))).scalars()  # fmt: skip
         # its orders are being made / shipped: Production carries it out now, no more re-approval checks
         result["_executing"] = any(st in ("in_production", "completed", "shipped") for st in statuses)
     result["_data_fp"] = _fp(f, rules.model_dump(), objective.model_dump(), mine, plan.rule,
-                             {k: v for k, v in result["inputs"].items() if k != "sequence"}, plan.start_date)  # fmt: skip
+                             {k: v for k, v in result["inputs"].items() if k != "sequence"}, plan.start_date,
+                             booked)  # fmt: skip
+    if plan.status == "approved":
+        snaps = await _snapshots(session, plan.id)
+        if snaps:  # compared with the last approved version: what changed and why
+            cmp = rev.compare(snaps[0].result, result, rules.reapproval_margin_drop_pct)
+            result["_revision"] = {**cmp, "against": snaps[0].version, "number": snaps[0].version + 1}
     return result, fp, ofp
 
 
@@ -252,12 +289,22 @@ async def _save(session: AsyncSession, plan: Plan, result: dict[str, Any], fp: s
     plan.version += 1
     if plan.status == "approved":
         approved_fp = (plan.inputs or {}).get("approval_fp")
+        was = plan.needs_reapproval
+        rv = result.get("_revision")
         if result.get("_executing"):
             pass  # in execution: keep the flag as it was
-        elif approved_fp:  # the business data it was approved on has changed
-            plan.needs_reapproval = result.get("_data_fp") != approved_fp
-        elif set(tabs) & {2, 3, 4, 5}:  # plans approved before the fingerprint existed
-            plan.needs_reapproval = True
+        else:
+            # data it was approved on changed AND that changes the outcome significantly (later, short, over
+            # capacity, order changed, money down more than the company's limit); good news is only logged
+            changed = result.get("_data_fp") != approved_fp if approved_fp else bool(set(tabs) & {2, 3, 4, 5})
+            plan.needs_reapproval = changed and (rv["needed"] if rv is not None else True)
+        if plan.needs_reapproval and not was:
+            first = next((c["title"] for c in (rv or {}).get("changes", []) if c["significant"]), None)
+            n = (rv or {}).get("number", 2)
+            session.add(PlanEvent(plan_id=plan.id, kind="needs_reapproval", tabs=[], actor_id=None,
+                                  summary=f"Rev {n} needs re-approval" + (f" · {first}" if first else "")))  # fmt: skip
+            await audit.record(session, actor_id=None, action="update", entity_type="plan", entity_id=plan.id,
+                               summary=f"{plan.number} rev {n} needs re-approval")  # fmt: skip
     session.add(PlanEvent(plan_id=plan.id, kind=kind, summary=summary, tabs=tabs, actor_id=actor))
     await session.flush()
     return tabs
@@ -315,7 +362,33 @@ async def _maybe_complete(session: AsyncSession, plan: Plan) -> bool:
 async def _marked(session: AsyncSession) -> list[str]:
     """Accepted orders that are 'In planning' in Orders received."""
     q = select(Order.id).where(Order.status == "accepted", Order.marked_for_planning).order_by(Order.number)
-    return [str(i) for i in (await session.execute(q)).scalars()]
+    taken = {i for p in await _active_plans(session) if p.status == "approved" for i in p.selected}
+    return [str(i) for i in (await session.execute(q)).scalars() if str(i) not in taken]
+
+
+async def _check_regenerate(session: AsyncSession, plan: Plan) -> None:
+    """The order set differs from the one generated: back to draft, generate again before approval.
+    Undoing the change (same orders as generated) makes it "awaiting approval" again."""
+    gen = (plan.inputs or {}).get("generated_selected")
+    if plan.status not in WORKING or plan.generated_at is None or gen is None:
+        return
+    added = [i for i in plan.selected if i not in gen]
+    removed = [i for i in gen if i not in plan.selected]
+    if added or removed:
+        ids = [uuid.UUID(i) for i in added + removed]
+        num = {
+            str(i): n
+            for i, n in (
+                await session.execute(select(Order.id, Order.number).where(Order.id.in_(ids)))
+            ).tuples()
+        }
+        plan.status = "draft"
+        plan.inputs = {**(plan.inputs or {}), "regenerate": {
+            "added": sorted(num.get(i, "?") for i in added), "removed": sorted(num.get(i, "?") for i in removed),
+            "at": datetime.now(UTC).isoformat()}}  # fmt: skip
+    elif (plan.inputs or {}).get("regenerate"):
+        plan.status = "generated"
+        plan.inputs = {k: v for k, v in (plan.inputs or {}).items() if k != "regenerate"}
 
 
 async def _sync_with_orders(session: AsyncSession, plan: Plan) -> list[str]:
@@ -336,6 +409,7 @@ async def _sync_with_orders(session: AsyncSession, plan: Plan) -> list[str]:
     }  # fmt: skip
     plan.selected = new
     plan.inputs = {**(plan.inputs or {}), "base": new}  # the owner's own picks changed in Orders
+    await _check_regenerate(session, plan)
     out = []
     if added:
         out.append("sent from Orders received: " + ", ".join(sorted(nums.get(i, "?") for i in added)))
@@ -374,25 +448,28 @@ async def _out(session: AsyncSession, plan: Plan, snapshot: PlanSnapshot | None 
         snapshot=SnapshotInfo(version=snapshot.version, approved_at=snapshot.approved_at, note=snapshot.note) if snapshot else None,
         snapshots=[SnapshotInfo(version=s.version, approved_at=s.approved_at, note=s.note) for s in snaps],
         completed_at=plan.completed_at, cancelled_at=plan.cancelled_at, cancel_reason=plan.cancel_reason,
+        revision=_revision(plan), regenerate=(plan.inputs or {}).get("regenerate"),
     )  # fmt: skip
+
+
+def _revision(plan: Plan) -> Revision | None:
+    rv = (plan.result or {}).get("_revision") if plan.status == "approved" else None
+    if not rv:
+        return None
+    return Revision.model_validate({**rv, "needed": plan.needs_reapproval})
 
 
 # ---- public API ------------------------------------------------------------------------------
 
 
 async def current_plan(session: AsyncSession) -> Plan | None:
-    """The working plan, or else the latest approved one (cancelled and completed plans are history)."""
-    q = (select(Plan).where(Plan.status.in_((*WORKING, "approved")), Plan.deleted_at.is_(None))
-         .order_by(Plan.status.in_(WORKING).desc(), Plan.created_at.desc()).limit(1))  # fmt: skip
-    return (await session.execute(q)).scalar_one_or_none()
+    """The one active plan (draft or awaiting approval), if any. Approved plans are history."""
+    return await _working(session)
 
 
 async def get_current(session: AsyncSession) -> PlanOut | None:
+    """Never starts a plan by itself: that is "+ New plan" or sending orders to Planning."""
     plan = await current_plan(session)
-    idle = plan is None or (plan.status == "approved" and not plan.needs_reapproval)
-    if idle and await _marked(session):
-        # Orders were sent to Planning and nothing is being planned: start the next plan for them.
-        return await _new_plan(session, None)
     if plan is None:
         return None
     return await _out(session, await _refresh(session, plan, clock.today()))
@@ -406,13 +483,34 @@ async def _get(session: AsyncSession, plan_id: uuid.UUID) -> Plan:
 
 
 async def create_plan(session: AsyncSession, actor: uuid.UUID) -> PlanOut:
+    await _lock_drafts(session)
     cur = await current_plan(session)
-    if cur is not None and cur.status in WORKING:
+    if cur is not None:
         raise DomainError(f"{cur.number} is still being worked on. Approve it first, or keep editing it.")
     return await _new_plan(session, actor)
 
 
+async def _lock_drafts(session: AsyncSession) -> None:
+    """Serialise "find or start the draft" per company (the unique index is the last line of defence)."""
+    await session.execute(text("SELECT pg_advisory_xact_lock(hashtextextended('plan-draft:' || "
+                               "current_setting('app.tenant_id', true), 0))"))  # fmt: skip
+
+
+async def _working(session: AsyncSession) -> Plan | None:
+    q = (
+        select(Plan)
+        .where(Plan.status.in_(WORKING), Plan.deleted_at.is_(None))
+        .order_by(Plan.created_at.desc())
+    )
+    return (await session.execute(q.limit(1))).scalar_one_or_none()
+
+
 async def _new_plan(session: AsyncSession, actor: uuid.UUID | None) -> PlanOut:
+    await _lock_drafts(session)
+    existing = await _working(session)
+    if existing is not None:  # another request started it a moment ago
+        await _refresh(session, existing, clock.today())
+        return await _out(session, existing)
     n = await counters.next_value(session, "plan", start=0)
     marked = await _marked(session)
     start = eng.next_working(clock.today(), await load_factory(session))
@@ -553,6 +651,7 @@ async def update_plan(session: AsyncSession, actor: uuid.UUID, plan_id: uuid.UUI
         summary += " · needs re-approval"
     if plan.status in WORKING:
         await _write_ticks_to_orders(session, actor, snapshot[0], list(plan.selected))
+        await _check_regenerate(session, plan)
     plan.inputs = {k: v for k, v in (plan.inputs or {}).items() if k != "changes_requested"}
     tabs = await _save(session, plan, result, fp, ofp, actor, "change", summary)
     await audit.record(session, actor_id=actor, action="update", entity_type="plan", entity_id=plan.id,
@@ -584,6 +683,10 @@ async def generate(session: AsyncSession, actor: uuid.UUID, plan_id: uuid.UUID) 
     if plan.status == "draft":
         plan.status = "generated"
     plan.generated_at = datetime.now(UTC)
+    plan.inputs = {
+        **{k: v for k, v in (plan.inputs or {}).items() if k != "regenerate"},
+        "generated_selected": list(plan.selected),
+    }
     session.add(PlanEvent(plan_id=plan.id, kind="generated", summary=f"Plan generated · {n} order{'s' * (n != 1)}",
                           tabs=[2, 3, 4, 5], actor_id=actor))  # fmt: skip
     await audit.record(session, actor_id=actor, action="update", entity_type="plan", entity_id=plan.id,
@@ -662,9 +765,12 @@ async def approve(session: AsyncSession, actor: uuid.UUID, plan_id: uuid.UUID, b
     plan.approved_at = datetime.now(UTC)
     plan.approved_by = actor
     plan.approval_note = body.note
-    plan.inputs = {k: v for k, v in (plan.inputs or {}).items() if k != "changes_requested"}
+    plan.inputs = {
+        k: v for k, v in (plan.inputs or {}).items() if k not in ("changes_requested", "regenerate")
+    }
     # recalculate as approved (other accepted orders are no longer candidates): not a "change" event
     result, fp, ofp = await _compute(session, plan, clock.today())
+    result.pop("_revision", None)  # this version is the new baseline
     plan.result, plan.fingerprint, plan.options_fingerprint = result, fp, ofp
     plan.version += 1
     plan.needs_reapproval = False
@@ -698,12 +804,10 @@ def _stage(plan: Plan) -> str:
 
 async def list_plans(session: AsyncSession) -> list[PlanSummary]:
     """Every plan, newest first. Approved / completed plans show the money of their latest approved version."""
-    q = (select(Plan).where(Plan.status == "approved", Plan.deleted_at.is_(None))
-         .order_by(Plan.created_at.desc()).limit(1))  # fmt: skip
-    cur = (await session.execute(q)).scalar_one_or_none()
-    if cur is not None:
-        # the latest approved plan is the one still in force: check whether data has changed since approval
-        await _refresh(session, cur, clock.today())
+    for p in await _active_plans(session):
+        # every approved plan in force: has data changed enough since approval to approve it again?
+        if p.status == "approved":
+            await _refresh(session, p, clock.today())
     plans = list((await session.execute(
         select(Plan).where(Plan.deleted_at.is_(None)).order_by(Plan.created_at.desc()))).scalars())  # fmt: skip
     out = []
@@ -719,6 +823,9 @@ async def list_plans(session: AsyncSession) -> list[PlanSummary]:
             start=ov.get("start"), end=ov.get("end"), approved_at=p.approved_at, completed_at=p.completed_at,
             cancelled_at=p.cancelled_at, value=fin.get("value", 0), contribution=fin.get("contribution", 0),
             margin=fin.get("margin", 0.0), snapshot_version=snaps[0].version if snaps else None,
+            revision=(rv.number if (rv := _revision(p)) and p.needs_reapproval else None),
+            reapproval_reason=(next((c.title for c in rv.changes if c.significant), None)
+                               if rv and p.needs_reapproval else None),
         ))  # fmt: skip
     return out
 
@@ -1003,3 +1110,64 @@ async def update_requests(session: AsyncSession, po_number: str, status: str) ->
             r.status, r.po_number = "requested", None
         else:
             r.status = status
+
+
+# ---- Orders -> Planning ------------------------------------------------------------------------
+
+
+async def assert_free(session: AsyncSession, order_ids: list[uuid.UUID]) -> None:
+    """An order is in one plan at a time: orders of an approved plan in force can't be sent again."""
+    ids = {str(i) for i in order_ids}
+    busy: list[str] = []
+    for p in await _active_plans(session):
+        if p.status != "approved":
+            continue
+        for i in ids & set(p.selected):
+            o = await session.get(Order, uuid.UUID(i))
+            if o is not None and o.status not in ("cancelled", "shipped"):
+                busy.append(f"{o.number} is already in {p.number} ({_stage(p).replace('_', '-')})")
+    if busy:
+        raise DomainError("Already in an approved plan, so it can't be sent to Planning again: " + "; ".join(sorted(busy)),
+                          details={"orders": sorted(busy)})  # fmt: skip
+
+
+async def place_in_draft(session: AsyncSession, actor: uuid.UUID | None) -> tuple[Plan | None, bool]:
+    """Orders were sent to Planning: they go into the one draft, which is started if there is none.
+    Returns (draft, started now)."""
+    await _lock_drafts(session)
+    plan = await _working(session)
+    if plan is not None:
+        await _refresh(session, plan, clock.today())
+        return plan, False
+    if not await _marked(session):
+        return None, False
+    out = await _new_plan(session, actor)
+    return await session.get(Plan, out.id), True
+
+
+async def send_orders(session: AsyncSession, actor: uuid.UUID, order_ids: list[uuid.UUID],
+                      marked: bool) -> tuple[int, Plan | None, bool]:  # fmt: skip
+    """Orders received: Send to / Remove from Planning, kept in step with the draft right away."""
+    if marked:
+        await assert_free(session, order_ids)
+    n = await orders_service.set_planning_selection(session, actor, order_ids, marked)
+    plan, created = await place_in_draft(session, actor)
+    return n, plan, created
+
+
+def plan_ref(plan: Plan) -> dict[str, Any]:
+    return {"id": plan.id, "number": plan.number, "stage": _stage(plan)}
+
+
+async def plan_refs(session: AsyncSession, order_ids: list[uuid.UUID]) -> dict[uuid.UUID, dict[str, Any]]:
+    """Which plan each order is in (for the Orders screens). The draft wins for orders sent to Planning."""
+    if not order_ids:
+        return {}
+    ids = {str(i) for i in order_ids}
+    q = (select(Plan).where(Plan.deleted_at.is_(None), Plan.status.in_((*WORKING, "approved", "completed")))
+         .order_by(Plan.status.in_(WORKING), Plan.created_at))  # fmt: skip
+    out: dict[uuid.UUID, dict[str, Any]] = {}
+    for p in (await session.execute(q)).scalars():
+        for i in ids & set(p.selected):
+            out[uuid.UUID(i)] = plan_ref(p)
+    return out

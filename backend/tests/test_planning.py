@@ -66,9 +66,9 @@ async def test_full_flow(client: AsyncClient, co: Company, data: dict[str, str])
     b = await _order(client, h, data["bolts"], data["cust"], "1500", 3)  # b + a need 2.5 t: 1.5 t short
     c = await _order(client, h, data["nuts"], data["cust"], "500", 12, mark=False)  # candidate, not ticked
 
-    r = await client.post("/planning/plans", headers=h)
-    assert r.status_code == 201, r.text
-    plan = r.json()
+    # Sending orders to Planning started the one active plan; "+ New plan" can't start a second one.
+    assert (await client.post("/planning/plans", headers=h)).status_code == 400
+    plan = (await client.get("/planning/plan", headers=h)).json()
     pid, res = plan["id"], plan["result"]
     assert plan["number"] == "PLAN-001" and plan["status"] == "draft"
     assert set(res["selection"]["selected"]) == {a, b}  # orders sent to Planning are ticked
@@ -129,10 +129,26 @@ async def test_full_flow(client: AsyncClient, co: Company, data: dict[str, str])
     # A change in Orders moves the approved plan back to "needs re-approval".
     r = await client.patch(f"/orders/{a}", headers=h, json={"quantity": "1200"})
     assert r.status_code == 200, r.text
-    after = (await client.get("/planning/plan", headers=h)).json()
-    assert after["needs_reapproval"] and after["last_change"]["summary"].startswith("Plan updated")
+    assert (await client.get("/planning/plan", headers=h)).json() is None  # approved plans are history
+    after = (await client.get(f"/planning/plans/{pid}?view=live", headers=h)).json()
+    assert after["needs_reapproval"] and after["status"] == "approved"
+    rv = after["revision"]
+    assert rv["number"] == 2 and rv["against"] == 1 and rv["needed"]
+    changed = next(c for c in rv["changes"] if c["kind"] == "order_changed")
+    assert changed["significant"] and "quantity 1,000 → 1,200" in changed["title"]
+    assert any("quantity" in c for c in rv["causes"])
+    # the approved version is kept exactly as approved
+    frozen = (await client.get(f"/planning/plans/{pid}", headers=h)).json()
+    assert (
+        frozen["view"] == "snapshot"
+        and frozen["result"]["sequence"]["rows"] == ap["result"]["sequence"]["rows"]
+    )
     hist = (await client.get(f"/planning/plans/{pid}/history", headers=h)).json()
-    assert {"approved", "generated", "po", "refresh"} <= {x["kind"] for x in hist}
+    assert {"approved", "generated", "po", "refresh", "needs_reapproval"} <= {x["kind"] for x in hist}
+    summary = next(p for p in (await client.get("/planning/plans", headers=h)).json() if p["id"] == pid)
+    assert (
+        summary["stage"] == "needs_reapproval" and summary["revision"] == 2 and summary["reapproval_reason"]
+    )
 
     # Another company never sees this plan.
     other = await make_company("plan-other")
@@ -237,11 +253,12 @@ async def test_new_order_after_approval_starts_the_next_plan(client: AsyncClient
     await client.post(f"/planning/plans/{plan['id']}/generate", headers=h)
     await client.post(f"/planning/plans/{plan['id']}/approve", headers=h, json={"raise_open_pos": True})
 
+    # approved = history: no active plan until orders are sent or the owner starts one
+    assert (await client.get("/planning/plan", headers=h)).json() is None
     await _order(client, h, bolts, cust, "100", 12, mark=False)  # a new accepted order, not sent yet
-    still = (await client.get("/planning/plan", headers=h)).json()
-    assert (
-        still["number"] == plan["number"] and not still["needs_reapproval"]
-    )  # unrelated order: no re-approval
+    assert (await client.get("/planning/plan", headers=h)).json() is None  # not sent: no plan started
+    still = (await client.get(f"/planning/plans/{plan['id']}?view=live", headers=h)).json()
+    assert still["status"] == "approved" and not still["needs_reapproval"]  # unrelated order: no re-approval
 
     nxt = await _order(client, h, bolts, cust, "100", 14)  # sent to Planning
     cur = (await client.get("/planning/plan", headers=h)).json()
@@ -266,8 +283,9 @@ async def test_approval_does_not_trigger_its_own_reapproval(client: AsyncClient)
         await client.post(f"/planning/plans/{plan['id']}/approve", headers=h, json={"raise_open_pos": True})
     ).json()
     assert ap["status"] == "approved" and not ap["needs_reapproval"]
-    again = (await client.get("/planning/plan", headers=h)).json()
+    again = (await client.get(f"/planning/plans/{plan['id']}?view=live", headers=h)).json()
     assert again["status"] == "approved" and not again["needs_reapproval"]
+    assert again["revision"] is None or not again["revision"]["needed"]
 
 
 async def test_best_score_rule_is_a_company_setting(client: AsyncClient) -> None:

@@ -38,6 +38,14 @@ class MaterialNeed(BaseModel):
     shortage: Decimal
 
 
+class OrderPlanRef(BaseModel):
+    """The plan an order is in (filled by Planning)."""
+
+    id: uuid.UUID
+    number: str
+    stage: str  # draft | awaiting | approved | needs_reapproval | completed
+
+
 class OrderOut(BaseModel):
     id: uuid.UUID
     number: str
@@ -63,6 +71,7 @@ class OrderOut(BaseModel):
     status: Status
     progress_pct: int | None
     marked_for_planning: bool
+    plan: OrderPlanRef | None = None  # the plan it is in (draft, approved...)
     promised_date: date | None
     cancel_reason: str | None
     notes: str | None
@@ -121,6 +130,12 @@ class OrderCancel(BaseModel):
 class PlanningSelection(BaseModel):
     order_ids: list[uuid.UUID] = Field(min_length=1, max_length=200)
     marked: bool
+
+
+class PlanningSelectionOut(BaseModel):
+    updated: int
+    plan: OrderPlanRef | None = None  # the draft the orders are now in
+    created: bool = False  # the draft was started for them
 
 
 RankingMode = Literal["weighted", "requirement", "customer", "profit", "deadline", "priority"]

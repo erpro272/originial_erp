@@ -496,6 +496,7 @@ async def set_planned(session: AsyncSession, actor: uuid.UUID, promised: dict[uu
         }
         if o.status == "accepted":
             o.status = "planned"
+        o.marked_for_planning = False  # in an approved plan now, not waiting in Planning
         o.promised_date = promised[o.id]
         await audit.record(session, actor_id=actor, action="update", entity_type="order", entity_id=o.id,
                            summary=f"{o.number} planned · promised {o.promised_date.isoformat()}", before=before,

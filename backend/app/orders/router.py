@@ -14,11 +14,14 @@ from app.orders.schemas import (
     OrderKpis,
     OrderOut,
     OrderPage,
+    OrderPlanRef,
     OrderUpdate,
     PlanningSelection,
+    PlanningSelectionOut,
     RankingSettings,
     SortField,
 )
+from app.planning import service as planning
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 Reader = Annotated[Principal, Depends(require(Permission.ORDERS_READ))]
@@ -52,7 +55,13 @@ async def list_orders(
         planning_only=planning_only,
     )  # fmt: skip
     items, total = await service.list_orders(db, f, sort, desc, limit, offset)
-    return OrderPage(items=items, total=total, limit=limit, offset=offset)
+    return OrderPage(items=await _with_plans(db, items), total=total, limit=limit, offset=offset)
+
+
+async def _with_plans(db: TenantDB, items: list[OrderOut]) -> list[OrderOut]:
+    refs = await planning.plan_refs(db, [o.id for o in items])
+    return [o.model_copy(update={"plan": OrderPlanRef.model_validate(refs[o.id])}) if o.id in refs else o
+            for o in items]  # fmt: skip
 
 
 @router.get("/kpis")
@@ -81,8 +90,11 @@ async def put_ranking(
 
 
 @router.post("/planning-selection")
-async def planning_selection(body: PlanningSelection, db: TenantDB, p: Writer) -> dict[str, int]:
-    return {"updated": await service.set_planning_selection(db, p.user_id, body.order_ids, body.marked)}
+async def planning_selection(body: PlanningSelection, db: TenantDB, p: Writer) -> PlanningSelectionOut:
+    """Send to / Remove from Planning: the orders go into the one draft plan (started if there is none)."""
+    n, plan, created = await planning.send_orders(db, p.user_id, body.order_ids, body.marked)
+    ref = OrderPlanRef.model_validate(planning.plan_ref(plan)) if plan is not None else None
+    return PlanningSelectionOut(updated=n, plan=ref, created=created)
 
 
 @router.get("/today")
@@ -93,7 +105,7 @@ async def today(_: Reader) -> dict[str, date]:
 
 @router.get("/{order_id}")
 async def get_order(order_id: uuid.UUID, db: TenantDB, _: Reader) -> OrderOut:
-    return await service.get_order(db, order_id)
+    return (await _with_plans(db, [await service.get_order(db, order_id)]))[0]
 
 
 @router.post("", status_code=201)
@@ -103,7 +115,12 @@ async def create(body: OrderCreate, db: TenantDB, p: Writer) -> OrderOut:
 
 @router.patch("/{order_id}")
 async def update(order_id: uuid.UUID, body: OrderUpdate, db: TenantDB, p: Writer) -> OrderOut:
-    return await service.update_order(db, p.user_id, order_id, body)
+    if body.marked_for_planning:
+        await planning.assert_free(db, [order_id])
+    await service.update_order(db, p.user_id, order_id, body)
+    if body.marked_for_planning is not None:
+        await planning.place_in_draft(db, p.user_id)  # into the draft (or out of it) right away
+    return (await _with_plans(db, [await service.get_order(db, order_id)]))[0]
 
 
 @router.post("/{order_id}/cancel")
