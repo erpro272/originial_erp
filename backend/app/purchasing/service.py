@@ -134,6 +134,9 @@ async def inventory(session: AsyncSession) -> InventoryOut:
                     po_id=po.id, po_number=po.number, status=po.status, supplier=po.supplier, quantity=left,
                     expected_date=po.expected_date, confirmed=po.confirmed))  # fmt: skip
     last_supplier = {ln.material_id: po.supplier for po in reversed(pos) for ln in po.lines}
+    from app.purchasing.suppliers import preferred_for
+
+    preferred = await preferred_for(session)
 
     rows = []
     for m in materials:
@@ -145,8 +148,12 @@ async def inventory(session: AsyncSession) -> InventoryOut:
         coming = [i for i in inc if i.status in INCOMING]
         on_order = sum((i.quantity for i in coming), ZERO)
         waiting = sum((i.quantity for i in inc if i.status == "awaiting_approval"), ZERO)
-        rows.append(_row(m, in_stock, reserved, on_order, waiting, needs, coming, inc,
-                         last_supplier.get(m.id) or m.express_supplier))  # fmt: skip
+        pref = preferred.get(m.id)
+        row = _row(m, in_stock, reserved, on_order, waiting, needs, coming, inc,
+                   pref[0] if pref else last_supplier.get(m.id) or m.express_supplier)  # fmt: skip
+        if pref:
+            row.preferred, row.preferred_rate_paise = True, pref[1]
+        rows.append(row)
 
     kpis = Kpis(
         skus=len(materials),
@@ -467,6 +474,7 @@ async def approve_po(session: AsyncSession, actor: uuid.UUID, po_id: uuid.UUID) 
     if po.status != "awaiting_approval":
         raise DomainError("Only a PO awaiting approval can be approved.")
     po.status, po.approved_by, po.approved_at = "ordered", actor, datetime.now(UTC)
+    po.promised_date = po.expected_date  # the date asked for; the supplier's first confirmation replaces it
     await planning.update_requests(session, po.number, "ordered")
     await sync_incoming(session, await _materials_of(session, po))
     await _log(session, po, actor, "approved", "Approved by the owner · PO sent to the supplier")
@@ -480,6 +488,8 @@ async def confirm_po(session: AsyncSession, actor: uuid.UUID, po_id: uuid.UUID, 
         raise DomainError("Only a PO sent to the supplier can be confirmed.")
     if po.status == "ordered":
         po.status = "confirmed"
+    if not po.confirmed:  # their first confirmation is the commitment on-time delivery is judged against
+        po.promised_date = body.expected_date
     po.confirmed, po.expected_date = True, body.expected_date
     await planning.update_requests(session, po.number, po.status)
     await sync_incoming(session, await _materials_of(session, po))

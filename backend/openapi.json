@@ -724,6 +724,118 @@
         "title": "CompanyOut",
         "type": "object"
       },
+      "ComparisonKpis": {
+        "properties": {
+          "active_suppliers": {
+            "title": "Active Suppliers",
+            "type": "integer"
+          },
+          "avg_lead_days": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Lead Days"
+          },
+          "avg_on_time_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg On Time Pct"
+          },
+          "saved_30d_paise": {
+            "title": "Saved 30D Paise",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "active_suppliers",
+          "avg_on_time_pct",
+          "avg_lead_days",
+          "saved_30d_paise"
+        ],
+        "title": "ComparisonKpis",
+        "type": "object"
+      },
+      "ComparisonOut": {
+        "properties": {
+          "default_material_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Material Id"
+          },
+          "kpis": {
+            "$ref": "#/components/schemas/ComparisonKpis"
+          },
+          "materials": {
+            "items": {
+              "$ref": "#/components/schemas/MaterialRef"
+            },
+            "title": "Materials",
+            "type": "array"
+          },
+          "quotes": {
+            "items": {
+              "$ref": "#/components/schemas/QuoteOut"
+            },
+            "title": "Quotes",
+            "type": "array"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/SupplierRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "rules": {
+            "$ref": "#/components/schemas/ScoringRules"
+          },
+          "today": {
+            "format": "date",
+            "title": "Today",
+            "type": "string"
+          },
+          "top": {
+            "additionalProperties": {
+              "items": {
+                "$ref": "#/components/schemas/TopCard"
+              },
+              "type": "array"
+            },
+            "title": "Top",
+            "type": "object"
+          }
+        },
+        "required": [
+          "kpis",
+          "materials",
+          "default_material_id",
+          "top",
+          "rows",
+          "quotes",
+          "rules",
+          "today"
+        ],
+        "title": "ComparisonOut",
+        "type": "object"
+      },
       "ConfirmIn": {
         "properties": {
           "expected_date": {
@@ -1904,6 +2016,96 @@
           "health_tags"
         ],
         "title": "CustomerRow",
+        "type": "object"
+      },
+      "DeliveryOut": {
+        "properties": {
+          "accepted": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted"
+          },
+          "arrived": {
+            "format": "date",
+            "title": "Arrived",
+            "type": "string"
+          },
+          "lead_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lead Days"
+          },
+          "material": {
+            "title": "Material",
+            "type": "string"
+          },
+          "on_time": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "On Time"
+          },
+          "po_number": {
+            "title": "Po Number",
+            "type": "string"
+          },
+          "promised_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Promised Date"
+          },
+          "rejected": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rejected"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "po_number",
+          "material",
+          "unit",
+          "promised_date",
+          "arrived",
+          "on_time",
+          "lead_days",
+          "accepted",
+          "rejected"
+        ],
+        "title": "DeliveryOut",
         "type": "object"
       },
       "DepartmentIn-Input": {
@@ -3869,6 +4071,40 @@
         "title": "MaterialNeed",
         "type": "object"
       },
+      "MaterialRef": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "needed": {
+            "title": "Needed",
+            "type": "boolean"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "name",
+          "unit",
+          "needed"
+        ],
+        "title": "MaterialRef",
+        "type": "object"
+      },
       "MaterialRow": {
         "properties": {
           "awaiting_approval": {
@@ -3948,6 +4184,22 @@
           "on_order": {
             "title": "On Order",
             "type": "string"
+          },
+          "preferred": {
+            "default": false,
+            "title": "Preferred",
+            "type": "boolean"
+          },
+          "preferred_rate_paise": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preferred Rate Paise"
           },
           "price_per_unit_paise": {
             "title": "Price Per Unit Paise",
@@ -6448,6 +6700,26 @@
         "title": "PoRaiseIn",
         "type": "object"
       },
+      "PreferredIn": {
+        "properties": {
+          "material_id": {
+            "format": "uuid",
+            "title": "Material Id",
+            "type": "string"
+          },
+          "supplier_id": {
+            "format": "uuid",
+            "title": "Supplier Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "material_id",
+          "supplier_id"
+        ],
+        "title": "PreferredIn",
+        "type": "object"
+      },
       "PreviewOut": {
         "properties": {
           "diff": {
@@ -6914,6 +7186,231 @@
           "accepted"
         ],
         "title": "QcIn",
+        "type": "object"
+      },
+      "QuoteOut": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lead_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lead Days"
+          },
+          "material": {
+            "title": "Material",
+            "type": "string"
+          },
+          "material_id": {
+            "format": "uuid",
+            "title": "Material Id",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "rate_paise": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rate Paise"
+          },
+          "replied_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Replied At"
+          },
+          "status": {
+            "enum": [
+              "requested",
+              "received"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "supplier": {
+            "title": "Supplier",
+            "type": "string"
+          },
+          "supplier_id": {
+            "format": "uuid",
+            "title": "Supplier Id",
+            "type": "string"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          },
+          "valid_until": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid Until"
+          }
+        },
+        "required": [
+          "id",
+          "supplier_id",
+          "supplier",
+          "material_id",
+          "material",
+          "code",
+          "unit",
+          "status",
+          "quantity",
+          "rate_paise",
+          "lead_days",
+          "valid_until",
+          "note",
+          "created_at",
+          "replied_at"
+        ],
+        "title": "QuoteOut",
+        "type": "object"
+      },
+      "QuoteReplyIn": {
+        "properties": {
+          "lead_days": {
+            "maximum": 365.0,
+            "minimum": 0.0,
+            "title": "Lead Days",
+            "type": "integer"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "rate_paise": {
+            "exclusiveMinimum": 0.0,
+            "title": "Rate Paise",
+            "type": "integer"
+          },
+          "valid_until": {
+            "format": "date",
+            "title": "Valid Until",
+            "type": "string"
+          }
+        },
+        "required": [
+          "rate_paise",
+          "lead_days",
+          "valid_until"
+        ],
+        "title": "QuoteReplyIn",
+        "type": "object"
+      },
+      "QuoteRequestIn": {
+        "properties": {
+          "material_id": {
+            "format": "uuid",
+            "title": "Material Id",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "suppliers": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 10,
+            "minItems": 1,
+            "title": "Suppliers",
+            "type": "array"
+          }
+        },
+        "required": [
+          "material_id",
+          "suppliers"
+        ],
+        "title": "QuoteRequestIn",
         "type": "object"
       },
       "RaisePoIn": {
@@ -7421,6 +7918,55 @@
           "bottlenecks"
         ],
         "title": "Schedule",
+        "type": "object"
+      },
+      "ScoringRules": {
+        "description": "How \"Best overall\" weighs the supplier measures (company setting `supplier-scoring`), and when a\nsupplier gets a risk flag.",
+        "properties": {
+          "late_risk_below": {
+            "default": 90,
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Late Risk Below",
+            "type": "number"
+          },
+          "lead_weight": {
+            "default": 10,
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Lead Weight",
+            "type": "number"
+          },
+          "on_time_weight": {
+            "default": 25,
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "On Time Weight",
+            "type": "number"
+          },
+          "price_weight": {
+            "default": 40,
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Price Weight",
+            "type": "number"
+          },
+          "quality_risk_above": {
+            "default": 1.0,
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Quality Risk Above",
+            "type": "number"
+          },
+          "quality_weight": {
+            "default": 25,
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Quality Weight",
+            "type": "number"
+          }
+        },
+        "title": "ScoringRules",
         "type": "object"
       },
       "Selection": {
@@ -7970,6 +8516,244 @@
         "title": "StepIn",
         "type": "object"
       },
+      "SupplierDetail": {
+        "properties": {
+          "deliveries": {
+            "items": {
+              "$ref": "#/components/schemas/DeliveryOut"
+            },
+            "title": "Deliveries",
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "open_pos": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Open Pos",
+            "type": "array"
+          },
+          "quotes": {
+            "items": {
+              "$ref": "#/components/schemas/QuoteOut"
+            },
+            "title": "Quotes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "deliveries",
+          "quotes",
+          "open_pos"
+        ],
+        "title": "SupplierDetail",
+        "type": "object"
+      },
+      "SupplierRow": {
+        "description": "One supplier for one material.",
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "active_pos": {
+            "title": "Active Pos",
+            "type": "integer"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "defect_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Defect Pct"
+          },
+          "deliveries": {
+            "title": "Deliveries",
+            "type": "integer"
+          },
+          "flags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Flags",
+            "type": "array"
+          },
+          "lead_days": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lead Days"
+          },
+          "lead_source": {
+            "enum": [
+              "actual",
+              "quote",
+              "none"
+            ],
+            "title": "Lead Source",
+            "type": "string"
+          },
+          "material": {
+            "title": "Material",
+            "type": "string"
+          },
+          "material_id": {
+            "format": "uuid",
+            "title": "Material Id",
+            "type": "string"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "on_time_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "On Time Pct"
+          },
+          "overall": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overall"
+          },
+          "preferred": {
+            "title": "Preferred",
+            "type": "boolean"
+          },
+          "quality_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quality Score"
+          },
+          "quote_valid_until": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote Valid Until"
+          },
+          "rate_paise": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rate Paise"
+          },
+          "rate_source": {
+            "enum": [
+              "quote",
+              "last_po",
+              "none"
+            ],
+            "title": "Rate Source",
+            "type": "string"
+          },
+          "stars": {
+            "title": "Stars",
+            "type": "integer"
+          },
+          "supplier": {
+            "title": "Supplier",
+            "type": "string"
+          },
+          "supplier_id": {
+            "format": "uuid",
+            "title": "Supplier Id",
+            "type": "string"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "supplier_id",
+          "supplier",
+          "material_id",
+          "material",
+          "code",
+          "category",
+          "unit",
+          "rate_paise",
+          "rate_source",
+          "lead_days",
+          "lead_source",
+          "on_time_pct",
+          "defect_pct",
+          "quality_score",
+          "deliveries",
+          "active_pos",
+          "overall",
+          "stars",
+          "flags",
+          "note",
+          "preferred",
+          "active"
+        ],
+        "title": "SupplierRow",
+        "type": "object"
+      },
       "TokenResponse": {
         "properties": {
           "access_token": {
@@ -7991,6 +8775,36 @@
           "expires_in"
         ],
         "title": "TokenResponse",
+        "type": "object"
+      },
+      "TopCard": {
+        "properties": {
+          "badges": {
+            "items": {
+              "enum": [
+                "Best overall",
+                "Highest quality",
+                "Lowest cost"
+              ],
+              "type": "string"
+            },
+            "title": "Badges",
+            "type": "array"
+          },
+          "pct": {
+            "title": "Pct",
+            "type": "number"
+          },
+          "row": {
+            "$ref": "#/components/schemas/SupplierRow"
+          }
+        },
+        "required": [
+          "badges",
+          "pct",
+          "row"
+        ],
+        "title": "TopCard",
         "type": "object"
       },
       "UploadDetail": {
@@ -11868,6 +12682,61 @@
         ]
       }
     },
+    "/api/purchasing/preferred": {
+      "put": {
+        "description": "Select vendor: Raise PO pre-fills this supplier and its rate for the material.",
+        "operationId": "set_preferred_api_purchasing_preferred_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreferredIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/SupplierRow"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Set Preferred Api Purchasing Preferred Put"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Set Preferred",
+        "tags": [
+          "purchasing"
+        ]
+      }
+    },
     "/api/purchasing/purchase-orders": {
       "get": {
         "operationId": "purchase_orders_api_purchasing_purchase_orders_get",
@@ -12473,6 +13342,262 @@
           }
         ],
         "summary": "Purchases",
+        "tags": [
+          "purchasing"
+        ]
+      }
+    },
+    "/api/purchasing/quotes": {
+      "post": {
+        "description": "Ask suppliers for a quote; their replies are recorded with /quotes/{id}/reply.",
+        "operationId": "request_quotes_api_purchasing_quotes_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuoteRequestIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/QuoteOut"
+                  },
+                  "title": "Response Request Quotes Api Purchasing Quotes Post",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Request Quotes",
+        "tags": [
+          "purchasing"
+        ]
+      }
+    },
+    "/api/purchasing/quotes/{quote_id}/reply": {
+      "post": {
+        "operationId": "reply_quote_api_purchasing_quotes__quote_id__reply_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "quote_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Quote Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuoteReplyIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuoteOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Reply Quote",
+        "tags": [
+          "purchasing"
+        ]
+      }
+    },
+    "/api/purchasing/scoring-rules": {
+      "get": {
+        "operationId": "get_scoring_rules_api_purchasing_scoring_rules_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScoringRules"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Scoring Rules",
+        "tags": [
+          "purchasing"
+        ]
+      },
+      "put": {
+        "description": "The owner's weights for \"Best overall\" and the risk thresholds.",
+        "operationId": "put_scoring_rules_api_purchasing_scoring_rules_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScoringRules"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScoringRules"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Put Scoring Rules",
+        "tags": [
+          "purchasing"
+        ]
+      }
+    },
+    "/api/purchasing/suppliers/comparison": {
+      "get": {
+        "description": "Rates, lead times, on-time delivery and quality per supplier and material; recommended suppliers.",
+        "operationId": "comparison_api_purchasing_suppliers_comparison_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComparisonOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Comparison",
+        "tags": [
+          "purchasing"
+        ]
+      }
+    },
+    "/api/purchasing/suppliers/{supplier_id}": {
+      "get": {
+        "description": "A supplier's deliveries (on time or not, QC) and quotes.",
+        "operationId": "supplier_detail_api_purchasing_suppliers__supplier_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "supplier_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Supplier Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Supplier Detail",
         "tags": [
           "purchasing"
         ]

@@ -165,11 +165,21 @@ async def test_demo_purchases_show_every_stage_without_changing_the_plan(client:
         assert await seed_purchases(s, co.id) == 0  # once only
     await eng_.dispose()
     out = (await client.get("/purchasing/purchases", headers=h)).json()
-    stages = {p["lines"][0]["code"]: p["stage"] for p in out["purchase_orders"]}
+    stages = {p["lines"][0]["code"]: p["stage"] for p in out["purchase_orders"] if p["status"] != "received"}
     assert stages == {"WR8": "pending_approval", "BSW": "delayed", "MSB": "at_gate", "AS10": "sent",
                       "EN8": "confirmed"}  # fmt: skip
     assert [p["stage"] for p in out["attention"]] == ["pending_approval", "delayed", "at_gate"]
     assert out["attention"][0]["priority"] == "high"  # ORD-1041
+    assert sum(p["status"] == "received" for p in out["purchase_orders"]) > 40  # 6 months of supplier history
+    # Supplier comparison on the demo: steel wire rod (needed now) has three different recommended suppliers
+    cmp_ = (await client.get("/purchasing/suppliers/comparison", headers=h)).json()
+    wr8 = next(m for m in cmp_["materials"] if m["code"] == "WR8")
+    assert cmp_["default_material_id"] == wr8["id"]
+    cards = {b: c["row"]["supplier"] for c in cmp_["top"][wr8["id"]] for b in c["badges"]}
+    assert cards == {"Best overall": "JSW Steel Distributors", "Highest quality": "Tata Steel BSL",
+                     "Lowest cost": "Jindal Stainless & Wire"}  # fmt: skip
+    assert cmp_["kpis"]["active_suppliers"] >= 10 and 80 < cmp_["kpis"]["avg_on_time_pct"] < 100
+    assert any(q["status"] == "requested" for q in cmp_["quotes"])
     after = (await client.get("/planning/plan", headers=h)).json()["result"]["sequence"]["rows"]
     assert [(r["id"], r["start"], r["finish"]) for r in after] == [
         (r["id"], r["start"], r["finish"]) for r in before

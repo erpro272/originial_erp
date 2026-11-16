@@ -60,6 +60,8 @@ class MaterialRow(BaseModel):
     suggested_qty: Decimal  # what a PO raised now should cover
     supplier: str | None = None  # the usual supplier
     needs: list[Need] = []  # orders that need it, in order of need
+    preferred: bool = False  # `supplier` is the one chosen in Supplier comparison
+    preferred_rate_paise: int | None = None  # its rate (valid quote, else last price paid)
 
 
 class Kpis(BaseModel):
@@ -203,3 +205,137 @@ class ConfirmIn(BaseModel):
 
 class CancelPoIn(BaseModel):
     reason: str = Field(min_length=1, max_length=2000)
+
+
+# ---- supplier comparison ------------------------------------------------------------------------
+
+
+class ScoringRules(BaseModel):
+    """How "Best overall" weighs the supplier measures (company setting `supplier-scoring`), and when a
+    supplier gets a risk flag."""
+
+    price_weight: float = Field(default=40, ge=0, le=100)
+    on_time_weight: float = Field(default=25, ge=0, le=100)
+    quality_weight: float = Field(default=25, ge=0, le=100)
+    lead_weight: float = Field(default=10, ge=0, le=100)
+    late_risk_below: float = Field(default=90, ge=0, le=100)  # on-time %
+    quality_risk_above: float = Field(default=1.0, ge=0, le=100)  # defect %
+
+
+class SupplierRow(BaseModel):
+    """One supplier for one material."""
+
+    supplier_id: uuid.UUID
+    supplier: str
+    material_id: uuid.UUID
+    material: str
+    code: str
+    category: str | None
+    unit: str
+    rate_paise: int | None  # per unit
+    rate_source: Literal["quote", "last_po", "none"]
+    lead_days: float | None
+    lead_source: Literal["actual", "quote", "none"]
+    on_time_pct: float | None  # supplier-wide, deliveries at the gate by the committed date
+    defect_pct: float | None  # supplier-wide, QC rejected / inspected
+    quality_score: float | None  # out of 10
+    deliveries: int  # supplier-wide, last 12 months
+    active_pos: int  # supplier-wide, open POs
+    overall: float | None  # %
+    stars: int  # 0-5
+    flags: list[str]
+    note: str
+    preferred: bool  # the chosen supplier for this material
+    active: bool  # an open PO, a PO in the last 6 months or a quote in the last 90 days
+    quote_valid_until: date | None = None
+
+
+class TopCard(BaseModel):
+    badges: list[
+        Literal["Best overall", "Highest quality", "Lowest cost"]
+    ]  # each badge goes to its real winner
+    pct: float
+    row: SupplierRow
+
+
+class MaterialRef(BaseModel):
+    id: uuid.UUID
+    code: str
+    name: str
+    unit: str
+    needed: bool  # an order needs it now
+
+
+class QuoteOut(BaseModel):
+    id: uuid.UUID
+    supplier_id: uuid.UUID
+    supplier: str
+    material_id: uuid.UUID
+    material: str
+    code: str
+    unit: str
+    status: Literal["requested", "received"]
+    quantity: Decimal | None
+    rate_paise: int | None
+    lead_days: int | None
+    valid_until: date | None
+    note: str | None
+    created_at: datetime
+    replied_at: datetime | None
+
+
+class ComparisonKpis(BaseModel):
+    active_suppliers: int
+    avg_on_time_pct: float | None
+    avg_lead_days: float | None
+    saved_30d_paise: int  # POs approved in the last 30 days vs the material's average rate (90 days)
+
+
+class ComparisonOut(BaseModel):
+    kpis: ComparisonKpis
+    materials: list[MaterialRef]
+    default_material_id: uuid.UUID | None  # the one most needed now
+    top: dict[str, list[TopCard]]  # material id -> recommended suppliers
+    rows: list[SupplierRow]
+    quotes: list[QuoteOut]  # waiting for a reply, and replies from the last 90 days
+    rules: ScoringRules
+    today: date
+
+
+class DeliveryOut(BaseModel):
+    po_number: str
+    material: str
+    unit: str
+    promised_date: date | None
+    arrived: date
+    on_time: bool | None
+    lead_days: int | None
+    accepted: Decimal | None
+    rejected: Decimal | None
+
+
+class SupplierDetail(BaseModel):
+    id: uuid.UUID
+    name: str
+    deliveries: list[DeliveryOut]
+    quotes: list[QuoteOut]
+    open_pos: list[str]
+
+
+class QuoteRequestIn(BaseModel):
+    material_id: uuid.UUID
+    suppliers: list[str] = Field(min_length=1, max_length=10)
+    quantity: Decimal | None = Field(default=None, gt=0)
+    note: str | None = Field(default=None, max_length=2000)
+
+
+class QuoteReplyIn(BaseModel):
+    rate_paise: int = Field(gt=0)
+    lead_days: int = Field(ge=0, le=365)
+    valid_until: date
+    note: str | None = Field(default=None, max_length=2000)
+
+
+class PreferredIn(BaseModel):
+    material_id: uuid.UUID
+    supplier_id: uuid.UUID

@@ -56,6 +56,9 @@ class PurchaseOrder(Base, TenantScoped, TimestampMixin):
     gate_qty: Mapped[Decimal | None] = mapped_column(Numeric(14, 3))
     gate_ref: Mapped[str | None] = mapped_column(String(100))  # challan / vehicle no.
     gate_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # the date the supplier committed to (at approval, then their first confirmation): on-time is judged
+    # against it, so later follow-ups that move expected_date don't make a late delivery look on time
+    promised_date: Mapped[date | None]
 
 
 class PurchaseOrderLine(Base, TenantScoped, TimestampMixin):
@@ -98,3 +101,31 @@ class PoEvent(Base, TenantScoped):
     data: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)
     actor_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class SupplierQuote(Base, TenantScoped, TimestampMixin):
+    """A quote asked from a supplier for a material (requested), and their reply (received)."""
+
+    __tablename__ = "supplier_quotes"
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    supplier_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("suppliers.id"), index=True)
+    material_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("materials.id"), index=True)
+    status: Mapped[str] = mapped_column(String(16), default="requested")  # requested | received
+    quantity: Mapped[Decimal | None] = mapped_column(Numeric(14, 3))
+    rate_paise: Mapped[int | None] = mapped_column(BigInteger)  # per unit
+    lead_days: Mapped[int | None]
+    valid_until: Mapped[date | None]
+    note: Mapped[str | None] = mapped_column(Text)
+    requested_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
+    replied_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class PreferredSupplier(Base, TenantScoped, TimestampMixin):
+    """The supplier chosen for a material (Select vendor): Raise PO pre-fills it."""
+
+    __tablename__ = "preferred_suppliers"
+    __table_args__ = (UniqueConstraint("tenant_id", "material_id"),)
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    material_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("materials.id"))
+    supplier_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("suppliers.id"))
+    set_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))

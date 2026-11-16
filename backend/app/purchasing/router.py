@@ -5,9 +5,10 @@ from fastapi import APIRouter, Depends
 
 from app.core.auth import Principal, TenantDB, require
 from app.core.permissions import Permission
-from app.purchasing import service
+from app.purchasing import service, suppliers
 from app.purchasing.schemas import (
     CancelPoIn,
+    ComparisonOut,
     ConfirmIn,
     DispatchIn,
     FollowUpIn,
@@ -17,8 +18,15 @@ from app.purchasing.schemas import (
     PoEditIn,
     PoOut,
     PoRaiseIn,
+    PreferredIn,
     PurchasesOut,
     QcIn,
+    QuoteOut,
+    QuoteReplyIn,
+    QuoteRequestIn,
+    ScoringRules,
+    SupplierDetail,
+    SupplierRow,
 )
 
 router = APIRouter(prefix="/purchasing", tags=["purchasing"])
@@ -101,3 +109,48 @@ async def follow_up(db: TenantDB, p: Writer, po_id: uuid.UUID, body: FollowUpIn)
 @router.post("/purchase-orders/{po_id}/cancel")
 async def cancel(db: TenantDB, p: Writer, po_id: uuid.UUID, body: CancelPoIn) -> PoDetail:
     return await service.cancel_po(db, p.user_id, po_id, body.reason)
+
+
+# ---- supplier comparison -------------------------------------------------------------------------
+
+
+@router.get("/suppliers/comparison")
+async def comparison(db: TenantDB, _: Reader) -> ComparisonOut:
+    """Rates, lead times, on-time delivery and quality per supplier and material; recommended suppliers."""
+    return await suppliers.comparison(db)
+
+
+@router.get("/suppliers/{supplier_id}")
+async def supplier_detail(db: TenantDB, _: Reader, supplier_id: uuid.UUID) -> SupplierDetail:
+    """A supplier's deliveries (on time or not, QC) and quotes."""
+    return await suppliers.supplier_detail(db, supplier_id)
+
+
+@router.post("/quotes", status_code=201)
+async def request_quotes(db: TenantDB, p: Writer, body: QuoteRequestIn) -> list[QuoteOut]:
+    """Ask suppliers for a quote; their replies are recorded with /quotes/{id}/reply."""
+    return await suppliers.request_quotes(db, p.user_id, body)
+
+
+@router.post("/quotes/{quote_id}/reply")
+async def reply_quote(db: TenantDB, p: Writer, quote_id: uuid.UUID, body: QuoteReplyIn) -> QuoteOut:
+    return await suppliers.reply_quote(db, p.user_id, quote_id, body)
+
+
+@router.put("/preferred")
+async def set_preferred(db: TenantDB, p: Writer, body: PreferredIn) -> SupplierRow | None:
+    """Select vendor: Raise PO pre-fills this supplier and its rate for the material."""
+    return await suppliers.set_preferred(db, p.user_id, body)
+
+
+@router.get("/scoring-rules")
+async def get_scoring_rules(db: TenantDB, _: Reader) -> ScoringRules:
+    return await suppliers.get_rules(db)
+
+
+@router.put("/scoring-rules")
+async def put_scoring_rules(
+    db: TenantDB, p: Annotated[Principal, Depends(require(Permission.SETTINGS_WRITE))], body: ScoringRules
+) -> ScoringRules:
+    """The owner's weights for "Best overall" and the risk thresholds."""
+    return await suppliers.put_rules(db, p.user_id, body)

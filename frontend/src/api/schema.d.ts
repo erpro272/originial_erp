@@ -896,6 +896,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/purchasing/preferred": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Preferred
+         * @description Select vendor: Raise PO pre-fills this supplier and its rate for the material.
+         */
+        put: operations["set_preferred_api_purchasing_preferred_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/purchasing/purchase-orders": {
         parameters: {
             query?: never;
@@ -1090,6 +1110,104 @@ export interface paths {
          * @description Raw Material Purchase: every PO with its stage, KPIs and the POs that need attention.
          */
         get: operations["purchases_api_purchasing_purchases_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/quotes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request Quotes
+         * @description Ask suppliers for a quote; their replies are recorded with /quotes/{id}/reply.
+         */
+        post: operations["request_quotes_api_purchasing_quotes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/quotes/{quote_id}/reply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reply Quote */
+        post: operations["reply_quote_api_purchasing_quotes__quote_id__reply_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/scoring-rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Scoring Rules */
+        get: operations["get_scoring_rules_api_purchasing_scoring_rules_get"];
+        /**
+         * Put Scoring Rules
+         * @description The owner's weights for "Best overall" and the risk thresholds.
+         */
+        put: operations["put_scoring_rules_api_purchasing_scoring_rules_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/suppliers/comparison": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Comparison
+         * @description Rates, lead times, on-time delivery and quality per supplier and material; recommended suppliers.
+         */
+        get: operations["comparison_api_purchasing_suppliers_comparison_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/purchasing/suppliers/{supplier_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Supplier Detail
+         * @description A supplier's deliveries (on time or not, QC) and quotes.
+         */
+        get: operations["supplier_detail_api_purchasing_suppliers__supplier_id__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1376,6 +1494,39 @@ export interface components {
             /** Name */
             name: string;
             role: components["schemas"]["Role"];
+        };
+        /** ComparisonKpis */
+        ComparisonKpis: {
+            /** Active Suppliers */
+            active_suppliers: number;
+            /** Avg Lead Days */
+            avg_lead_days: number | null;
+            /** Avg On Time Pct */
+            avg_on_time_pct: number | null;
+            /** Saved 30D Paise */
+            saved_30d_paise: number;
+        };
+        /** ComparisonOut */
+        ComparisonOut: {
+            /** Default Material Id */
+            default_material_id: string | null;
+            kpis: components["schemas"]["ComparisonKpis"];
+            /** Materials */
+            materials: components["schemas"]["MaterialRef"][];
+            /** Quotes */
+            quotes: components["schemas"]["QuoteOut"][];
+            /** Rows */
+            rows: components["schemas"]["SupplierRow"][];
+            rules: components["schemas"]["ScoringRules"];
+            /**
+             * Today
+             * Format: date
+             */
+            today: string;
+            /** Top */
+            top: {
+                [key: string]: components["schemas"]["TopCard"][];
+            };
         };
         /** ConfirmIn */
         ConfirmIn: {
@@ -1669,6 +1820,30 @@ export interface components {
             total_sales_paise: number;
             /** Units Sold */
             units_sold: string;
+        };
+        /** DeliveryOut */
+        DeliveryOut: {
+            /** Accepted */
+            accepted: string | null;
+            /**
+             * Arrived
+             * Format: date
+             */
+            arrived: string;
+            /** Lead Days */
+            lead_days: number | null;
+            /** Material */
+            material: string;
+            /** On Time */
+            on_time: boolean | null;
+            /** Po Number */
+            po_number: string;
+            /** Promised Date */
+            promised_date: string | null;
+            /** Rejected */
+            rejected: string | null;
+            /** Unit */
+            unit: string;
         };
         /** DepartmentIn */
         "DepartmentIn-Input": {
@@ -2376,6 +2551,22 @@ export interface components {
             /** Unit */
             unit: string;
         };
+        /** MaterialRef */
+        MaterialRef: {
+            /** Code */
+            code: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Needed */
+            needed: boolean;
+            /** Unit */
+            unit: string;
+        };
         /** MaterialRow */
         MaterialRow: {
             /** Awaiting Approval */
@@ -2411,6 +2602,13 @@ export interface components {
             next_need?: string | null;
             /** On Order */
             on_order: string;
+            /**
+             * Preferred
+             * @default false
+             */
+            preferred: boolean;
+            /** Preferred Rate Paise */
+            preferred_rate_paise?: number | null;
             /** Price Per Unit Paise */
             price_per_unit_paise: number;
             /** Reason */
@@ -3284,6 +3482,19 @@ export interface components {
             /** Supplier */
             supplier: string;
         };
+        /** PreferredIn */
+        PreferredIn: {
+            /**
+             * Material Id
+             * Format: uuid
+             */
+            material_id: string;
+            /**
+             * Supplier Id
+             * Format: uuid
+             */
+            supplier_id: string;
+        };
         /** PreviewOut */
         PreviewOut: {
             diff: components["schemas"]["Diff"];
@@ -3451,6 +3662,82 @@ export interface components {
              * @default 0
              */
             rejected: number | string;
+        };
+        /** QuoteOut */
+        QuoteOut: {
+            /** Code */
+            code: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Lead Days */
+            lead_days: number | null;
+            /** Material */
+            material: string;
+            /**
+             * Material Id
+             * Format: uuid
+             */
+            material_id: string;
+            /** Note */
+            note: string | null;
+            /** Quantity */
+            quantity: string | null;
+            /** Rate Paise */
+            rate_paise: number | null;
+            /** Replied At */
+            replied_at: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "requested" | "received";
+            /** Supplier */
+            supplier: string;
+            /**
+             * Supplier Id
+             * Format: uuid
+             */
+            supplier_id: string;
+            /** Unit */
+            unit: string;
+            /** Valid Until */
+            valid_until: string | null;
+        };
+        /** QuoteReplyIn */
+        QuoteReplyIn: {
+            /** Lead Days */
+            lead_days: number;
+            /** Note */
+            note?: string | null;
+            /** Rate Paise */
+            rate_paise: number;
+            /**
+             * Valid Until
+             * Format: date
+             */
+            valid_until: string;
+        };
+        /** QuoteRequestIn */
+        QuoteRequestIn: {
+            /**
+             * Material Id
+             * Format: uuid
+             */
+            material_id: string;
+            /** Note */
+            note?: string | null;
+            /** Quantity */
+            quantity?: number | string | null;
+            /** Suppliers */
+            suppliers: string[];
         };
         /** RaisePoIn */
         RaisePoIn: {
@@ -3691,6 +3978,43 @@ export interface components {
              */
             today: string;
         };
+        /**
+         * ScoringRules
+         * @description How "Best overall" weighs the supplier measures (company setting `supplier-scoring`), and when a
+         *     supplier gets a risk flag.
+         */
+        ScoringRules: {
+            /**
+             * Late Risk Below
+             * @default 90
+             */
+            late_risk_below: number;
+            /**
+             * Lead Weight
+             * @default 10
+             */
+            lead_weight: number;
+            /**
+             * On Time Weight
+             * @default 25
+             */
+            on_time_weight: number;
+            /**
+             * Price Weight
+             * @default 40
+             */
+            price_weight: number;
+            /**
+             * Quality Risk Above
+             * @default 1
+             */
+            quality_risk_above: number;
+            /**
+             * Quality Weight
+             * @default 25
+             */
+            quality_weight: number;
+        };
         /** Selection */
         Selection: {
             /** Base */
@@ -3889,6 +4213,86 @@ export interface components {
             /** Setup Hours */
             setup_hours: string;
         };
+        /** SupplierDetail */
+        SupplierDetail: {
+            /** Deliveries */
+            deliveries: components["schemas"]["DeliveryOut"][];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Open Pos */
+            open_pos: string[];
+            /** Quotes */
+            quotes: components["schemas"]["QuoteOut"][];
+        };
+        /**
+         * SupplierRow
+         * @description One supplier for one material.
+         */
+        SupplierRow: {
+            /** Active */
+            active: boolean;
+            /** Active Pos */
+            active_pos: number;
+            /** Category */
+            category: string | null;
+            /** Code */
+            code: string;
+            /** Defect Pct */
+            defect_pct: number | null;
+            /** Deliveries */
+            deliveries: number;
+            /** Flags */
+            flags: string[];
+            /** Lead Days */
+            lead_days: number | null;
+            /**
+             * Lead Source
+             * @enum {string}
+             */
+            lead_source: "actual" | "quote" | "none";
+            /** Material */
+            material: string;
+            /**
+             * Material Id
+             * Format: uuid
+             */
+            material_id: string;
+            /** Note */
+            note: string;
+            /** On Time Pct */
+            on_time_pct: number | null;
+            /** Overall */
+            overall: number | null;
+            /** Preferred */
+            preferred: boolean;
+            /** Quality Score */
+            quality_score: number | null;
+            /** Quote Valid Until */
+            quote_valid_until?: string | null;
+            /** Rate Paise */
+            rate_paise: number | null;
+            /**
+             * Rate Source
+             * @enum {string}
+             */
+            rate_source: "quote" | "last_po" | "none";
+            /** Stars */
+            stars: number;
+            /** Supplier */
+            supplier: string;
+            /**
+             * Supplier Id
+             * Format: uuid
+             */
+            supplier_id: string;
+            /** Unit */
+            unit: string;
+        };
         /** TokenResponse */
         TokenResponse: {
             /** Access Token */
@@ -3900,6 +4304,14 @@ export interface components {
              * @default bearer
              */
             token_type: string;
+        };
+        /** TopCard */
+        TopCard: {
+            /** Badges */
+            badges: ("Best overall" | "Highest quality" | "Lowest cost")[];
+            /** Pct */
+            pct: number;
+            row: components["schemas"]["SupplierRow"];
         };
         /** UploadDetail */
         UploadDetail: {
@@ -5933,6 +6345,39 @@ export interface operations {
             };
         };
     };
+    set_preferred_api_purchasing_preferred_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreferredIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupplierRow"] | null;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     purchase_orders_api_purchasing_purchase_orders_get: {
         parameters: {
             query?: never;
@@ -6309,6 +6754,178 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PurchasesOut"];
+                };
+            };
+        };
+    };
+    request_quotes_api_purchasing_quotes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuoteRequestIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuoteOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reply_quote_api_purchasing_quotes__quote_id__reply_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                quote_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuoteReplyIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuoteOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_scoring_rules_api_purchasing_scoring_rules_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScoringRules"];
+                };
+            };
+        };
+    };
+    put_scoring_rules_api_purchasing_scoring_rules_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScoringRules"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScoringRules"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    comparison_api_purchasing_suppliers_comparison_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ComparisonOut"];
+                };
+            };
+        };
+    };
+    supplier_detail_api_purchasing_suppliers__supplier_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                supplier_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupplierDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
