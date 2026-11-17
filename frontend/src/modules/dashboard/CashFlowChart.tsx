@@ -106,7 +106,7 @@ export function CashFlowChart({ months }: { months: CashMonth[] }) {
               cx={PAD.l + step * (i + 0.5)}
               cy={y(m.payables)}
               r="3.5"
-              className="pointer-events-none fill-white stroke-s4"
+              className="pointer-events-none fill-card stroke-s4"
               strokeWidth="2"
             />
           ))}
@@ -114,7 +114,7 @@ export function CashFlowChart({ months }: { months: CashMonth[] }) {
         {h && hover != null && (
           <div
             role="status"
-            className="pointer-events-none absolute top-2 z-10 w-[210px] rounded-tip border border-line bg-white px-3.5 py-2.5 text-[12px] shadow-tip"
+            className="pointer-events-none absolute top-2 z-10 w-[210px] rounded-tip border border-line bg-card px-3.5 py-2.5 text-[12px] shadow-tip"
             style={{
               left: `${Math.min(70, Math.max(0, ((PAD.l + step * (hover + 0.5)) / W) * 100 - 18))}%`,
             }}

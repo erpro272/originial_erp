@@ -91,7 +91,7 @@ export function StepTabs({
             <span
               className={cn(
                 "grid size-[22px] place-items-center rounded-full border border-faint text-xs font-semibold text-muted",
-                on && "border-ink bg-ink text-white",
+                on && "border-inverse bg-inverse text-on-inverse",
                 s.locked && "border-dashed text-subtle",
               )}
             >

@@ -162,11 +162,11 @@ export function WidgetView({ w }: { w: Widget }): ReactNode {
       const tables = w.children.filter((c) => c.type === "table");
       const side = w.children.filter((c) => c.type !== "table");
       return (
-        <section className="flex flex-col gap-3 rounded-card border border-line bg-white p-4">
+        <section className="flex flex-col gap-3 rounded-card border border-line bg-card p-4">
           <div className="flex flex-wrap items-center gap-2">
             <span
               className={cn(
-                "grid size-5 place-items-center rounded-full text-white",
+                "grid size-5 place-items-center rounded-full text-on-tone",
                 w.icon === "alert" ? "bg-md-accent" : "bg-ok",
               )}
               aria-hidden="true"
@@ -215,7 +215,7 @@ export function RelatedChips({ items }: { items: Related[] }) {
           <Link
             key={`${r.kind}:${r.label}`}
             to={r.href}
-            className="flex items-center gap-2 rounded-card border border-line bg-white px-3 py-1.5 text-[13px] text-ink-2 hover:border-faint hover:bg-surface"
+            className="flex items-center gap-2 rounded-card border border-line bg-card px-3 py-1.5 text-[13px] text-ink-2 hover:border-faint hover:bg-surface"
           >
             <KitIcon kind={CHIP_ICON[r.kind] ?? "trend"} className="size-4 text-ink-3" />
             {r.kind === "screen" ? `Open ${r.label}` : r.label}

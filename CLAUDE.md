@@ -160,6 +160,12 @@ isolation). One company per website: no company picker or switcher in the UI.
   never hand-write API types. Server state via TanStack Query.
 - Module pages replace the "Coming soon" route in `src/app/App.tsx`; nav in `src/app/nav.ts`.
 - Page-level top-bar actions (e.g. "+ New order") via `<PageActions>`.
+- Dark mode: every colour token has a dark value under `:root[data-theme="dark"]` in `styles.css` (text pairs WCAG AA;
+  s1..s5 = the dataviz palette's dark steps, validated). Use `bg-card` (never `bg-white`) for panels, `bg-inverse
+  text-on-inverse` for dark-on-light chips / toasts / the dark button, and `text-on-tone` for text on a solid status
+  fill (`bg-hi`, `bg-ok`, `bg-te`...). `lib/theme.ts` (light / dark / system, localStorage `erp.theme` + account
+  preference `ui.theme`), `ThemeToggle` in `TopNav`, no-flash script in `index.html`. `e2e/tests/theme.spec.ts` fails on
+  any large light panel left in dark mode.
 - Brand: neutral placeholder `Brand` (owner's choice; `VITE_BRAND_NAME` overrides). Design language "Clean Kri".
 - Tests: Vitest + RTL next to components (`*.test.tsx`); `src/test/utils.tsx` mocks fetch.
 - `/_design` (dev only) shows every shared component.

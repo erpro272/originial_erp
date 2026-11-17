@@ -377,7 +377,7 @@ function Review({ detail, spec }: { detail: UploadDetail; spec: FieldSpec }) {
                 <details
                   key={s.key}
                   open={found > 0 || hasIssue}
-                  className="group rounded-card border border-line bg-white"
+                  className="group rounded-card border border-line bg-card"
                 >
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-4">
                     <b className="text-[15px] font-semibold">{s.label}</b>
@@ -569,7 +569,7 @@ function Review({ detail, spec }: { detail: UploadDetail; spec: FieldSpec }) {
           )}
 
           {editable && (
-            <div className="sticky bottom-3 z-10 flex flex-wrap items-center justify-between gap-3 rounded-card border border-line bg-white px-5 py-4 shadow-tip">
+            <div className="sticky bottom-3 z-10 flex flex-wrap items-center justify-between gap-3 rounded-card border border-line bg-card px-5 py-4 shadow-tip">
               <div className="flex flex-col gap-1 text-sm">
                 {dup.flag === "possible" && (
                   <label className="flex items-center gap-2 text-md">
@@ -672,7 +672,7 @@ function FieldInput(props: {
         aria-invalid={err ? true : undefined}
         aria-describedby={issues.length ? `${id}-msg` : undefined}
         className={cn(
-          "min-h-9 rounded-[10px] border border-line-input bg-white px-3 text-sm text-ink outline-none placeholder:text-subtle focus:border-primary focus:ring-2 focus:ring-bl-bg disabled:bg-surface",
+          "min-h-9 rounded-[10px] border border-line-input bg-card px-3 text-sm text-ink outline-none placeholder:text-subtle focus:border-primary focus:ring-2 focus:ring-bl-bg disabled:bg-surface",
           (type === "gstin" || type === "pan") && "font-mono",
           missing && "border-dashed",
           low && "border-md-line bg-md-bg",

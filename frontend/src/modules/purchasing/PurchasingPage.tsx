@@ -31,7 +31,7 @@ import { RequestQuoteDialog, SupplierTab } from "./SupplierTab";
 
 type StatusKey = keyof typeof STATUS;
 const select =
-  "cursor-pointer rounded-full border border-line-input bg-white px-3.5 py-2 text-[13px] font-medium text-ink-2";
+  "cursor-pointer rounded-full border border-line-input bg-card px-3.5 py-2 text-[13px] font-medium text-ink-2";
 
 /** Purchasing: raw material stock levels, shortage alerts and open purchase orders. */
 export function PurchasingPage() {
@@ -492,7 +492,7 @@ function AttentionCard({
     <article
       data-testid={`attention-${m.code}`}
       className={cn(
-        "flex flex-col gap-1.5 rounded-card border bg-white p-[18px]",
+        "flex flex-col gap-1.5 rounded-card border bg-card p-[18px]",
         m.status === "critical_short"
           ? "border-hi-line"
           : m.status === "low_stock"

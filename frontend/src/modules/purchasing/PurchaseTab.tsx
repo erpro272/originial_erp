@@ -153,7 +153,7 @@ function AttentionCard({ po, onOpen }: { po: Po; onOpen: () => void }) {
     <article
       data-testid={`card-${po.number}`}
       className={cn(
-        "flex flex-col gap-1.5 rounded-card border bg-white p-[18px]",
+        "flex flex-col gap-1.5 rounded-card border bg-card p-[18px]",
         po.stage === "pending_approval"
           ? "border-hi-line"
           : po.stage === "delayed"

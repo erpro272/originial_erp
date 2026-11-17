@@ -187,7 +187,7 @@ export function Panel({
   return (
     <section
       aria-labelledby={id}
-      className={cn("rounded-card border border-line bg-white", className)}
+      className={cn("rounded-card border border-line bg-card", className)}
     >
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-divider px-6 py-4">
         <h2 id={id} className="m-0 flex items-center gap-3 text-[18px] font-semibold">

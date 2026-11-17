@@ -19,7 +19,7 @@ function LiveClock() {
   });
   const date = now.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
   return (
-    <div className="flex items-center rounded-full border border-line bg-white text-[13px]">
+    <div className="flex items-center rounded-full border border-line bg-card text-[13px]">
       <span className="flex items-center gap-2 border-r border-line px-4 py-2 font-semibold text-ink">
         <span className="size-2 rounded-full bg-ok" />
         Live
@@ -81,7 +81,7 @@ export function ProductionPage() {
       <FactoryPanel id="layout-h" />
 
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.4fr_1fr]">
-        <section aria-labelledby="perf-h" className="rounded-card border border-line bg-white p-5">
+        <section aria-labelledby="perf-h" className="rounded-card border border-line bg-card p-5">
           <h2 id="perf-h" className="m-0 mb-4 flex items-center gap-3 text-[18px] font-semibold">
             <Icon className="size-6 text-ink-2">
               <path d="M4 20V10M10 20V4M16 20v-7M2 20h20" />
@@ -104,10 +104,7 @@ export function ProductionPage() {
             ))}
           </dl>
         </section>
-        <section
-          aria-labelledby="alerts-h"
-          className="rounded-card border border-line bg-white p-5"
-        >
+        <section aria-labelledby="alerts-h" className="rounded-card border border-line bg-card p-5">
           <div className="mb-3 flex items-center justify-between">
             <h2 id="alerts-h" className="m-0 flex items-center gap-3 text-[18px] font-semibold">
               <Icon className="size-6 text-ink-2">

@@ -57,7 +57,7 @@ export function SegmentedControl<T extends string>({
             className={cn(
               "cursor-pointer rounded-full border-0 bg-transparent font-medium text-ink-3",
               size === "md" ? "px-[18px] py-2 text-sm" : "px-3.5 py-1.5 text-[13px]",
-              on && "bg-white font-semibold text-ink shadow-seg",
+              on && "bg-card font-semibold text-ink shadow-seg",
             )}
           >
             {o.label}

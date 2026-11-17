@@ -20,7 +20,7 @@ export function UserMenu() {
     <Menu>
       <MenuTrigger
         aria-label={`Account menu for ${me.full_name}`}
-        className="flex cursor-pointer items-center gap-2.5 rounded-full border border-line-input bg-white py-1 pr-3 pl-1 hover:border-faint"
+        className="flex cursor-pointer items-center gap-2.5 rounded-full border border-line-input bg-card py-1 pr-3 pl-1 hover:border-faint"
       >
         <span className="grid size-8 place-items-center rounded-full bg-bl-bg text-xs font-semibold text-bl">
           {initials(me.full_name)}

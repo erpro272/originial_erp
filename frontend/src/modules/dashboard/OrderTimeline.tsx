@@ -48,7 +48,7 @@ function Gantt({ t, days, today }: { t: Timeline; days: string[]; today: string 
   return (
     <div className="overflow-x-auto">
       <div className="min-w-fit" style={{ display: "grid", gridTemplateColumns: col }}>
-        <div className="sticky left-0 z-10 flex items-end border-b border-line bg-white px-4 pb-2 text-[13px] font-semibold text-ink-2">
+        <div className="sticky left-0 z-10 flex items-end border-b border-line bg-card px-4 pb-2 text-[13px] font-semibold text-ink-2">
           Orders
         </div>
         {days.map((d) => {
@@ -86,7 +86,7 @@ function Gantt({ t, days, today }: { t: Timeline; days: string[]; today: string 
               aria-label={`${r.number} · ${r.customer}: ${shortDate(r.start)} to ${shortDate(r.finish)}`}
               className="group contents"
             >
-              <div className="sticky left-0 z-10 flex items-center gap-3 border-b border-divider bg-white px-4 py-3 group-hover:bg-surface">
+              <div className="sticky left-0 z-10 flex items-center gap-3 border-b border-divider bg-card px-4 py-3 group-hover:bg-surface">
                 <span
                   className={cn(
                     "size-2 shrink-0 rounded-full",

@@ -20,7 +20,7 @@ const STAGE_TONE = {
     head: "bg-load-ink/80",
     box: "border-bl-line bg-bl-bg",
   },
-  s2: { zone: "bg-te-bg/70", badge: "bg-te", head: "bg-te/80", box: "border-te-line bg-white/70" },
+  s2: { zone: "bg-te-bg/70", badge: "bg-te", head: "bg-te/80", box: "border-te-line bg-card/70" },
   s3: { zone: "bg-md-bg/50", badge: "bg-ok", head: "bg-ok/80", box: "border-ok bg-ok-bg" },
 } as const;
 
@@ -45,7 +45,7 @@ function HoverCard({ h }: { h: Hover }) {
       role="tooltip"
       id="factory-hover"
       style={style}
-      className="pointer-events-none absolute z-20 w-[230px] rounded-card border border-line bg-white p-4 shadow-[0_12px_32px_rgb(15_23_42/0.16)]"
+      className="pointer-events-none absolute z-20 w-[230px] rounded-card border border-line bg-card p-4 shadow-[0_12px_32px_rgb(15_23_42/0.16)]"
     >
       <div className="flex items-center gap-2 text-[15px] font-semibold text-ink">
         <CubeIcon className="size-4 text-ink-2" />
@@ -215,7 +215,7 @@ export function FactoryLayout({ view }: { view: "layout" | "status" }) {
           h={{ id: `${st.key}-badge`, title: st.name, stats: st, box: st.badge, stage: true }}
           onHover={setHover}
           className={cn(
-            "flex items-stretch overflow-hidden rounded-md text-white shadow-sm",
+            "flex items-stretch overflow-hidden rounded-md text-on-tone shadow-sm",
             STAGE_TONE[st.key].head,
           )}
           style={at(st.badge)}
@@ -236,7 +236,7 @@ export function FactoryLayout({ view }: { view: "layout" | "status" }) {
 
       {/* utility strip */}
       <div
-        className="absolute rounded-[4px] border border-faint bg-white"
+        className="absolute rounded-[4px] border border-faint bg-card"
         style={at({ x: 40, y: 334, w: 796, h: 46 })}
       />
       <Hoverable
@@ -260,7 +260,7 @@ export function FactoryLayout({ view }: { view: "layout" | "status" }) {
           s.stage === "utility"
             ? "border-l border-faint bg-transparent"
             : s.kind === "store" && s.id === "general"
-              ? "border border-ink-3 bg-white"
+              ? "border border-ink-3 bg-card"
               : s.kind === "goods"
                 ? "rounded-md border border-ai-line bg-ai-bg"
                 : s.kind === "loading"
@@ -291,7 +291,7 @@ export function FactoryLayout({ view }: { view: "layout" | "status" }) {
                 {s.name}
               </span>
             ) : (
-              <span className={cn(s.kind === "loading" && "rounded bg-white/90 px-1.5 py-0.5")}>
+              <span className={cn(s.kind === "loading" && "rounded bg-card/90 px-1.5 py-0.5")}>
                 {s.name}
               </span>
             )}

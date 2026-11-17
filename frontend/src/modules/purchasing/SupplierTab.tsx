@@ -277,7 +277,7 @@ function TopCard({
       data-testid={`top-${row.supplier}`}
       className={cn(
         "flex flex-col gap-1.5 rounded-card border p-[18px]",
-        first ? "border-ok-line bg-ok-bg" : "border-line bg-white",
+        first ? "border-ok-line bg-ok-bg" : "border-line bg-card",
       )}
     >
       <div className="flex flex-wrap justify-end gap-1.5">

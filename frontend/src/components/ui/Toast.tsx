@@ -31,7 +31,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           <T.Root
             key={t.id}
             onOpenChange={(open) => !open && setItems((xs) => xs.filter((x) => x.id !== t.id))}
-            className="flex animate-fade-in items-start gap-3 rounded-tip bg-ink px-4 py-3 text-white shadow-tip"
+            className="flex animate-fade-in items-start gap-3 rounded-tip bg-inverse px-4 py-3 text-on-inverse shadow-tip"
           >
             <span
               aria-hidden
@@ -50,7 +50,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             </div>
             <T.Close
               aria-label="Dismiss"
-              className="cursor-pointer border-0 bg-transparent text-faint hover:text-white"
+              className="cursor-pointer border-0 bg-transparent text-faint hover:text-on-inverse"
             >
               ×
             </T.Close>

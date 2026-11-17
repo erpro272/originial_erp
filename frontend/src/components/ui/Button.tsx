@@ -16,10 +16,10 @@ export const buttonVariants = cva(
     variants: {
       variant: {
         primary: "bg-primary font-semibold text-white hover:bg-primary-hover",
-        dark: "bg-ink font-semibold text-white hover:bg-ink-2",
-        pill: "border border-line-input bg-white font-medium text-ink-2 hover:border-faint",
+        dark: "bg-inverse font-semibold text-on-inverse hover:bg-inverse-hover",
+        pill: "border border-line-input bg-card font-medium text-ink-2 hover:border-faint",
         ghost: "font-medium text-ink-3 hover:bg-surface-2 hover:text-ink",
-        danger: "bg-hi font-semibold text-white hover:opacity-90",
+        danger: "bg-hi font-semibold text-on-tone hover:opacity-90",
       },
       size: {
         md: "min-h-10 px-5 py-2.5 text-sm",

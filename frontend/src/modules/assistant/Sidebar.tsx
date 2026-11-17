@@ -57,7 +57,7 @@ export function Sidebar({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search conversations"
-          className="w-full rounded-card border border-line-input bg-white px-3 py-2 text-[13px] outline-none focus:border-primary"
+          className="w-full rounded-card border border-line-input bg-card px-3 py-2 text-[13px] outline-none focus:border-primary"
         />
       </label>
       <nav
@@ -82,7 +82,7 @@ export function Sidebar({
                   onClick={() => onOpen(c.id)}
                   aria-current={c.id === activeId ? "true" : undefined}
                   className={cn(
-                    "flex cursor-pointer items-start gap-2 rounded-lg px-2 py-2 text-left text-[13px] text-ink-2 hover:bg-white",
+                    "flex cursor-pointer items-start gap-2 rounded-lg px-2 py-2 text-left text-[13px] text-ink-2 hover:bg-card",
                     c.id === activeId && "bg-bl-bg font-medium text-primary hover:bg-bl-bg",
                   )}
                 >

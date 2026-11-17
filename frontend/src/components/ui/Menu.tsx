@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
 const panel =
-  "z-50 min-w-[200px] rounded-tip border border-line bg-white p-1.5 shadow-tip animate-fade-in";
+  "z-50 min-w-[200px] rounded-tip border border-line bg-card p-1.5 shadow-tip animate-fade-in";
 
 /** Dropdown menu (Radix): keyboard navigation, typeahead, focus return. */
 export const Menu = DM.Root;
@@ -86,7 +86,7 @@ export function Tooltip({ content, children }: { content: ReactNode; children: R
         <TT.Portal>
           <TT.Content
             sideOffset={6}
-            className="z-[60] max-w-[260px] animate-fade-in rounded-tip border border-line bg-white px-4 py-3 text-[13px] text-ink shadow-tip"
+            className="z-[60] max-w-[260px] animate-fade-in rounded-tip border border-line bg-card px-4 py-3 text-[13px] text-ink shadow-tip"
           >
             {content}
           </TT.Content>

@@ -74,8 +74,8 @@ export function ApDrawer({
                   className={cn(
                     "cursor-pointer rounded-full border px-3 py-1.5 font-mono text-xs",
                     i.id === inv?.id
-                      ? "border-ink bg-ink text-white"
-                      : "border-line bg-white text-ink-2",
+                      ? "border-inverse bg-inverse text-on-inverse"
+                      : "border-line bg-card text-ink-2",
                   )}
                 >
                   {i.number} · {inr(i.total_paise)}

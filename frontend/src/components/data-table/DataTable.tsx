@@ -221,7 +221,7 @@ export function DataTable<T>({
     virtual && vItems.length ? virtualizer.getTotalSize() - vItems[vItems.length - 1]!.end : 0;
 
   return (
-    <section className="rounded-card border border-line bg-white" aria-busy={loading || undefined}>
+    <section className="rounded-card border border-line bg-card" aria-busy={loading || undefined}>
       <CardHeader
         title={
           <span className="flex flex-wrap items-baseline gap-3">

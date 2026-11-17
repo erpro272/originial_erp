@@ -23,7 +23,14 @@
   --color-subtle: #94a3b8;
   --color-faint: #cbd5e1;
 
-  /* lines and surfaces */
+  /* lines and surfaces (card = panels, modals, inputs: white in light mode) */
+  --color-card: #ffffff;
+  /* inverse = a dark chip / toast / button on a light page (and the other way round in dark mode) */
+  --color-inverse: #0f172a;
+  --color-inverse-hover: #334155;
+  --color-on-inverse: #ffffff;
+  /* text on a solid status fill (bg-hi / bg-ok / bg-te ...): white here, near-black in dark mode where fills are light */
+  --color-on-tone: #ffffff;
   --color-line: #e5e9f0;
   --color-line-input: #e2e8f0;
   --color-divider: #eef1f5;
@@ -113,7 +120,7 @@
     -webkit-font-smoothing: antialiased;
   }
   body {
-    @apply bg-white font-sans text-ink;
+    @apply bg-card font-sans text-ink;
     margin: 0;
   }
   a {
@@ -132,4 +139,86 @@
 /* Overlay colour used by modals. */
 .overlay {
   background: rgba(15, 23, 42, 0.35);
+}
+
+/*
+ * Dark mode: the same tokens with dark values, switched by <html data-theme="dark"> (lib/theme.ts sets it from the
+ * user's choice: light / dark / follow the device). Every screen uses tokens only, so nothing else changes.
+ * Text pairs are WCAG AA on their backgrounds (checked); chart series s1..s5 are the dataviz palette's dark steps,
+ * validated against the dark card (#161b22) with the palette script (all checks pass).
+ */
+:root {
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-primary: #2f6fe6;
+  --color-primary-hover: #3a78ec;
+  --color-link: #79a6ff;
+  --color-link-hover: #a3c2ff;
+
+  --color-ink: #e6edf3;
+  --color-ink-2: #c9d3de;
+  --color-ink-3: #a9b4c2;
+  --color-muted: #8d99a8;
+  --color-subtle: #6f7b8a;
+  --color-faint: #4a5664;
+
+  --color-card: #161b22;
+  --color-inverse: #e6edf3;
+  --color-inverse-hover: #c9d3de;
+  --color-on-inverse: #0f141b;
+  --color-on-tone: #0f141b;
+
+  --color-line: #2a323d;
+  --color-line-input: #343d49;
+  --color-divider: #232a33;
+  --color-divider-2: #1f262e;
+  --color-surface: #1c222b;
+  --color-surface-2: #232a34;
+  --color-surface-blue: #1a2232;
+
+  --color-hi-bg: #3b1e1e;
+  --color-hi: #ff9e94;
+  --color-hi-line: #6e2e28;
+  --color-hi-wash: #241719;
+  --color-md-bg: #38290f;
+  --color-md: #f2b55a;
+  --color-md-line: #6b4a1a;
+  --color-md-accent: #e59e2e;
+  --color-lo-bg: #232a34;
+  --color-lo: #b0bccb;
+  --color-ok-bg: #11301f;
+  --color-ok: #72d39b;
+  --color-ok-line: #245a3c;
+  --color-bl-bg: #172649;
+  --color-bl: #8db5ff;
+  --color-bl-line: #2e4a85;
+
+  --color-in-bg: #20224a;
+  --color-in-line: #3d4190;
+  --color-in: #aab0ff;
+  --color-te-bg: #0f302b;
+  --color-te-line: #215c53;
+  --color-te: #62d5c4;
+  --color-s1: #3987e5;
+  --color-s2: #d95926;
+  --color-s3: #199e70;
+  --color-s4: #c98500;
+  --color-s5: #d55181;
+  --color-load: #25426f;
+  --color-load-ink: #dbe7ff;
+  --color-ai-bg: #2b2047;
+  --color-ai: #c6a8ff;
+  --color-ai-wash: #1d1830;
+  --color-ai-line: #3e3066;
+
+  --shadow-seg: 0 1px 2px rgba(0, 0, 0, 0.4), 0 0 0 1px #2a323d;
+  --shadow-tip: 0 12px 32px rgba(0, 0, 0, 0.5);
+  --shadow-modal: 0 24px 64px rgba(0, 0, 0, 0.6);
+  --shadow-lift: 0 2px 6px rgba(0, 0, 0, 0.45);
+}
+:root[data-theme="dark"] .overlay {
+  background: rgba(0, 0, 0, 0.6);
 }

@@ -3,6 +3,7 @@ import { useAuth } from "@/auth/AuthContext";
 import { BRAND_NAME } from "@/app/brand";
 import { MODULES } from "@/app/nav";
 import { cn } from "@/lib/cn";
+import { ThemeToggle } from "./ThemeToggle";
 import { UserMenu } from "./UserMenu";
 
 function Sparkle() {
@@ -19,8 +20,8 @@ export function TopNav({ actionsRef }: { actionsRef?: (el: HTMLElement | null) =
   const loc = useLocation();
   const onAssistant = loc.pathname.startsWith("/assistant");
   return (
-    <header className="border-b border-line bg-white">
-      <div className="mx-auto flex min-h-16 max-w-[1360px] flex-wrap items-center gap-10 px-8">
+    <header className="border-b border-line bg-card">
+      <div className="mx-auto flex min-h-16 max-w-[1360px] flex-wrap items-center gap-x-8 gap-y-2 px-8">
         <NavLink
           to="/"
           className="flex items-center gap-2.5 text-lg font-bold text-ink no-underline hover:text-ink"
@@ -28,7 +29,7 @@ export function TopNav({ actionsRef }: { actionsRef?: (el: HTMLElement | null) =
           <span aria-hidden className="size-4 rounded-full bg-primary" />
           {BRAND_NAME}
         </NavLink>
-        <nav aria-label="Main" className="flex flex-1 flex-wrap gap-8">
+        <nav aria-label="Main" className="flex flex-1 flex-wrap gap-x-7">
           {MODULES.map((m) => (
             <NavLink
               key={m.key}
@@ -53,12 +54,13 @@ export function TopNav({ actionsRef }: { actionsRef?: (el: HTMLElement | null) =
             title="AI Assistant"
             className={cn(
               "grid size-10 place-items-center rounded-full border text-primary no-underline transition-colors hover:bg-bl-bg",
-              onAssistant ? "border-bl-line bg-bl-bg" : "border-line bg-white",
+              onAssistant ? "border-bl-line bg-bl-bg" : "border-line bg-card",
             )}
           >
             <Sparkle />
           </Link>
         )}
+        <ThemeToggle />
         <UserMenu />
       </div>
     </header>

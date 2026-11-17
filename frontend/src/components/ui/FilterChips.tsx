@@ -31,8 +31,8 @@ export function FilterChips<T extends string>({
             aria-pressed={on}
             onClick={() => onChange(o.value)}
             className={cn(
-              "inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-line-input bg-white px-3.5 py-[7px] text-[13px] font-medium text-ink-2 hover:border-faint",
-              on && "border-ink bg-ink text-white hover:border-ink",
+              "inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-line-input bg-card px-3.5 py-[7px] text-[13px] font-medium text-ink-2 hover:border-faint",
+              on && "border-inverse bg-inverse text-on-inverse hover:border-inverse",
             )}
           >
             {o.dot && <i aria-hidden className={cn("size-2 rounded-full", o.dot)} />}

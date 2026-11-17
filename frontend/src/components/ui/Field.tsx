@@ -27,7 +27,7 @@ export const TextField = forwardRef<
         aria-invalid={error ? true : undefined}
         aria-describedby={error || hint ? msgId : undefined}
         className={cn(
-          "min-h-10 rounded-[10px] border border-line-input bg-white px-3 text-sm text-ink outline-none placeholder:text-subtle focus:border-primary focus:ring-2 focus:ring-bl-bg",
+          "min-h-10 rounded-[10px] border border-line-input bg-card px-3 text-sm text-ink outline-none placeholder:text-subtle focus:border-primary focus:ring-2 focus:ring-bl-bg",
           error && "border-hi-line focus:border-hi focus:ring-hi-bg",
           className,
         )}
@@ -84,7 +84,7 @@ export function SearchBox({
 }
 
 const control =
-  "min-h-10 rounded-[10px] border border-line-input bg-white px-3 text-sm text-ink outline-none focus:border-primary focus:ring-2 focus:ring-bl-bg disabled:bg-surface disabled:text-muted";
+  "min-h-10 rounded-[10px] border border-line-input bg-card px-3 text-sm text-ink outline-none focus:border-primary focus:ring-2 focus:ring-bl-bg disabled:bg-surface disabled:text-muted";
 const controlError = "border-hi-line focus:border-hi focus:ring-hi-bg";
 
 function FieldShell({

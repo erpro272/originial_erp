@@ -306,7 +306,7 @@ export function ScheduleStep({ plan, go }: { plan: Plan; go: (step: string) => v
             const info = runInfo[r.id];
             return (
               <Row key={r.id} grid={grid} minW={minW}>
-                <div className="sticky left-0 z-[3] col-start-1 row-start-1 flex h-full items-center gap-2.5 border-r border-line bg-white pr-3.5 pl-5">
+                <div className="sticky left-0 z-[3] col-start-1 row-start-1 flex h-full items-center gap-2.5 border-r border-line bg-card pr-3.5 pl-5">
                   <span className="w-3.5 text-xs opacity-60" title="In production, can't be moved">
                     🔒
                   </span>
@@ -386,7 +386,7 @@ export function ScheduleStep({ plan, go }: { plan: Plan; go: (step: string) => v
           <Section minW={minW}>Machine load</Section>
           {sch.load.map((l) => (
             <Row key={l.machine} grid={grid} minW={minW} small>
-              <div className="sticky left-0 z-[3] col-start-1 row-start-1 flex h-full items-center gap-2.5 border-r border-line bg-white pr-3.5 pl-5 text-sm">
+              <div className="sticky left-0 z-[3] col-start-1 row-start-1 flex h-full items-center gap-2.5 border-r border-line bg-card pr-3.5 pl-5 text-sm">
                 <i
                   className={cn(
                     "inline-block size-3 rounded-[3px] border bg-current!",
@@ -417,7 +417,7 @@ export function ScheduleStep({ plan, go }: { plan: Plan; go: (step: string) => v
                       empty
                         ? "font-normal text-faint"
                         : v > 100
-                          ? "bg-hi text-white"
+                          ? "bg-hi text-on-tone"
                           : v >= 90
                             ? "bg-load text-load-ink"
                             : "bg-bl-bg text-bl",
@@ -450,7 +450,7 @@ export function ScheduleStep({ plan, go }: { plan: Plan; go: (step: string) => v
 function Section({ children, minW }: { children: ReactNode; minW: number }) {
   return (
     <div
-      className="relative z-[2] border-t border-line bg-white px-5 pt-3.5 pb-2 text-xs font-semibold tracking-[0.06em] text-muted uppercase"
+      className="relative z-[2] border-t border-line bg-card px-5 pt-3.5 pb-2 text-xs font-semibold tracking-[0.06em] text-muted uppercase"
       style={{ minWidth: minW }}
     >
       {children}
@@ -631,11 +631,11 @@ function PlanRow({
       data-testid={`gantt-${o.number}`}
       className={cn(
         "relative grid min-h-14 items-center border-t border-divider",
-        isDragging && "z-10 bg-white opacity-70 shadow-tip",
+        isDragging && "z-10 bg-card opacity-70 shadow-tip",
       )}
       style={{ ...grid, minWidth: minW, transform: CSS.Transform.toString(transform), transition }}
     >
-      <div className="sticky left-0 z-[3] col-start-1 row-start-1 flex h-full items-center gap-2.5 border-r border-line bg-white pr-3.5 pl-5">
+      <div className="sticky left-0 z-[3] col-start-1 row-start-1 flex h-full items-center gap-2.5 border-r border-line bg-card pr-3.5 pl-5">
         <button
           type="button"
           ref={setActivatorNodeRef}

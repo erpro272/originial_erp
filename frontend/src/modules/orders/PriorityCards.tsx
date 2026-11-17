@@ -64,7 +64,7 @@ export function PriorityCard({ o, onOpen }: { o: Order; onOpen: (o: Order) => vo
             onClick={(e) => e.stopPropagation()}
             className={cn(
               buttonVariants({ variant: "dark", size: "sm" }),
-              "min-h-9 no-underline hover:text-white",
+              "min-h-9 no-underline hover:text-on-inverse",
             )}
           >
             {o.signal.action.label}

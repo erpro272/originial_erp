@@ -27,7 +27,7 @@ import { ApDrawer, SupplierInvoiceDialog } from "./ApDrawer";
 import { ArDrawer } from "./ArDrawer";
 
 const select =
-  "cursor-pointer rounded-full border border-line-input bg-white px-3.5 py-2 text-[13px] font-medium text-ink-2";
+  "cursor-pointer rounded-full border border-line-input bg-card px-3.5 py-2 text-[13px] font-medium text-ink-2";
 
 /** Payments & Settlements: what customers owe (receivables) and what we owe suppliers (payables), as of any
  * month. Every number is computed by the server from invoices, receipts and payments. */

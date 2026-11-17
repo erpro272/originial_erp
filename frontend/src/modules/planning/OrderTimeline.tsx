@@ -75,7 +75,7 @@ export function OrderTimeline({
     >
       <span
         className={cn(
-          "sticky left-0 z-[2] col-start-1 row-start-1 flex h-full items-center border-r border-line bg-white pr-3 pl-8 font-mono text-[11.5px] text-ink-3 group-data-[on=true]/opt:bg-surface-blue",
+          "sticky left-0 z-[2] col-start-1 row-start-1 flex h-full items-center border-r border-line bg-card pr-3 pl-8 font-mono text-[11.5px] text-ink-3 group-data-[on=true]/opt:bg-surface-blue",
           struck && "text-subtle line-through",
         )}
       >
@@ -131,7 +131,7 @@ export function OrderTimeline({
 
       {/* date range */}
       <div className="flex flex-wrap items-center gap-3 border-t border-divider px-5 py-3 text-[13px] text-ink-2">
-        <label className="flex items-center gap-2 rounded-full border border-line-input bg-white px-3.5 py-1.5 font-medium">
+        <label className="flex items-center gap-2 rounded-full border border-line-input bg-card px-3.5 py-1.5 font-medium">
           From
           <input
             type="date"
@@ -142,7 +142,7 @@ export function OrderTimeline({
             className="border-0 bg-transparent text-[13px] text-ink-2"
           />
         </label>
-        <label className="flex items-center gap-2 rounded-full border border-line-input bg-white px-3.5 py-1.5 font-medium">
+        <label className="flex items-center gap-2 rounded-full border border-line-input bg-card px-3.5 py-1.5 font-medium">
           To
           <input
             type="date"

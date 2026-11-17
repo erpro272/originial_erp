@@ -29,7 +29,7 @@ export function Sheet({
         <Dialog.Overlay className="overlay fixed inset-0 z-50 animate-fade-in" />
         <Dialog.Content
           style={{ maxWidth: width }}
-          className="fixed top-0 right-0 z-50 flex h-full w-full flex-col bg-white shadow-modal focus:outline-none"
+          className="fixed top-0 right-0 z-50 flex h-full w-full flex-col bg-card shadow-modal focus:outline-none"
         >
           <div className="flex items-start gap-3 border-b border-line px-6 pt-5 pb-4">
             <div className="flex min-w-0 flex-1 flex-col gap-1">
@@ -52,7 +52,7 @@ export function Sheet({
             </div>
             <Dialog.Close
               aria-label="Close"
-              className="grid size-9 cursor-pointer place-items-center rounded-full border border-line bg-white text-lg leading-none text-subtle hover:bg-surface-2 hover:text-ink"
+              className="grid size-9 cursor-pointer place-items-center rounded-full border border-line bg-card text-lg leading-none text-subtle hover:bg-surface-2 hover:text-ink"
             >
               ×
             </Dialog.Close>

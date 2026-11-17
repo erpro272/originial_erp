@@ -397,7 +397,7 @@ export function SequenceStep({ plan, go }: { plan: Plan; go: (step: string) => v
                       )}
                     >
                       {many && (
-                        <span className="flex items-center gap-1.5 border-t border-divider bg-white pt-3 pr-5 pl-[86px] text-xs font-semibold text-bl">
+                        <span className="flex items-center gap-1.5 border-t border-divider bg-card pt-3 pr-5 pl-[86px] text-xs font-semibold text-bl">
                           ∥ Run in parallel
                           <em
                             className={cn(
@@ -599,7 +599,7 @@ function SeqLine({
       data-testid={`seq-${o.number}`}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
-        "grid items-center gap-3 border-t border-divider bg-white px-5 py-3.5 text-sm",
+        "grid items-center gap-3 border-t border-divider bg-card px-5 py-3.5 text-sm",
         COLS,
         grouped && "border-dashed",
         late && "bg-hi-wash",

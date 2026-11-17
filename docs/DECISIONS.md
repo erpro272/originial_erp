@@ -397,4 +397,14 @@ Short records of choices and the reason for each. Newest at the bottom.
     is shown. Prompt: data questions get the number from a tool, no period given -> FY to date (say so, don't ask), and if
     no tool can return it say so and name the real screen; the prompt lists the only screens that exist. Guide: "Sales
     figures" section.
+63. **Dark mode (owner's choices: sun / moon icon in the top bar; follow the device until the user picks)**: done at
+    the token level, not per screen: every `--color-*` token gets a dark value under `:root[data-theme="dark"]`, plus
+    `color-scheme` for native controls. New tokens: `card` (replaces all 67 `bg-white`), `inverse` / `inverse-hover` /
+    `on-inverse` (the dark button, toasts and selected chips, which flip to light-on-dark), `on-tone` (text on a solid
+    status fill: a fill can't carry white text in dark mode and still be readable as a text colour, so the text flips).
+    Text pairs checked for WCAG AA; chart series use the dataviz palette's dark steps, validated on the dark card
+    (all checks pass). Choice: Light / Dark / System, kept in localStorage (applied before first paint by a tiny script
+    in index.html, so no white flash) and on the account (`ui.theme` preference, loaded after sign-in, so it follows
+    the user across devices). The e2e test visits every module and a dialog in dark mode and fails on any large light
+    panel. The assistant guide explains the toggle.
 

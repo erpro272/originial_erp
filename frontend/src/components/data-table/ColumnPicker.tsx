@@ -38,7 +38,7 @@ function Row({
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
         "flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-surface",
-        isDragging && "relative z-10 bg-white shadow-lift",
+        isDragging && "relative z-10 bg-card shadow-lift",
       )}
     >
       <button

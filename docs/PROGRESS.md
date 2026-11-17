@@ -159,6 +159,7 @@
   active plan; approve it, then + New plan), with this company's rule values; supplier comparison tool; richer answer
   formatting; free-tier pacing (waits shown as a step).
 - AI Assistant sales tool (2026-11-17): exact invoiced sales per customer / company / period, same as the Customers tab.
+- Dark mode (2026-11-17, awaiting owner review): every screen, sun / moon toggle in the top bar (Light / Dark / System), saved per user.
 - Production backend: real stations from factory setup, live status/output from the plant floor.
 - Billing round 2: document intake + review queue, quotation versions and compare, e-invoice / IRN,
   credit notes and advances screens, GST filing tab, Gmail / WhatsApp / bank feeds.

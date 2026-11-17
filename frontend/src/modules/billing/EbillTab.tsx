@@ -27,7 +27,7 @@ import { field, lbl } from "./ArDrawer";
 import { DealDrawer } from "./DealDrawer";
 
 const select =
-  "cursor-pointer rounded-full border border-line-input bg-white px-3.5 py-2 text-[13px] font-medium text-ink-2";
+  "cursor-pointer rounded-full border border-line-input bg-card px-3.5 py-2 text-[13px] font-medium text-ink-2";
 const DOT: Record<string, string> = { incoming: "bg-bl", outgoing: "bg-ok", internal: "bg-faint" };
 
 /** Invoice / E-bill: one row per deal (TXN-####), the commercial memory of the company. */
@@ -187,7 +187,7 @@ export function EbillTab() {
           {menu && (
             <div
               role="menu"
-              className="absolute top-12 right-0 z-10 flex w-44 flex-col rounded-xl border border-line bg-white p-1.5 shadow-modal"
+              className="absolute top-12 right-0 z-10 flex w-44 flex-col rounded-xl border border-line bg-card p-1.5 shadow-modal"
             >
               {(["sale", "purchase"] as const).map((k) => (
                 <button

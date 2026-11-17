@@ -11,6 +11,17 @@
       rel="stylesheet"
     />
     <title>ERP</title>
+    <script>
+      // Apply the saved theme before the first paint (no light flash). Same logic as src/lib/theme.ts.
+      (function () {
+        var m = "system";
+        try {
+          m = localStorage.getItem("erp.theme") || "system";
+        } catch (e) {}
+        var dark = m === "dark" || (m === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.dataset.theme = dark ? "dark" : "light";
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

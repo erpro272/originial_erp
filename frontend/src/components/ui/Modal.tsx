@@ -33,7 +33,7 @@ export function Modal({
         <Dialog.Overlay className="overlay fixed inset-0 z-50 animate-fade-in" />
         <Dialog.Content
           style={{ maxWidth: width }}
-          className="fixed top-1/2 left-1/2 z-50 flex max-h-[calc(100vh-48px)] w-[calc(100%-48px)] -translate-x-1/2 -translate-y-1/2 flex-col gap-[18px] overflow-y-auto rounded-modal bg-white p-[26px] shadow-modal focus:outline-none"
+          className="fixed top-1/2 left-1/2 z-50 flex max-h-[calc(100vh-48px)] w-[calc(100%-48px)] -translate-x-1/2 -translate-y-1/2 flex-col gap-[18px] overflow-y-auto rounded-modal bg-card p-[26px] shadow-modal focus:outline-none"
         >
           <div className="flex items-start gap-3.5">
             {tone !== "default" && (

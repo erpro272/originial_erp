@@ -62,7 +62,7 @@ export function OrdersInPlan({
             aria-label="Sort orders"
             value={sort}
             onChange={(e) => setSort(e.target.value as typeof sort)}
-            className="cursor-pointer rounded-full border border-line-input bg-white px-3.5 py-2 text-[13px] font-medium text-ink-2"
+            className="cursor-pointer rounded-full border border-line-input bg-card px-3.5 py-2 text-[13px] font-medium text-ink-2"
           >
             <option value="deadline">Sort: Deadline</option>
             <option value="value">Sort: Value</option>

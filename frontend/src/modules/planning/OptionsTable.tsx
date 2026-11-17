@@ -213,7 +213,7 @@ export function OptionsTable({
                       {Object.keys(opts[k]?.dropped ?? {}).map((id) => (
                         <span
                           key={id}
-                          className="rounded-md border border-line-input bg-white px-1.5 py-0.5 font-mono text-[11.5px] text-subtle line-through"
+                          className="rounded-md border border-line-input bg-card px-1.5 py-0.5 font-mono text-[11.5px] text-subtle line-through"
                         >
                           {short(id)}
                         </span>

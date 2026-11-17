@@ -46,7 +46,7 @@ export function LoginPage() {
           <span aria-hidden className="size-4 rounded-full bg-primary" />
           {BRAND_NAME}
         </div>
-        <section className="flex flex-col gap-5 rounded-card border border-line bg-white p-7">
+        <section className="flex flex-col gap-5 rounded-card border border-line bg-card p-7">
           <div className="flex flex-col gap-1.5">
             <h1 className="m-0 text-2xl font-bold tracking-[-0.02em]">Sign in</h1>
             <p className="m-0 text-sm text-muted">Use your work email and password.</p>

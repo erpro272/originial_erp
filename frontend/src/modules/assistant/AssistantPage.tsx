@@ -151,7 +151,7 @@ function StatusPills({ turn }: { turn: Turn }) {
             !s.done
               ? "border-bl-line bg-bl-bg text-bl"
               : s.ok
-                ? "border-line bg-white text-ink-3"
+                ? "border-line bg-card text-ink-3"
                 : "border-hi-line bg-hi-bg text-hi",
           )}
         >
@@ -341,7 +341,7 @@ export function AssistantPage() {
   };
 
   return (
-    <div className="grid h-[calc(100vh-65px)] grid-cols-1 bg-white lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)_330px]">
+    <div className="grid h-[calc(100vh-65px)] grid-cols-1 bg-card lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)_330px]">
       <div className="hidden min-h-0 lg:flex lg:flex-col">
         <Sidebar activeId={cid} onOpen={(id) => setParams({ c: id })} onNew={newChat} />
       </div>
@@ -448,7 +448,7 @@ export function AssistantPage() {
           }}
           className="border-t border-line px-6 py-4"
         >
-          <div className="mx-auto flex max-w-[860px] items-end gap-2 rounded-card border border-line-input bg-white p-2 focus-within:border-primary">
+          <div className="mx-auto flex max-w-[860px] items-end gap-2 rounded-card border border-line-input bg-card p-2 focus-within:border-primary">
             <button
               type="button"
               aria-label="Attach a document"

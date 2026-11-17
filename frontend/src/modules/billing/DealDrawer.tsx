@@ -476,7 +476,7 @@ function Activity({ d }: { d: DealDetail }) {
               <span
                 aria-hidden
                 className={cn(
-                  "absolute top-3.5 -left-[21px] size-2.5 rounded-full border-2 border-white",
+                  "absolute top-3.5 -left-[21px] size-2.5 rounded-full border-2 border-card",
                   a.direction === "incoming"
                     ? "bg-bl"
                     : a.direction === "outgoing"

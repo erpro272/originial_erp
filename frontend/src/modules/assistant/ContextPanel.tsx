@@ -34,7 +34,7 @@ function Card({ c }: { c: ContextCard }) {
   return (
     <section
       aria-label={`${c.title} context`}
-      className="flex flex-col gap-3 rounded-card border border-line bg-white p-4"
+      className="flex flex-col gap-3 rounded-card border border-line bg-card p-4"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
@@ -100,7 +100,7 @@ export function ContextPanel({
         </div>
       </div>
       {cards.length === 0 ? (
-        <p className="m-0 rounded-card border border-dashed border-faint bg-white px-4 py-5 text-[13px] text-muted">
+        <p className="m-0 rounded-card border border-dashed border-faint bg-card px-4 py-5 text-[13px] text-muted">
           Ask about an order, a machine or the plan: their details appear here.
         </p>
       ) : (
@@ -108,7 +108,7 @@ export function ContextPanel({
       )}
       <section
         aria-label="Quick actions"
-        className="flex flex-col gap-1 rounded-card border border-line bg-white p-3"
+        className="flex flex-col gap-1 rounded-card border border-line bg-card p-3"
       >
         <h3 className="m-0 px-1 pb-1 text-[14px] font-semibold text-ink">⚡ Actions</h3>
         {QUICK_ACTIONS.map((a) => (
@@ -128,7 +128,7 @@ export function ContextPanel({
       </section>
       <section
         aria-label="Quick prompts"
-        className="flex flex-col gap-1.5 rounded-card border border-line bg-white p-3"
+        className="flex flex-col gap-1.5 rounded-card border border-line bg-card p-3"
       >
         <h3 className="m-0 px-1 pb-1 text-[14px] font-semibold text-ink">Quick prompts</h3>
         {QUICK_PROMPTS.map((q) => (

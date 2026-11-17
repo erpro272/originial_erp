@@ -247,6 +247,13 @@ screen: /assistant
 📎 Documents in the assistant: upload PDF / Word / text files and choose which roles may read them. They are indexed
 in the background; answers quote them with the document and page.
 
+## Dark mode / light mode
+keywords: dark mode, light mode, theme, night mode, appearance, black background, change colours
+screen: /
+The sun / moon button in the top bar (next to ✦) switches between Light, Dark and System (follow this device's
+setting). Every screen supports both. The choice is saved on your account, so it follows you to other devices; each
+user picks their own.
+
 ## Settings and company rules you can change
 keywords: settings, company rules, change rule, configure, customise, weights, thresholds, minimum margin, penalty
 needs: settings.write

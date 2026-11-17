@@ -14,9 +14,7 @@ export function Card({
   accent: a = "none",
   ...props
 }: HTMLAttributes<HTMLElement> & { accent?: Accent }) {
-  return (
-    <section className={cn("rounded-card border bg-white", accent[a], className)} {...props} />
-  );
+  return <section className={cn("rounded-card border bg-card", accent[a], className)} {...props} />;
 }
 
 /** Card header row: 17px title (+ optional muted suffix) and right-side actions. */

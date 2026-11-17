@@ -136,7 +136,7 @@ export function MonthlySalesChart({ data, months }: { data: Point[]; months: str
                     width={132}
                     height={36}
                     rx={8}
-                    fill="white"
+                    fill="var(--color-card)"
                     stroke="var(--color-line)"
                   />
                   <text x={cx} y={16} textAnchor="middle" fontSize="11" fill="var(--color-muted)">
