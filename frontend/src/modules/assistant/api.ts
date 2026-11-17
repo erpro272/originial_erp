@@ -45,11 +45,38 @@ export type Widget =
       badge?: Badge;
       items: { label: string; value: string; tone?: Tone | null; link?: string }[];
     };
+/** A suggested write (a stored proposal): applied only after the user reviews and approves it. */
 export interface Action {
   id: string;
   label: string;
-  detail?: string;
+  detail?: string | null;
   kind: string;
+  proposal_id?: string;
+  status?: string; // pending | executed | failed | rejected | expired
+  allowed?: boolean;
+  needs?: string;
+  payload_hash?: string;
+  editable?: string[];
+  note?: string | null;
+  result?: { summary?: string; href?: string; error?: string } | null;
+}
+export type Proposal = Schemas["ProposalOut"];
+export type ProposalPreview = Schemas["ProposalPreview"];
+
+export async function previewProposal(id: string) {
+  return unwrap(
+    await api.POST("/api/ai/proposals/{pid}/preview", { params: { path: { pid: id } } }),
+  );
+}
+export async function approveProposals(
+  items: { id: string; payload_hash: string; note?: string | null }[],
+) {
+  return unwrap(await api.POST("/api/ai/proposals/approve", { body: { items } }));
+}
+export async function rejectProposal(id: string) {
+  return unwrap(
+    await api.POST("/api/ai/proposals/{pid}/reject", { params: { path: { pid: id } } }),
+  );
 }
 export interface Related {
   kind: string;
@@ -290,4 +317,15 @@ export async function openCitation(c: Citation) {
   } catch {
     win?.close();
   }
+}
+
+/** Merge server results (proposal statuses) into the turn's actions. */
+export function mergeProposals(actions: Action[], updated: Proposal[]): Action[] {
+  const by = new Map(updated.map((p) => [p.id, p]));
+  return actions.map((a) => {
+    const p = a.proposal_id ? by.get(a.proposal_id) : undefined;
+    return p
+      ? { ...a, ...p, id: a.id, proposal_id: p.id, result: p.result as Action["result"] }
+      : a;
+  });
 }

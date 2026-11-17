@@ -54,7 +54,9 @@ class AiActionProposal(Base, TenantScoped, TimestampMixin):
     user_id: Mapped[uuid.UUID] = mapped_column(index=True)
     conversation_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("ai_conversations.id"))
     message_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("ai_messages.id"))
-    action_type: Mapped[str] = mapped_column(String(40))
+    action_type: Mapped[str] = mapped_column(String(40))  # plan_fix | plan_sequence | raise_po | follow_up
+    label: Mapped[str] = mapped_column(String(300), default="")
+    detail: Mapped[str | None] = mapped_column(Text)
     payload: Mapped[dict[str, Any]] = mapped_column(JSONB)
     payload_hash: Mapped[str] = mapped_column(String(64))
     status: Mapped[str] = mapped_column(

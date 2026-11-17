@@ -119,11 +119,16 @@ from app.core.security import hash_password  # noqa: E402
 TODAY = date(2026, 11, 13)  # a Friday
 
 
+# Pinned for the whole session (module-scoped fixtures run before function fixtures, so a per-test pin alone let
+# them see the real date and break once it passed their dates), and again around each test.
+clock.set_today(TODAY)
+
+
 @pytest.fixture(autouse=True)
 def _pin_today():  # type: ignore[no-untyped-def]
     clock.set_today(TODAY)
     yield
-    clock.set_today(None)
+    clock.set_today(TODAY)
 
 
 class Company:

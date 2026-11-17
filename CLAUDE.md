@@ -69,8 +69,8 @@ isolation). One company per website: no company picker or switcher in the UI.
   (scripted assistant `app/ai/mock.py`, invoice fixtures `app/ai/fixtures/<task>/`); tests always use mocks.
   AI never does maths; code does. No Anthropic SDK.
 - Never log secrets/PII: logging has a redacting filter; don't put bank numbers in messages.
-- Tests: `backend/tests`, real Postgres DB `erp_test` (recreated per run), seed via
-  `seed.run.seed()`. Use helpers in `tests/conftest.py` (`login`, `owner`, `planner`).
+- Tests: `backend/tests`, real Postgres DB `erp_test` (recreated per run: never run two pytest sessions at once), seed via
+  `seed.run.seed()`. "Today" is pinned to `conftest.TODAY` for the whole session. Use helpers in `tests/conftest.py` (`login`, `owner`, `planner`).
 
 ## Modules built so far
 - `catalog/` products, materials, BOM, stock (minimal; Purchasing will own it).
@@ -123,7 +123,10 @@ isolation). One company per website: no company picker or switcher in the UI.
 - `ai/assistant/` AI Assistant: `graph.py` (LangGraph agent <-> tools, parallel tools in their own tenant sessions,
   timeouts), `tools.py` (read / dry-run tools calling module services; each has a permission; returns summary + data
   + widgets / related / context / actions), `service.py` (conversations private to the user, `chat()` streams typed SSE),
-  models `ai_conversations`, `ai_messages`, `ai_action_proposals` (handover C), migration 0013, permission `ai.use`.
+  models `ai_conversations`, `ai_messages`, `ai_action_proposals`, migrations 0013 / 0015, permission `ai.use`.
+  `actions.py`: suggested writes = proposals (`create` / `preview` / `approve` / `reject`; kinds plan_fix, plan_sequence,
+  raise_po, follow_up, each with its module permission); approve = same user + permission + reviewed payload hash + row
+  lock + re-validation + savepoint, idempotent; executes through the owning module's service only.
 - `ai/rag/` company documents for the assistant: `models.py` (`ai_documents`, `ai_document_chunks` with `vector(384)` +
   generated tsvector), `ingestion.py` (ARQ job `ingest_document`: extract / chunk / embed), `embeddings.py` (fastembed
   bge-small, hashing fallback; `EMBEDDINGS_BACKEND=auto|fastembed|hash`, tests use hash), `retrieval.py` (hybrid
@@ -170,6 +173,7 @@ isolation). One company per website: no company picker or switcher in the UI.
   `ContextPanel` (ERP context cards, quick actions / prompts). `streamChat()` reads the SSE stream via `apiFetch`.
   `Documents.tsx`: `DocumentsSheet` (📎 / Documents: upload with roles, status, delete) and `Sources` (citations; open
   the cited page via a fresh link). A conversation on screen is never replaced by an older saved copy (`shown`).
+  `Actions.tsx`: Recommended actions card (tick -> review dialog with live re-check -> confirm; Dismiss; statuses).
 - Production route `/production` = `ProductionPage` (Factory Layout). FRONTEND PREVIEW ONLY: all numbers are
   placeholders in `modules/production/demoData.ts` (owner's request; replace with API data when the backend is
   built). `FactoryLayout` places boxes in a 1000 x 420 plan space; hover / focus shows the stage or station card.

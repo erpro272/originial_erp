@@ -337,3 +337,19 @@ Short records of choices and the reason for each. Newest at the bottom.
     fresh 5-minute link (`GET /ai/documents/{id}/link`, roles checked again). Uploader or owner may delete / re-index;
     delete removes the chunks at once. Demo: three sample documents (`samples/documents/`, `scripts/make_sample_documents`),
     seeded once into the demo company (Costing Policy visible to owner / accountant / planner only).
+59. **AI Assistant, handover C: actions you approve**: the assistant never changes anything itself. Tools return
+    recommended actions with typed payloads; the chat turn stores each as an `ai_action_proposals` row (private to the
+    user, payload hash, 24 h expiry, idempotency key) and streams it (`approval_required`). Kinds and permissions:
+    `plan_fix` and `plan_sequence` (planning.write: owner, planner; applied to the working plan through
+    `planning.update_plan`, so the plan still needs approval in Planning as usual), `raise_po` (purchasing.write: owner,
+    purchaser; `purchasing.raise_po`, the PO then waits for the owner's approval in Purchasing), `follow_up`
+    (billing.write: owner, accountant; `billing.receivables.log_follow_up`, the note is editable before applying).
+    Flow: tick -> Apply -> `POST /ai/proposals/{id}/preview` re-checks against live data and shows what will happen
+    (plan: contribution / cost / late orders now vs after, via Planning's dry run) -> Confirm -> `POST /ai/proposals/approve`:
+    same user, the permission, the reviewed payload hash, row lock (`FOR UPDATE`), re-validated again, executed in a
+    savepoint (one failing doesn't undo the others), audited; an executed proposal returns its stored result (never twice).
+    Re-validation refuses: a plan that is no longer the working plan, a fix no longer offered, a material that is no
+    longer short or already has a PO waiting for approval, expired or dismissed suggestions. Statuses are shown again when
+    a conversation is reopened. E2E applies a follow-up only (applying a plan fix would change the shared demo plan);
+    plan fixes are covered by pytest. Also fixed: tests pin "today" for the whole session (module fixtures ran before the
+    per-test pin and broke once the real date passed their dates).

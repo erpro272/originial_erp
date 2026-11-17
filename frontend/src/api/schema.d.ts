@@ -134,6 +134,64 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/ai/proposals/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Approve Proposals
+         * @description Apply approved suggestions: same user, the action's permission, the reviewed payload; re-validated, executed
+         *     once (idempotent), audited.
+         */
+        post: operations["approve_proposals_api_ai_proposals_approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/proposals/{pid}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview Proposal
+         * @description What applying a suggestion would do now (re-checked against live data). Saves nothing.
+         */
+        post: operations["preview_proposal_api_ai_proposals__pid__preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/proposals/{pid}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reject Proposal */
+        post: operations["reject_proposal_api_ai_proposals__pid__reject_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/ai/status": {
         parameters: {
             query?: never;
@@ -5200,6 +5258,77 @@ export interface components {
              */
             promised_on: string;
         };
+        /** ProposalApproveIn */
+        ProposalApproveIn: {
+            /** Items */
+            items: components["schemas"]["ProposalApproveItem"][];
+        };
+        /** ProposalApproveItem */
+        ProposalApproveItem: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Note */
+            note?: string | null;
+            /** Payload Hash */
+            payload_hash: string;
+        };
+        /**
+         * ProposalOut
+         * @description A write the assistant suggested; applied only after the user approves it.
+         */
+        ProposalOut: {
+            /** Allowed */
+            allowed: boolean;
+            /** Detail */
+            detail: string | null;
+            /** Editable */
+            editable: string[];
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Kind */
+            kind: string;
+            /** Label */
+            label: string;
+            /** Needs */
+            needs: string;
+            /** Note */
+            note: string | null;
+            /** Payload Hash */
+            payload_hash: string;
+            /** Result */
+            result: {
+                [key: string]: unknown;
+            } | null;
+            /** Status */
+            status: string;
+        };
+        /** ProposalPreview */
+        ProposalPreview: {
+            /** Error */
+            error: string | null;
+            /** Lines */
+            lines: string[];
+            /** Ok */
+            ok: boolean;
+            proposal: components["schemas"]["ProposalOut"];
+            /** Rows */
+            rows: {
+                [key: string]: string;
+            }[];
+            /** Warnings */
+            warnings: string[];
+        };
         /** PurchaseKpis */
         PurchaseKpis: {
             /** In Transit */
@@ -6721,6 +6850,101 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AiDocumentOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_proposals_api_ai_proposals_approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProposalApproveIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposalOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_proposal_api_ai_proposals__pid__preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposalPreview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reject_proposal_api_ai_proposals__pid__reject_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposalOut"];
                 };
             };
             /** @description Validation Error */

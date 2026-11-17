@@ -11,6 +11,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.ai.assistant import actions
 from app.ai.assistant.graph import GRAPH, HISTORY, SYSTEM, entities
 from app.ai.assistant.models import AiConversation, AiMessage
 from app.ai.assistant.schemas import ConversationDetail, ConversationOut, MessageOut
@@ -53,9 +54,14 @@ async def get_conversation(session: AsyncSession, p: Principal, cid: uuid.UUID) 
     c = await _own(session, p, cid)
     msgs = (await session.execute(select(AiMessage).where(AiMessage.conversation_id == cid)
                                   .order_by(AiMessage.created_at, AiMessage.role.desc()))).scalars()  # fmt: skip
-    return ConversationDetail(
-        id=c.id, title=c.title, last_message_at=c.last_message_at, messages=[_msg(m) for m in msgs]
-    )
+    live = await actions.statuses(session, p, cid)  # current status of each suggestion (applied, expired...)
+    out = []
+    for m in msgs:
+        mo = _msg(m)
+        mo.actions = [{**a, **live[a["proposal_id"]].model_dump(mode="json")} if a.get("proposal_id") in live else a
+                      for a in mo.actions]  # fmt: skip
+        out.append(mo)
+    return ConversationDetail(id=c.id, title=c.title, last_message_at=c.last_message_at, messages=out)
 
 
 async def rename(session: AsyncSession, p: Principal, cid: uuid.UUID, title: str) -> ConversationOut:
@@ -148,6 +154,7 @@ async def chat(p: Principal, role: str, text: str, cid: uuid.UUID | None) -> Asy
     llm = get_llm()
     state: dict[str, Any] = {}
     error: str | None = None
+    saved_early = False
     try:
         async for mode, chunk in GRAPH.astream(
             {"messages": messages, "tools": tools, "ctx": Ctx(principal=p, today=today), "llm": llm, "rounds": 0,
@@ -178,8 +185,13 @@ async def chat(p: Principal, role: str, text: str, cid: uuid.UUID | None) -> Asy
                 {"text": " ".join(words[i : i + 6]) + (" " if i + 6 < len(words) else "")},
             )
         if merged["actions"]:
-            # proposals are only executed after approval (handover C); for now they're recommendations
-            yield _sse(seq, am_id, "approval_required", {"actions": merged["actions"], "enabled": False})
+            # stored as pending proposals now; nothing changes until the user approves (actions.approve)
+            async with tenant_session(p.tenant_id) as s2:
+                s2.add(AiMessage(id=am_id, conversation_id=conv_id, role="assistant", content=answer))
+                await s2.flush()
+                merged["actions"] = await actions.create(s2, p, conv_id, am_id, merged["actions"])
+            saved_early = True
+            yield _sse(seq, am_id, "approval_required", {"actions": merged["actions"], "enabled": True})
         if merged["citations"]:
             yield _sse(seq, am_id, "citations", {"citations": merged["citations"]})
         if merged["related"]:
@@ -187,10 +199,18 @@ async def chat(p: Principal, role: str, text: str, cid: uuid.UUID | None) -> Asy
         if merged["context"]:
             yield _sse(seq, am_id, "context_update", {"cards": merged["context"]})
     async with tenant_session(p.tenant_id) as s:
-        s.add(AiMessage(id=am_id, conversation_id=conv_id, role="assistant", content=answer, error=error,
-                        widgets=merged["widgets"], related=merged["related"], context=merged["context"],
-                        actions=merged["actions"], citations=merged["citations"], tools=state.get("runs") or [],
-                        model=state.get("model") or llm.mode))  # fmt: skip
+        fields: dict[str, Any] = {
+            "content": answer, "error": error, "widgets": merged["widgets"], "related": merged["related"],
+            "context": merged["context"], "actions": merged["actions"], "citations": merged["citations"],
+            "tools": state.get("runs") or [], "model": state.get("model") or llm.mode,
+        }  # fmt: skip
+        if saved_early:
+            msg = await s.get(AiMessage, am_id)
+            assert msg is not None
+            for k, v in fields.items():
+                setattr(msg, k, v)
+        else:
+            s.add(AiMessage(id=am_id, conversation_id=conv_id, role="assistant", **fields))
         c = await s.get(AiConversation, conv_id)
         if c is not None:
             c.last_message_at = datetime.now(UTC)

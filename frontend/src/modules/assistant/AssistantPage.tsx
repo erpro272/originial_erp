@@ -19,7 +19,8 @@ import { ContextPanel } from "./ContextPanel";
 import { QUICK_PROMPTS } from "./prompts";
 import { Sidebar, Sparkle } from "./Sidebar";
 import { DocumentsSheet, Sources } from "./Documents";
-import { ActionsCard, RelatedChips, WidgetView } from "./Widgets";
+import { ActionsCard } from "./Actions";
+import { RelatedChips, WidgetView } from "./Widgets";
 
 /** Tiny, safe formatter for the model's text: paragraphs, "- " bullets and **bold** (no HTML). */
 function Text({ text }: { text: string }) {
@@ -88,7 +89,7 @@ function StatusPills({ turn }: { turn: Turn }) {
   );
 }
 
-function Bubble({ turn }: { turn: Turn }) {
+function Bubble({ turn, onActions }: { turn: Turn; onActions: (a: Turn["actions"]) => void }) {
   if (turn.role === "user")
     return (
       <div className="flex justify-end">
@@ -113,7 +114,7 @@ function Bubble({ turn }: { turn: Turn }) {
           <WidgetView key={i} w={w} />
         ))}
         {turn.citations.length > 0 && <Sources items={turn.citations} />}
-        {turn.actions.length > 0 && <ActionsCard actions={turn.actions} />}
+        {turn.actions.length > 0 && <ActionsCard actions={turn.actions} onChange={onActions} />}
         {turn.related.length > 0 && <RelatedChips items={turn.related} />}
         {turn.error && (
           <p
@@ -347,7 +348,13 @@ export function AssistantPage() {
           ) : (
             <div className="mx-auto flex w-full max-w-[860px] flex-col gap-6">
               {turns.map((t) => (
-                <Bubble key={t.id} turn={t} />
+                <Bubble
+                  key={t.id}
+                  turn={t}
+                  onActions={(actions) =>
+                    setTurns((all) => all.map((x) => (x.id === t.id ? { ...x, actions } : x)))
+                  }
+                />
               ))}
               <div ref={endRef} />
             </div>

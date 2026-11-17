@@ -1,7 +1,7 @@
 """Supplier comparison: history from real PO steps (gate entry, QC), on-time vs the committed date, quotes,
 the preferred supplier pre-filling Raise PO, the scoring rule and permissions."""
 
-from datetime import timedelta
+from datetime import date, timedelta
 
 from sqlalchemy import update
 
@@ -26,7 +26,9 @@ async def _deliver(client: AsyncClient, h: dict[str, str], tid, material_id: str
             "expected_date": _day(5)}  # fmt: skip
     po = (await client.post(PO, json=body, headers=h)).json()
     await client.post(f"{PO}/{po['id']}/approve", headers=h)
-    await client.post(f"{PO}/{po['id']}/confirm", json={"expected_date": _day(3)}, headers=h)
+    # gate entries are stamped with the real time: promise a date that is ahead of both the pinned and the real date
+    soon = max(clock.today(), date.today()) + timedelta(days=3)
+    await client.post(f"{PO}/{po['id']}/confirm", json={"expected_date": soon.isoformat()}, headers=h)
     if late:  # the committed date has passed (and a follow-up moving the expected date doesn't change that)
         async with tenant_session(tid) as s:
             await s.execute(update(PurchaseOrder).where(PurchaseOrder.id == po["id"])

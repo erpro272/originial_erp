@@ -4,8 +4,17 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 
-from app.ai.assistant import service
-from app.ai.assistant.schemas import AssistantStatus, ChatIn, ConversationDetail, ConversationOut, RenameIn
+from app.ai.assistant import actions, service
+from app.ai.assistant.schemas import (
+    AssistantStatus,
+    ChatIn,
+    ConversationDetail,
+    ConversationOut,
+    ProposalApproveIn,
+    ProposalOut,
+    ProposalPreview,
+    RenameIn,
+)
 from app.ai.assistant.tools import allowed
 from app.ai.llm import get_llm
 from app.core.auth import Principal, TenantDB, require
@@ -52,3 +61,21 @@ async def rename(cid: uuid.UUID, body: RenameIn, db: TenantDB, p: User) -> Conve
 @router.delete("/conversations/{cid}", status_code=204)
 async def delete(cid: uuid.UUID, db: TenantDB, p: User) -> None:
     await service.delete(db, p, cid)
+
+
+@router.post("/proposals/{pid}/preview", response_model=ProposalPreview)
+async def preview_proposal(pid: uuid.UUID, db: TenantDB, p: User) -> ProposalPreview:
+    """What applying a suggestion would do now (re-checked against live data). Saves nothing."""
+    return await actions.preview(db, p, pid)
+
+
+@router.post("/proposals/approve", response_model=list[ProposalOut])
+async def approve_proposals(body: ProposalApproveIn, db: TenantDB, p: User) -> list[ProposalOut]:
+    """Apply approved suggestions: same user, the action's permission, the reviewed payload; re-validated, executed
+    once (idempotent), audited."""
+    return await actions.approve(db, p, body.items)
+
+
+@router.post("/proposals/{pid}/reject", response_model=ProposalOut)
+async def reject_proposal(pid: uuid.UUID, db: TenantDB, p: User) -> ProposalOut:
+    return await actions.reject(db, p, pid)

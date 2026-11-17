@@ -143,9 +143,12 @@
   policies with document + page ("Sources" under the answer, opens the cited page). Hybrid search: pgvector + full text
   + RRF, roles and company enforced before anything reaches the model. Local free embeddings (bge-small, hashing
   fallback). Three demo documents. Tests: 316 pytest, 76 Vitest, 29 Playwright.
+- AI Assistant, handover C (2026-11-17, awaiting owner review): Recommended actions you approve: plan fixes (night
+  shifts, express material), order sequence, raise a PO for a short material, log a payment follow-up. Tick -> review
+  (re-checked live: now vs after) -> confirm; applied once, audited, with a link; Dismiss; statuses kept in the
+  conversation; role limits shown ("Needs Planning edit access"). Tests: 319 pytest, 78 Vitest, 30 Playwright.
 
 ## Next
-- AI Assistant handover C: approved actions (plan fixes, raise PO, follow-ups) with re-validation and idempotency.
 - Production backend: real stations from factory setup, live status/output from the plant floor.
 - Billing round 2: document intake + review queue, quotation versions and compare, e-invoice / IRN,
   credit notes and advances screens, GST filing tab, Gmail / WhatsApp / bank feeds.

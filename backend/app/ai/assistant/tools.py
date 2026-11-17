@@ -173,6 +173,12 @@ async def _facts(s: AsyncSession, ids: set[str]) -> dict[str, dict[str, Any]]:
     return {str(k): v for k, v in out.items()}
 
 
+def fix_action(p: PlanOut, fix_id: str, label: str, detail: str) -> dict[str, Any]:
+    """A plan fix the user can apply to the working plan (after approval, re-checked first)."""
+    return {"id": f"fix:{p.id}:{fix_id}", "kind": "plan_fix", "label": label, "detail": detail,
+            "payload": {"plan_id": str(p.id), "fixes": [fix_id]}}  # fmt: skip
+
+
 # ---- machines ---------------------------------------------------------------------------------------------------
 
 
@@ -385,9 +391,8 @@ async def why_delayed(s: AsyncSession, c: Ctx, a: dict[str, Any]) -> ToolOut:
     if plan:
         for fx in plan.result.finance.fixes:
             if any(o.number in t for t in fx.solves) or (o.number in fx.label):
-                fixes.append({"id": fx.id, "label": fx.label,
-                              "detail": f"Cost {inr(fx.cost)} · avoids {inr(fx.penalty_avoided)} late penalty"
-                                        + (f" · {fx.effect}" if fx.effect else ""), "kind": "plan_fix"})  # fmt: skip
+                fixes.append(fix_action(plan, fx.id, fx.label, f"Cost {inr(fx.cost)} · avoids {inr(fx.penalty_avoided)} late "
+                                        f"penalty" + (f" · {fx.effect}" if fx.effect else "")))  # fmt: skip
     expected = (due + timedelta(days=slip)) if slip else fin
     if slip:
         summary = f"{o.number} is likely {slip} day{'s' * (slip != 1)} late" + (
@@ -578,8 +583,8 @@ async def plan_fixes(s: AsyncSession, c: Ctx, a: dict[str, Any]) -> ToolOut:
             {"key": "fix", "label": "Fix"}, {"key": "cost", "label": "Cost", "align": "right"},
             {"key": "avoids", "label": "Penalty avoided", "align": "right"}, {"key": "effect", "label": "Effect"},
             {"key": "status", "label": "Status"}], "rows": rows, "empty": "No fixes needed."}],
-        actions=[{"id": fx.id, "label": fx.label, "detail": f"Cost {inr(fx.cost)} · avoids {inr(fx.penalty_avoided)}",
-                  "kind": "plan_fix"} for fx in open_[:5]],
+        actions=[fix_action(p, fx.id, fx.label, f"Cost {inr(fx.cost)} · avoids {inr(fx.penalty_avoided)}")
+                 for fx in open_[:5]] if p.status in ("draft", "generated") else [],
         related=[{"kind": "plan", "label": p.number, "href": f"/planning/{p.id}?step=4"}],
         context=[_plan_card(p)],
     )  # fmt: skip
@@ -641,7 +646,7 @@ async def simulate_plan(s: AsyncSession, c: Ctx, a: dict[str, Any]) -> ToolOut:
                            {"k": "Margin", "now": f"{b.margin}%", "then": f"{w.margin}%"},
                            {"k": "Late orders", "now": str(ob.late), "then": str(ow.late)},
                            {"k": "Plan ends", "now": day(ob.end) if ob.end else "—", "then": day(ow.end) if ow.end else "—"}]}],
-        actions=[{"id": f, "label": labels[f], "detail": "Tested in this what-if", "kind": "plan_fix"} for f in sorted(want)],
+        actions=[fix_action(p, f, labels[f], "Tested in this what-if") for f in sorted(want)] if not out.diff.blocked else [],
         related=[{"kind": "plan", "label": p.number, "href": f"/planning/{p.id}?step=4"}],
     )  # fmt: skip
 
@@ -665,10 +670,15 @@ async def best_sequence(s: AsyncSession, c: Ctx, a: dict[str, Any]) -> ToolOut:
     best["status"], best["status_tone"] = ("Best · in use" if p.rule == best["_id"] else "Best"), "ok"
     summary = (f"Best sequence for {p.number}: {best['rule']} — {best['late']} late, contribution {best['contribution']}. "
                + " | ".join(f"{r['rule']}: {r['late']} late, {r['contribution']}" for r in rows if r is not best) + ". Nothing was saved.")  # fmt: skip
+    best_rule = best["_id"]
     for r in rows:
         r.pop("_c"), r.pop("_late"), r.pop("_id")
+    seq_action = [] if p.rule == best_rule else [{
+        "id": f"seq:{p.id}:{best_rule}", "kind": "plan_sequence", "label": f"Use “{best['rule']}” for {p.number}",
+        "detail": f"{best['late']} late · contribution {best['contribution']}",
+        "payload": {"plan_id": str(p.id), "rule": best_rule}}]  # fmt: skip
     return ToolOut(
-        summary=summary, data={"plan": p.number, "current_rule": p.rule, "options": rows},
+        summary=summary, data={"plan": p.number, "current_rule": p.rule, "options": rows}, actions=seq_action,
         widgets=[{"type": "table", "title": "Order sequence options", "badge": {"label": "Dry run", "tone": "bl"}, "columns": [
             {"key": "rule", "label": "Sequence"}, {"key": "late", "label": "Late orders", "align": "right"},
             {"key": "contribution", "label": "Contribution", "align": "right"}, {"key": "ends", "label": "Plan ends"},
@@ -738,6 +748,9 @@ async def material_coverage(s: AsyncSession, c: Ctx, a: dict[str, Any]) -> ToolO
     start = _d(a.get("start"), monday + timedelta(days=7))
     end = _d(a.get("end"), start + timedelta(days=6))
     inv = await purchasing.inventory(s)
+    from app.purchasing import suppliers as supplier_cmp
+
+    preferred = await supplier_cmp.preferred_for(s)
     want = norm(a.get("material") or "")
     mats = [m for m in inv.materials if not want or want in norm(m.name) or want in norm(m.code)]
     if want and not mats:
@@ -759,8 +772,15 @@ async def material_coverage(s: AsyncSession, c: Ctx, a: dict[str, Any]) -> ToolO
                      "incoming": qty(incoming, m.unit), "gap": qty(max(gap, Decimal(0)), m.unit),
                      "status": "Short" if gap > 0 else "Covered", "status_tone": "hi" if gap > 0 else "ok"})  # fmt: skip
         if gap > 0:
-            gaps.append({"id": f"po:{m.id}", "label": f"Raise a PO for {qty(gap, m.unit)} {m.name}",
-                         "detail": f"From {m.supplier or 'the usual supplier'} · owner approves", "kind": "purchase"})  # fmt: skip
+            sup, rate = preferred.get(m.id, (m.supplier, None))
+            orders_for = sorted({n.number for n in m.needs if n.needed_by <= end})
+            need_by = min((n.needed_by for n in m.needs if n.needed_by <= end), default=end)
+            gaps.append({"id": f"po:{m.id}", "kind": "raise_po", "label": f"Raise a PO for {qty(gap, m.unit)} {m.name}",
+                         "detail": f"From {sup or 'the usual supplier'} · needed by {day(need_by)} · the owner approves the PO",
+                         "payload": {"material_id": str(m.id), "material": m.name, "quantity": str(gap), "unit": m.unit,
+                                     "supplier": sup or "", "price_per_unit_paise": rate or m.price_per_unit_paise,
+                                     "expected_date": max(c.today + timedelta(days=1), need_by - timedelta(days=1)).isoformat(),
+                                     "order_numbers": orders_for}})  # fmt: skip
     when = f"{day(start)} – {day(end)}"
     short = [r for r in rows if r["status"] == "Short"]
     summary = (f"Materials for {when}: " + ("; ".join(f"{r['material']} short by {r['gap']} (needs {r['required']}, "
@@ -827,6 +847,12 @@ async def receivables(s: AsyncSession, c: Ctx, a: dict[str, Any]) -> ToolOut:
             {"key": "overdue", "label": "Overdue"}, {"key": "update", "label": "Latest update"}, {"key": "status", "label": ""}],
             "rows": rows}],
         related=[{"kind": "customer", "label": r.name, "href": f"/billing?customer={r.customer_id}"} for r in top[:4]],
+        actions=[{"id": f"fu:{r.customer_id}", "kind": "follow_up", "label": f"Log a follow-up call with {r.name}",
+                  "detail": f"{inr(r.outstanding_paise)} outstanding · {r.days_overdue} days overdue · next follow-up in 3 days",
+                  "payload": {"customer_id": str(r.customer_id), "channel": "call",
+                              "note": f"Payment reminder: {inr(r.outstanding_paise)} outstanding, {r.days_overdue} days overdue.",
+                              "next_follow_up": (c.today + timedelta(days=3)).isoformat()}}
+                 for r in sorted((r for r in out.rows if r.status == "overdue"), key=lambda r: -r.outstanding_paise)[:3]],
     )  # fmt: skip
 
 

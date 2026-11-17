@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { KitIcon, type IconKind } from "@/components/kit/Kit";
 import { Tag } from "@/components/ui/Tag";
 import { cn } from "@/lib/cn";
-import type { Action, Badge, Related, Widget } from "./api";
+import type { Badge, Related, Widget } from "./api";
 
 function BadgeTag({ b }: { b?: Badge }) {
   return b ? (
@@ -230,46 +230,5 @@ export function RelatedChips({ items }: { items: Related[] }) {
         ))}
       </div>
     </div>
-  );
-}
-
-export function ActionsCard({ actions }: { actions: Action[] }) {
-  const isPlan = actions.some((a) => a.kind === "plan_fix");
-  return (
-    <section
-      aria-label="Recommended actions"
-      className="flex flex-col gap-2 rounded-card border border-bl-line bg-bl-bg/50 p-4"
-    >
-      <div className="flex items-center justify-between gap-3">
-        <h3 className="m-0 flex items-center gap-2 text-[14px] font-semibold text-ink">
-          <span aria-hidden="true">✦</span>Recommended actions
-        </h3>
-        <button
-          type="button"
-          disabled
-          title="Applying a change needs your approval: coming in the next step"
-          className="cursor-not-allowed rounded-full bg-primary px-4 py-1.5 text-[13px] font-semibold text-white opacity-50"
-        >
-          {isPlan ? "Apply to plan" : "Apply"}
-        </button>
-      </div>
-      <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
-        {actions.map((a) => (
-          <li key={a.id}>
-            <label className="flex cursor-not-allowed items-start gap-2 text-[13px] text-ink-2">
-              <input type="checkbox" disabled className="mt-0.5" aria-describedby={`act-${a.id}`} />
-              <span>
-                <span className="font-semibold text-ink">{a.label}</span>
-                {a.detail && <span id={`act-${a.id}`}>: {a.detail}</span>}
-              </span>
-            </label>
-          </li>
-        ))}
-      </ul>
-      <p className="m-0 text-[12px] text-muted">
-        Suggestions only for now: nothing changes until you approve it (applying with approval comes
-        next).
-      </p>
-    </section>
   );
 }
