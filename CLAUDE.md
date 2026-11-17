@@ -73,6 +73,9 @@ isolation). One company per website: no company picker or switcher in the UI.
   OCR text (`templates.ocr_text`) -> text model with `fields.TEXT_FORMAT`; vision only without Tesseract.
   `backend/.env` may hold the owner's key: never commit or print it. Tests set `LLM_API_KEY=""`; run e2e against
   `LLM_API_KEY= make api` (mock).
+- Assistant guide: `app/ai/assistant/guide.md` describes every screen, task and rule (with `needs:` permission,
+  `screen:`, `setting:`). **Update it whenever a feature or rule changes**: the assistant answers how-to / logic questions
+  from it (`guide.brief` -> system prompt notes; `erp_guide` tool adds live rule values via `tools.company_rule`).
 - Never log secrets/PII: logging has a redacting filter; don't put bank numbers in messages.
 - Tests: `backend/tests`, real Postgres DB `erp_test` (recreated per run: never run two pytest sessions at once), seed via
   `seed.run.seed()`. "Today" is pinned to `conftest.TODAY` for the whole session. Use helpers in `tests/conftest.py` (`login`, `owner`, `planner`).

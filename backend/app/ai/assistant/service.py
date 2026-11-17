@@ -11,7 +11,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.ai.assistant import actions
+from app.ai.assistant import actions, guide
 from app.ai.assistant.graph import GRAPH, HISTORY, SYSTEM, entities
 from app.ai.assistant.models import AiConversation, AiMessage
 from app.ai.assistant.schemas import ConversationDetail, ConversationOut, MessageOut
@@ -21,6 +21,7 @@ from app.core import audit, clock
 from app.core.auth import Principal
 from app.core.db import tenant_session
 from app.core.errors import NotFound
+from app.core.permissions import Permission
 
 log = logging.getLogger(__name__)
 SCHEMA_VERSION = 1
@@ -148,6 +149,14 @@ async def chat(p: Principal, role: str, text: str, cid: uuid.UUID | None) -> Asy
     system = SYSTEM.format(today=f"{today:%A %d %B %Y}", role=role)
     if hints:
         system += f"\nMentioned in the question: {', '.join(hints)}."
+    notes = guide.brief(text, lambda need: p.can(Permission(need)) if need in set(Permission) else None)
+    if (
+        notes
+    ):  # how the ERP works, looked up already: answers stay true to the app (rule values: erp_guide tool)
+        system += (
+            "\n\nERP guide notes for this question (the real screens, rules and permissions; use only these "
+            "names and rules, and call erp_guide for this company's current rule values):\n" + notes
+        )
     messages: list[dict[str, Any]] = [{"role": "system", "content": system}]
     messages += [{"role": m.role, "content": m.content} for m in prior if m.content]
     messages.append({"role": "user", "content": text})

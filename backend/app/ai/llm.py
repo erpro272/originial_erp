@@ -8,6 +8,7 @@ import asyncio
 import json
 import logging
 import re
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any, Literal, Protocol
 
@@ -48,6 +49,7 @@ class LLM(Protocol):
         json_mode: bool = False,
         model: str | None = None,
         max_tokens: int = 1024,
+        on_wait: Callable[[float], None] | None = None,  # told before waiting out a rate limit
     ) -> ChatResult: ...
 
 
@@ -87,7 +89,9 @@ class OpenAICompatibleLLM:
     mode: Literal["live", "mock"] = "live"
 
     def __init__(self, base_url: str, api_key: str, primary: str, fallback: str, timeout: float,
-                 max_wait: float = 20.0, max_waits: int = 1) -> None:  # fmt: skip
+                 max_wait: float = 20.0, max_waits: int = 1, reasoning: str = "low", prefer_wait: float = 0) -> None:  # fmt: skip
+        self.reasoning = reasoning
+        self.prefer_wait = prefer_wait
         # rate limits: longest single wait, and how many waits (chat: one short one; background jobs: a few)
         self.max_wait, self.max_waits = max_wait, max_waits
         self.base_url = base_url.rstrip("/")
@@ -107,14 +111,11 @@ class OpenAICompatibleLLM:
         tools: list[dict[str, Any]] | None = None,
         json_mode: bool = False,
         model: str | None = None,
-        max_tokens: int = 2048,
+        max_tokens: int = 1400,  # Groq reserves max_tokens against the minute's budget: keep it near real use
+        on_wait: Callable[[float], None] | None = None,  # told before waiting out a rate limit
     ) -> ChatResult:
         payload: dict[str, Any] = {"model": model or self.primary, "messages": messages,
                                    "max_tokens": max_tokens, "temperature": 0.2}  # fmt: skip
-        if (
-            "gpt-oss" in payload["model"]
-        ):  # reasoning models: keep thinking short (speed, free-tier token limits)
-            payload["reasoning_effort"] = "low"
         if tools:
             payload["tools"] = tools
             payload["tool_choice"] = "auto"
@@ -135,8 +136,10 @@ class OpenAICompatibleLLM:
             i += 1
             tried.add(m)
             payload["model"] = m
-            if "gpt-oss" in m:
-                payload["reasoning_effort"] = "low"
+            if (
+                "gpt-oss" in m
+            ):  # reasoning models: how hard to think (assistant: medium; bulk extraction: low)
+                payload["reasoning_effort"] = self.reasoning
             else:
                 payload.pop("reasoning_effort", None)
             try:
@@ -144,13 +147,29 @@ class OpenAICompatibleLLM:
             except httpx.HTTPError as exc:
                 raise LLMError("Could not reach the AI service") from exc
             if r.status_code == 200:
-                return _parse(r.json())
+                res = _parse(r.json())
+                log.info("LLM %s used %s", m, {k: v for k, v in res.usage.items() if k.endswith("tokens")})
+                return res
             last = f"AI API error {r.status_code}"
             if r.status_code == 429:
                 if (
                     r.headers.get("x-should-retry") == "false"
                 ):  # e.g. the request alone is over the free tier's limit
                     last = "too large"
+                short = wait_seconds(r.headers)
+                if (
+                    m == models[0]
+                    and short <= self.prefer_wait
+                    and waits < self.max_waits
+                    and last != "too large"
+                ):
+                    waits += 1  # a short wait for the main model beats a weaker answer from the fallback
+                    log.warning("LLM rate limited on %s, waiting %.0fs for it", m, short)
+                    if on_wait:
+                        on_wait(short)
+                    await asyncio.sleep(short)
+                    i -= 1
+                    continue
                 if len(tried) < len(models):
                     log.warning("LLM rate limited on %s, trying %s", m, models[i % len(models)])
                     continue
@@ -159,6 +178,8 @@ class OpenAICompatibleLLM:
                     break
                 waits += 1
                 log.warning("LLM rate limited on every model, retrying in %.0fs", after)
+                if on_wait:
+                    on_wait(after)
                 await asyncio.sleep(after)
                 i = 0
                 continue
@@ -179,7 +200,8 @@ def get_llm() -> LLM:
     s = get_settings()
     if s.llm_api_key and s.llm_api_key.get_secret_value():
         return OpenAICompatibleLLM(s.llm_base_url, s.llm_api_key.get_secret_value(), s.llm_primary_model,
-                                   s.llm_fallback_model, s.llm_timeout_seconds)  # fmt: skip
+                                   s.llm_fallback_model, s.llm_timeout_seconds, max_wait=35, max_waits=2, reasoning="medium",
+                                   prefer_wait=15)  # fmt: skip
     from app.ai.mock import ScriptedLLM
 
     return ScriptedLLM()

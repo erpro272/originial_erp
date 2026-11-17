@@ -5,6 +5,8 @@ invoice reading on the vision client. Always the offline scripted model (no key 
 import asyncio
 import json
 import time
+import uuid
+from datetime import date
 from typing import Any
 
 import httpx
@@ -13,8 +15,12 @@ from httpx import AsyncClient
 
 from app.ai import service as ai_service
 from app.ai.assistant import graph as g
-from app.ai.assistant.tools import BY_NAME, ToolOut
+from app.ai.assistant import guide
+from app.ai.assistant.graph import _run_one
+from app.ai.assistant.tools import BY_NAME, Ctx, ToolOut
 from app.ai.llm import LLMError, OpenAICompatibleLLM, wait_seconds
+from app.core.auth import Principal
+from app.core.permissions import Role
 from app.invoices.normalize import build_document
 from tests.conftest import headers_for
 from tests.test_purchasing import _demo_co
@@ -247,3 +253,71 @@ def test_compact_item_cells_are_accepted() -> None:
         {"is_invoice": True, "fields": {}, "lines": [{"product_name": "M8 bolt", "quantity": 500}]}, None
     )
     assert doc["lines"][0]["product_name"]["raw"] == "M8 bolt" and doc["lines"][0]["quantity"]["raw"] == "500"
+
+
+def test_the_erp_guide_finds_the_right_section() -> None:
+    cases = {
+        "can i create a new plan": "Create a new plan",
+        "how are orders ranked": "How orders are ranked (top priority orders)",
+        "who approves supplier payments": "Payables: paying suppliers",
+        "explain customer health": "Customers and customer health",
+        "what does waiting on wire mean": "Orders received: the list, statuses and signals",
+        "how does supplier scoring work": "How suppliers are scored",
+        "what can you do": "This assistant: what it can do",
+    }
+    for q, title in cases.items():
+        assert guide.search(q)[0].title == title, q
+    assert guide.search("zzz qqq") == []
+    notes = guide.brief("can i create a new plan", lambda need: need == "planning.write")
+    assert (
+        notes.startswith("### Create a new plan (/planning · the user's role CAN do this)")
+        and "ONE active plan" in notes
+    )
+    assert "CANNOT" in guide.brief("can i create a new plan", lambda need: False)
+
+
+async def test_how_to_questions_use_the_guide_with_role_and_company_rules(client: AsyncClient) -> None:
+    co = await _demo_co("ai-guide")
+    owner, buyer = await headers_for(client, co), await headers_for(client, co, "purchaser")
+    evs = await ask(client, owner, "Can I create a new plan?")
+    assert {d["tool"] for k, d in evs if k == "tool_start"} == {
+        "erp_guide",
+        "plan_summary",
+    }  # rule + live state
+    answer = "".join(d["text"] for k, d in evs if k == "token")
+    assert "Create a new plan" in answer and "Your role can do this" in answer
+    chips = next(d["records"] for k, d in evs if k == "related_records")
+    assert {"kind": "screen", "label": "Planning", "href": "/planning"} in chips
+
+    evs = await ask(client, buyer, "Can I create a new plan?")  # the purchaser may read plans, not make them
+    assert "can't do this" in "".join(d["text"] for k, d in evs if k == "token")
+
+    # explanations carry this company's current rule values
+    principal = Principal(user_id=uuid.uuid4(), tenant_id=co.id, role=Role.OWNER)
+    out = await _run_one(BY_NAME["erp_guide"], Ctx(principal=principal, today=date.today()),
+                         {"question": "how are orders ranked"})  # fmt: skip
+    top = out.data["sections"][0]
+    assert (
+        top["this_company_rule"] == "weights requirement 10, customer 20, profit 25, deadline 30, priority 15"
+    )
+    assert top["your_role_can_do_this"] is True and top["screen"] == "Orders (/orders)"
+
+
+async def test_supplier_questions_compare_with_the_scores(client: AsyncClient) -> None:
+    co = await _demo_co("ai-sup")
+    owner = await headers_for(client, co)
+    evs = await ask(client, owner, "Which supplier is best for steel wire rod and why?")
+    assert "supplier_comparison" in {d["tool"] for k, d in evs if k == "tool_start"}
+    table = next(
+        d["widget"]
+        for k, d in evs
+        if k == "ui_widget" and d["widget"].get("title", "").startswith("Suppliers")
+    )
+    assert table["rows"] and all(r["overall"] for r in table["rows"])
+    principal = Principal(user_id=uuid.uuid4(), tenant_id=co.id, role=Role.OWNER)
+    out = await _run_one(BY_NAME["supplier_comparison"], Ctx(principal=principal, today=date.today()),
+                         {"material": "steel wire rod"})  # fmt: skip
+    assert (
+        out.data["material"] == "Steel wire rod"
+    )  # found by name (this test company has no wire-rod supplier)
+    assert out.data["weights"] == {"price": 40, "on_time": 25, "quality": 25, "lead": 10}

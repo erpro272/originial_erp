@@ -203,6 +203,7 @@ const CHIP_ICON: Record<string, IconKind> = {
   po: "wip",
   inventory: "wip",
   billing: "trend",
+  screen: "info",
 };
 
 export function RelatedChips({ items }: { items: Related[] }) {
@@ -217,8 +218,8 @@ export function RelatedChips({ items }: { items: Related[] }) {
             className="flex items-center gap-2 rounded-card border border-line bg-white px-3 py-1.5 text-[13px] text-ink-2 hover:border-faint hover:bg-surface"
           >
             <KitIcon kind={CHIP_ICON[r.kind] ?? "trend"} className="size-4 text-ink-3" />
-            {r.label}
-            {r.kind !== "plan" && r.kind !== "billing" && r.kind !== "inventory" && (
+            {r.kind === "screen" ? `Open ${r.label}` : r.label}
+            {!["plan", "billing", "inventory", "screen"].includes(r.kind) && (
               <span className="text-muted">
                 ({r.kind === "po" ? "PO" : r.kind[0]!.toUpperCase() + r.kind.slice(1)})
               </span>

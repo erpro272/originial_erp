@@ -22,34 +22,115 @@ import { DocumentsSheet, Sources } from "./Documents";
 import { ActionsCard } from "./Actions";
 import { RelatedChips, WidgetView } from "./Widgets";
 
-/** Tiny, safe formatter for the model's text: paragraphs, "- " bullets and **bold** (no HTML). */
-function Text({ text }: { text: string }) {
-  const bold = (s: string): ReactNode[] =>
-    s
-      .split(/(\*\*[^*]+\*\*)/g)
-      .map((p, i) => (p.startsWith("**") ? <strong key={i}>{p.slice(2, -2)}</strong> : p));
+/** Small, safe formatter for the model's text (no HTML): paragraphs, "- " bullets, "1. " steps, "#" headings, tables,
+ * **bold**, *italic* and `code`. */
+function inline(s: string): ReactNode[] {
+  return s
+    .split(/(\*\*[^*]+\*\*|`[^`]+`|\*[^*\s][^*]*\*)/g)
+    .filter(Boolean)
+    .map((p, i) =>
+      p.startsWith("**") ? (
+        <strong key={i}>{p.slice(2, -2)}</strong>
+      ) : p.startsWith("`") ? (
+        <code key={i} className="rounded bg-surface px-1 text-[13px]">
+          {p.slice(1, -1)}
+        </code>
+      ) : p.length > 2 && p.startsWith("*") ? (
+        <em key={i}>{p.slice(1, -1)}</em>
+      ) : (
+        p
+      ),
+    );
+}
+
+const cells = (row: string) =>
+  row
+    .trim()
+    .replace(/^\|/, "")
+    .replace(/\|$/, "")
+    .split("|")
+    .map((c) => c.trim());
+
+export function Text({ text }: { text: string }) {
   const blocks: ReactNode[] = [];
-  let list: string[] = [];
+  let list: { ordered: boolean; start: number; items: string[] } | null = null;
+  let table: string[][] = [];
   const flush = () => {
-    if (list.length)
+    if (list) {
+      const items = list.items.map((l, i) => <li key={i}>{inline(l)}</li>);
       blocks.push(
-        <ul key={`u${blocks.length}`} className="m-0 flex list-disc flex-col gap-1 pl-5">
-          {list.map((l, i) => (
-            <li key={i}>{bold(l)}</li>
-          ))}
-        </ul>,
+        list.ordered ? (
+          <ol
+            key={`o${blocks.length}`}
+            start={list.start}
+            className="m-0 flex list-decimal flex-col gap-1 pl-5"
+          >
+            {items}
+          </ol>
+        ) : (
+          <ul key={`u${blocks.length}`} className="m-0 flex list-disc flex-col gap-1 pl-5">
+            {items}
+          </ul>
+        ),
       );
-    list = [];
+      list = null;
+    }
+    if (table.length) {
+      const [head, ...rows] = table;
+      blocks.push(
+        <div key={`t${blocks.length}`} className="overflow-x-auto rounded-card border border-line">
+          <table className="w-full border-collapse text-[13px]">
+            <thead>
+              <tr className="bg-surface text-left text-[12px] text-muted">
+                {head!.map((c, i) => (
+                  <th key={i} className="px-3 py-2 font-medium">
+                    {inline(c)}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r, i) => (
+                <tr key={i} className="border-t border-divider">
+                  {r.map((c, k) => (
+                    <td key={k} className="px-3 py-2 text-ink-2">
+                      {inline(c)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>,
+      );
+      table = [];
+    }
   };
   for (const line of text.split("\n")) {
     const t = line.trim();
-    if (/^[-*•] /.test(t)) list.push(t.slice(2));
-    else {
+    const bullet = /^[-*•] (.*)/.exec(t);
+    const step = /^(\d+)[.)] (.*)/.exec(t);
+    if (!t) continue; // blank lines don't end a list (steps are often spaced out)
+    if (t.startsWith("|")) {
+      if (list) flush();
+      if (!/^\|?[\s:|-]+\|?$/.test(t)) table.push(cells(t)); // skip the |---| line
+    } else if (bullet || step) {
+      if (table.length || (list && list.ordered !== !!step)) flush();
+      list ??= { ordered: !!step, start: step ? Number(step[1]) : 1, items: [] };
+      list.items.push(bullet ? bullet[1]! : step![2]!);
+    } else {
       flush();
-      if (t)
+      const h = /^#{1,4} (.*)/.exec(t);
+      if (h)
+        blocks.push(
+          <h4 key={`h${blocks.length}`} className="m-0 mt-1 text-[14px] font-semibold text-ink">
+            {inline(h[1]!)}
+          </h4>,
+        );
+      else if (!/^(-{3,}|\*{3,})$/.test(t))
         blocks.push(
           <p key={`p${blocks.length}`} className="m-0">
-            {bold(t)}
+            {inline(t)}
           </p>,
         );
     }

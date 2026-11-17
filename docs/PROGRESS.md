@@ -154,6 +154,10 @@
   use context; free-tier rate limits handled (fallback model, short waits); invoice reading works live (OCR + text
   model, vision fallback). Tested live in the browser: purchasing overview, what to do today, fixing the biggest
   problem, EOQ, costing-policy citation, Hindi CNC question, receivables.
+- AI Assistant knows the ERP (2026-11-17, awaiting owner review): how-to, permission and "why / logic" questions answered
+  from a built-in guide combined with live data (e.g. "can I create a new plan" -> no, PLAN-001 awaits approval; only one
+  active plan; approve it, then + New plan), with this company's rule values; supplier comparison tool; richer answer
+  formatting; free-tier pacing (waits shown as a step).
 - Production backend: real stations from factory setup, live status/output from the plant floor.
 - Billing round 2: document intake + review queue, quotation versions and compare, e-invoice / IRN,
   credit notes and advances screens, GST filing tab, Gmail / WhatsApp / bank feeds.

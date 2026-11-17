@@ -17,16 +17,19 @@ from typing import Any
 from sqlalchemy import select as sa_select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.ai.assistant import guide
 from app.billing import payables as ap
 from app.billing import receivables as ar
 from app.core.auth import Principal
 from app.core.permissions import Permission
+from app.customers import service as customers
 from app.invoices import ledger
 from app.orders import service as orders
 from app.orders.schemas import OrderOut
 from app.planning import service as planning
 from app.planning.schemas import PlanOut, PlanPatch
 from app.purchasing import service as purchasing
+from app.purchasing import suppliers
 
 # ---- result shape -----------------------------------------------------------------------------------------------
 
@@ -825,6 +828,48 @@ async def purchase_orders(s: AsyncSession, c: Ctx, a: dict[str, Any]) -> ToolOut
     )  # fmt: skip
 
 
+async def supplier_comparison(s: AsyncSession, c: Ctx, a: dict[str, Any]) -> ToolOut:
+    cmp = await suppliers.comparison(s)
+    want = norm(str(a.get("material") or ""))
+    mats = [m for m in cmp.materials if want and (want in norm(m.name) or want == norm(m.code))]
+    mat = mats[0] if mats else next((m for m in cmp.materials if m.id == cmp.default_material_id), None)
+    if mat is None:
+        return ToolOut(summary="No suppliers are recorded for comparison yet.", data={"materials": []})
+    rows = sorted((r for r in cmp.rows if r.material_id == mat.id), key=lambda r: -(r.overall or -1))
+    top = cmp.top.get(str(mat.id), [])
+
+    def pct(v: float | None) -> str:
+        return "—" if v is None else f"{v:g}%"
+
+    table = [{"supplier": r.supplier + (" ★ preferred" if r.preferred else ""), "overall": pct(r.overall),
+              "rate": inr(r.rate_paise) + f"/{r.unit}" if r.rate_paise else "—",
+              "lead": f"{r.lead_days:g} d" if r.lead_days else "—", "on_time": pct(r.on_time_pct),
+              "quality": f"{r.quality_score:g}/10" if r.quality_score is not None else "—",
+              "status": ", ".join(r.flags) or r.note, "status_tone": "md" if r.flags else "ok"} for r in rows]  # fmt: skip
+    best = top[0] if top else None
+    summary = (f"{mat.name}: {len(rows)} supplier{'s' * (len(rows) != 1)} compared"
+               + (f"; {best.row.supplier} is {' / '.join(best.badges)} ({best.pct:g}%): {best.note}" if best else "")
+               + ".")  # fmt: skip
+    return ToolOut(
+        summary=summary,
+        data={"material": mat.name, "weights": {"price": cmp.rules.price_weight, "on_time": cmp.rules.on_time_weight,
+                                                "quality": cmp.rules.quality_weight, "lead": cmp.rules.lead_weight},
+              "recommended": [{"supplier": t.row.supplier, "badges": t.badges, "overall_pct": t.pct, "why": t.note}
+                              for t in top],
+              "suppliers": [{"supplier": r.supplier, "overall_pct": r.overall, "rate": inr(r.rate_paise) if r.rate_paise else None,
+                             "rate_from": r.rate_source, "lead_days": r.lead_days, "lead_from": r.lead_source,
+                             "on_time_pct": r.on_time_pct, "defect_pct": r.defect_pct, "deliveries": r.deliveries,
+                             "flags": r.flags, "preferred": r.preferred} for r in rows[:6]],
+              "other_materials": [m.name for m in cmp.materials if m.id != mat.id][:8]},
+        widgets=[{"type": "table", "title": f"Suppliers for {mat.name}", "columns": [
+            {"key": "supplier", "label": "Supplier"}, {"key": "overall", "label": "Overall", "align": "right"},
+            {"key": "rate", "label": "Rate", "align": "right"}, {"key": "lead", "label": "Lead", "align": "right"},
+            {"key": "on_time", "label": "On time", "align": "right"}, {"key": "quality", "label": "Quality", "align": "right"},
+            {"key": "status", "label": "Note"}], "rows": table, "empty": "No suppliers for this material."}],
+        related=[{"kind": "screen", "label": "Supplier comparison", "href": "/purchasing/suppliers"}],
+    )  # fmt: skip
+
+
 # ---- billing / money --------------------------------------------------------------------------------------------
 
 
@@ -971,6 +1016,75 @@ async def search_documents(s: AsyncSession, c: Ctx, a: dict[str, Any]) -> ToolOu
 _DATE = {"type": "string", "description": "ISO date YYYY-MM-DD"}
 P = Permission
 
+# ---- the ERP guide: how-to, logic, permissions -----------------------------------------------------------------
+
+SCREENS = {"/": "ERP", "/orders": "Orders", "/orders/customers": "Customers", "/orders/customers/imports": "Invoice imports",
+           "/planning": "Planning", "/purchasing": "Inventory", "/purchasing/purchase": "Raw Material Purchase",
+           "/purchasing/suppliers": "Supplier comparison", "/billing": "Payments", "/billing/ebill": "Invoice / E-bill",
+           "/billing/gst": "GST", "/production": "Production", "/dashboard": "Dashboard", "/assistant": "AI Assistant"}  # fmt: skip
+
+
+async def company_rule(s: AsyncSession, key: str) -> str | None:
+    """The company's current values for a rule the guide explains (so 'how' answers use this company's numbers)."""
+    if key == "order-ranking":
+        rk = await orders.get_ranking(s)
+        if rk.mode != "weighted":
+            return f"ranked by {rk.mode} only"
+        return "weights " + ", ".join(f"{k} {v}" for k, v in rk.weights.model_dump().items())
+    if key == "customer-health":
+        h = await customers.get_health_settings(s)
+        return (f"repeat = at least {h.repeat_min_invoices} invoices and bought in the last {h.repeat_recent_days} days; "
+                f"high value = top {h.high_value_top_pct}% of period sales; declining = down more than "
+                f"{h.declining_drop_pct}%; inactive after {h.inactive_days} days; dormant after {h.dormant_days} days")  # fmt: skip
+    if key == "supplier-scoring":
+        w = await suppliers.get_rules(s)
+        return (f"weights price {w.price_weight:g}, on-time {w.on_time_weight:g}, quality {w.quality_weight:g}, lead "
+                f"{w.lead_weight:g}; late risk below {w.late_risk_below:g}% on time; quality risk above "
+                f"{w.quality_risk_above:g}% defects")  # fmt: skip
+    if key == "planning-rules":
+        r = await planning.get_rules(s)
+        pen = (inr(r.penalty_fixed_paise) + " per late day" if r.penalty_mode == "fixed"
+               else f"{r.penalty_percent:g}% of order value per late day")  # fmt: skip
+        return (f"late penalty {pen}; overheads {r.overhead_pct:g}%; packaging ₹{r.packaging_paise_per_unit / 100:.2f} per "
+                f"unit; minimum margin {r.min_margin_pct:g}%; re-approval when contribution falls more than "
+                f"{r.reapproval_margin_drop_pct:g}%")  # fmt: skip
+    if key == "planning-objective":
+        o = await planning.get_objective(s)
+        names = {"late": "fewest late orders", "per_day": "most contribution per production day",
+                 "idle": "use idle machines", "bottlenecks": "fewest bottlenecks",
+                 "contribution": "most contribution", "days": "shortest plan"}  # fmt: skip
+        return "criteria in order: " + " > ".join(names.get(c, c) for c in o.criteria)
+    return None
+
+
+async def erp_guide(s: AsyncSession, c: Ctx, a: dict[str, Any]) -> ToolOut:
+    question = str(a.get("question") or "").strip()
+    found = guide.search(question)
+    role = c.principal.role.value
+    if not found:
+        return ToolOut(summary="The ERP guide has nothing on that.", data={"role": role, "sections": []})
+    out: list[dict[str, Any]] = []
+    for sec in found:
+        item: dict[str, Any] = {"title": sec.title, "how_it_works": sec.body}
+        if sec.screen:
+            item["screen"] = f"{SCREENS.get(sec.screen, sec.screen)} ({sec.screen})"
+        if sec.needs in set(Permission):
+            item["your_role_can_do_this"] = c.principal.can(Permission(sec.needs))
+        if sec.setting:
+            item["this_company_rule"] = await company_rule(s, sec.setting)
+        out.append(item)
+    top = out[0]
+    first = re.split(r"(?<=[.!?])\s", found[0].body.replace("\n", " "), maxsplit=2)
+    can = top.get("your_role_can_do_this")
+    summary = (f"{found[0].title}: {' '.join(first[:2])}"
+               + ("" if can is None else " Your role can do this." if can else f" Your role ({role}) can't do this."))  # fmt: skip
+    related = [{"kind": "screen", "label": SCREENS.get(sec.screen, sec.screen), "href": sec.screen}
+               for sec in found if sec.screen and sec.screen != "/"]  # fmt: skip
+    unique = {r["href"]: r for r in reversed(related)}  # first mention wins
+    related = [r for r in related if unique[r["href"]] is r][:3]
+    return ToolOut(summary=summary, data={"role": role, "sections": out}, related=related)
+
+
 TOOLS: list[Tool] = [
     Tool("machine_schedule", "A machine's booked work per day (orders, hours, % of capacity). Default: tomorrow.",
          {"machine": {"type": "string", "description": "Machine name, e.g. CNC 01"}, "start": _DATE, "end": _DATE},
@@ -1007,6 +1121,11 @@ TOOLS: list[Tool] = [
          [], P.PURCHASING_READ, lambda a: "Checking material coverage", material_coverage),
     Tool("purchase_orders", "Open purchase orders and which are delayed.", {}, [], P.PURCHASING_READ,
          lambda a: "Checking purchase orders", purchase_orders),
+    Tool("supplier_comparison", "Suppliers of one material compared: overall score, rate, lead time, on-time %, quality, "
+         "risk flags, the recommended supplier and why (default: the material most needed now).",
+         {"material": {"type": "string", "description": "material name or code, e.g. steel wire rod"}}, [],
+         P.PURCHASING_READ, lambda a: f"Comparing suppliers{' for ' + a['material'] if a.get('material') else ''}",
+         supplier_comparison),
     Tool("receivables", "What customers owe: totals, overdue, expected this week, largest balances.",
          {"customer": {"type": "string"}}, [], P.BILLING_READ, lambda a: "Checking receivables", receivables),
     Tool("payables", "What we owe suppliers and what awaits owner approval.", {}, [], P.BILLING_READ,
@@ -1014,6 +1133,12 @@ TOOLS: list[Tool] = [
     Tool("search_documents", "Search the company's own documents (SOPs, policies, manuals, specs) and return cited passages. "
          "Use for 'what does our policy / SOP / manual say'.", {"query": {"type": "string"}}, ["query"], P.AI_USE,
          lambda a: f"Searching company documents for “{(a.get('query') or '')[:40]}”", search_documents),
+    Tool("erp_guide", "How this ERP works: screens, how to do something (create a plan, raise a PO, record a receipt...), "
+         "who may do it (says if the user's role can), and the logic behind numbers and tags (ranking, signals, scheduling, "
+         "costs, supplier scores, customer health, approvals) with this company's current rule values. Use for any "
+         "'how / can I / where / why does it / what does X mean' question about the ERP, together with live-data tools.",
+         {"question": {"type": "string", "description": "the user's question in English keywords"}}, ["question"],
+         P.AI_USE, lambda a: "Reading the ERP guide", erp_guide),
     Tool("cost_trend", "Monthly supplier bills, payments, invoicing and collections (cost trend).",
          {"months": {"type": "integer"}}, [], P.BILLING_READ, lambda a: "Checking cost trend", cost_trend),
 ]  # fmt: skip

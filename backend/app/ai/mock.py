@@ -6,6 +6,7 @@ own one-line summaries, so every number shown still comes from the ERP tools. De
 
 import json
 import re
+from collections.abc import Callable
 from datetime import timedelta
 from typing import Any, Literal
 
@@ -16,6 +17,11 @@ HELP = ("I can answer from live ERP data: machine schedules and load, why an ord
         "ready to ship, the current plan with fixes and what-ifs, capacity for a new order, material coverage, purchase "
         "orders, receivables, payables and cost trends. Try “Is CNC 01 busy tomorrow?” or “Which orders are at risk?”.")  # fmt: skip
 
+HOWTO = re.compile(
+    r"\b(how (do|can|does|should|to|are|is the)|can (i|we|the \w+)|where (do|can|is)|explain|logic|"
+    r"what does .+ mean|who (can|approves|may)|what can you do|how .+ work|what is (a|the) )",
+    re.I,
+)
 MACHINE = re.compile(r"\b(cnc|press|assembly|rolling|qc|lathe|drill|furnace)[\s-]*(\d+)?\b", re.I)
 
 
@@ -100,6 +106,11 @@ def plan_calls(text: str, names: set[str]) -> list[tuple[str, dict[str, Any]]]:
         calls.append(("plan_summary", {}))
     if any(w in t for w in ("purchase order", " po ", "pos ", "supplier deliver")):
         calls.append(("purchase_orders", {}))
+    if re.search(
+        r"\b(supplier|vendor)s?\b.*\b(score|scoring|compar|best|recommend|rating|why)|\b(compare|best|recommended) (supplier|vendor)",
+        t,
+    ):
+        calls.append(("supplier_comparison", {}))
     if any(w in t for w in ("receivable", "owe us", "customers owe", "overdue", "collection")):
         calls.append(("receivables", {}))
     if any(w in t for w in ("payable", "we owe", "pay supplier")):
@@ -115,6 +126,8 @@ def plan_calls(text: str, names: set[str]) -> list[tuple[str, dict[str, Any]]]:
         dq = re.split(r"(?:what does|what do|according to)\s+(?:our|the)?\s*", text, flags=re.I)[-1]
         dq = re.sub(r"\b(say|says|about|tell us)\b|\?", " ", dq, flags=re.I).strip() or text
         calls.append(("search_documents", {"query": dq[:200]}))
+    if not orders and HOWTO.search(t):  # how-to / permission / logic questions about the ERP itself
+        calls.insert(0, ("erp_guide", {"question": text[:300]}))
     if not calls:  # a module or topic named on its own ("purchasing", "billing", "stock"...): its overview
         for words, names_ in ((("purchas", "supplier", "po "), ("purchase_orders", "material_coverage")),
                               (("billing", "payment", "money", "cash", "invoice"), ("receivables", "payables")),
@@ -148,6 +161,7 @@ class ScriptedLLM:
         json_mode: bool = False,
         model: str | None = None,
         max_tokens: int = 1024,
+        on_wait: Callable[[float], None] | None = None,  # told before waiting out a rate limit
     ) -> ChatResult:
         last_user = max((i for i, m in enumerate(messages) if m.get("role") == "user"), default=-1)
         results = [m for m in messages[last_user + 1 :] if m.get("role") == "tool"]

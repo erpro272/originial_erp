@@ -371,3 +371,21 @@ Short records of choices and the reason for each. Newest at the bottom.
     latest message. Fixed: the document search loaded the embedding model on the event loop (froze the API while the
     model downloaded); now in a thread. The scripted mock also maps a bare module name ("purchasing", "billing"...)
     to that area's overview tools.
+61. **Assistant knows how the ERP works (owner: "can I create a new plan" should say yes/no, how, and the active plan;
+    users ask "what's the logic behind this")**: a built-in guide `app/ai/assistant/guide.md` (one section per screen,
+    task and rule: lifecycle, signals, ranking, planning steps / costing / Best score / fixes / approval, inventory, PO
+    lifecycle, supplier scoring, customer health, invoice import, receivables, payables + 3-way match, deals, dashboard,
+    what isn't built yet), each with `needs:` (permission), `screen:` and `setting:` (company rule). Kept true to the
+    code: update it with every feature. `guide.py` searches it with plain keyword scoring (no DB, no model). Two ways in:
+    (a) every question's best 3 sections (if any match well) go into the system prompt as "ERP guide notes", marked
+    with whether the user's role can do it, so answers can't drift from the real screens and rules and no model round
+    is spent; (b) the `erp_guide` tool returns the same plus this company's current rule values (ranking weights,
+    health limits, supplier weights, planning rules, Best-score criteria) and "Open <screen>" chips. New tool
+    `supplier_comparison` (scores, rates, lead, on-time, quality, flags, recommended supplier and why). Prompt: lead
+    with the direct answer, then steps / reasoning, the live state that matters (e.g. "can I create a plan" also reads
+    the plan), and where to do it; never invent names, codes, statuses or buttons, not even as examples; no guessing
+    causes; plain-text formulas. Chat text now renders headings, numbered steps, tables, italics and code (still no
+    HTML). Free tier: max_tokens 1,400 (Groq reserves it against the 8k/minute budget), 2 tool rounds max, the
+    assistant uses reasoning "medium", waits up to 15 s for the main model before using the weaker fallback, and a
+    rate-limit wait shows as a step ("Waiting N s for the free AI quota"). The free tier is enough for about one or two
+    questions a minute; Groq's paid Dev tier removes that limit without code changes.
