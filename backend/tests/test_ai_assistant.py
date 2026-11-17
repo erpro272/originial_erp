@@ -18,6 +18,7 @@ from app.ai.assistant import graph as g
 from app.ai.assistant import guide
 from app.ai.assistant.graph import _run_one
 from app.ai.assistant.tools import BY_NAME, Ctx, ToolOut
+from app.ai.assistant.tools import inr as tools_inr
 from app.ai.llm import LLMError, OpenAICompatibleLLM, wait_seconds
 from app.core.auth import Principal
 from app.core.permissions import Role
@@ -321,3 +322,31 @@ async def test_supplier_questions_compare_with_the_scores(client: AsyncClient) -
         out.data["material"] == "Steel wire rod"
     )  # found by name (this test company has no wire-rod supplier)
     assert out.data["weights"] == {"price": 40, "on_time": 25, "quality": 25, "lead": 10}
+
+
+async def test_sales_questions_get_the_number(client: AsyncClient) -> None:
+    co = await _demo_co("ai-sales")
+    owner = await headers_for(client, co)
+    evs = await ask(client, owner, "What are my total sales for Mahindra this fiscal year?")
+    calls = [d for k, d in evs if k == "tool_start"]
+    assert [d["tool"] for d in calls] == ["sales"]
+    answer = "".join(d["text"] for k, d in evs if k == "token")
+    assert answer.startswith("Mahindra") and "₹" in answer and "financial year" in answer
+
+    # the same number as the Customers tab for the same period
+    page = (await client.get("/customers", params={"period": "fytd", "q": "Mahindra"}, headers=owner)).json()
+    row = page["items"][0]
+    principal = Principal(user_id=uuid.uuid4(), tenant_id=co.id, role=Role.OWNER)
+    out = await _run_one(
+        BY_NAME["sales"], Ctx(principal=principal, today=date.today()), {"customer": "mahindra"}
+    )
+    assert out.data["customer"] == row["name"] and out.data["invoices"] == row["invoices"]
+    assert out.data["sales"] == tools_inr(row["total_sales_paise"])
+    total = await _run_one(
+        BY_NAME["sales"], Ctx(principal=principal, today=date.today()), {"period": "this_month"}
+    )
+    assert total.data["period_name"] == "this month" and total.data["where_in_the_erp"].startswith("Customers") and "top_customers" in total.data
+    missing = await _run_one(
+        BY_NAME["sales"], Ctx(principal=principal, today=date.today()), {"customer": "Nobody Ltd"}
+    )
+    assert missing.data["found"] is False

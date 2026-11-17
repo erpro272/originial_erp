@@ -870,6 +870,89 @@ async def supplier_comparison(s: AsyncSession, c: Ctx, a: dict[str, Any]) -> Too
     )  # fmt: skip
 
 
+PERIODS = {"this_month": "this month", "this_quarter": "this quarter", "fytd": "this financial year to date",
+           "last_12_months": "the last 12 months", "custom": "the chosen dates"}  # fmt: skip
+
+
+async def sales(s: AsyncSession, c: Ctx, a: dict[str, Any]) -> ToolOut:
+    """Invoiced sales (customer invoices recorded in the ERP), the same numbers as the Customers tab."""
+    preset = str(a["period"]) if a.get("period") in PERIODS else "fytd"
+    start, end = a.get("start"), a.get("end")
+    if start or end:
+        preset = "custom"
+    try:
+        per = customers.resolve_period(preset, _d(start, c.today) if start else None,
+                                       _d(end, c.today) if end else None, c.today)  # fmt: skip
+    except Exception:
+        per = customers.resolve_period("fytd", None, None, c.today)
+    span = f"{day(per.date_from)} {per.date_from.year} – {day(per.date_to)} {per.date_to.year}"
+    fy = per.date_from.year if per.date_from.month >= 4 else per.date_from.year - 1
+    name = f"financial year {fy}-{str(fy + 1)[-2:]} to date" if per.preset == "fytd" else PERIODS[per.preset]
+    prev_span = f"{day(per.prev_from)} {per.prev_from.year} – {day(per.prev_to)} {per.prev_to.year}"
+    where = "Customers tab (/orders/customers), with the period selector set the same way"
+    page = await customers.list_customers(s, per, customers.CustomerFilters(), limit=1000)
+    rows = page.items
+    total = sum(r.total_sales_paise for r in rows)
+    prev = sum(r.previous_sales_paise for r in rows)
+    invoices = sum(r.invoices for r in rows)
+    who = str(a.get("customer") or "").strip()
+    if who:
+        n = norm(who)
+        match = [r for r in rows if n and (n in norm(r.name) or norm(r.name) in n)]
+        if not match:
+            return ToolOut(summary=f"No customer matching “{who}” has invoices recorded.",
+                           data={"customer": who, "period": span, "found": False})  # fmt: skip
+        r = match[0]
+        share = round(100 * r.total_sales_paise / total, 1) if total else None
+        change = (
+            f"{r.sales_change_pct:+g}% vs the previous period"
+            if r.sales_change_pct is not None
+            else "no earlier sales to compare"
+        )
+        summary = (f"{r.name}: sales {lakh(r.total_sales_paise)} ({inr(r.total_sales_paise)}) from {r.invoices} invoice"
+                   f"{'s' * (r.invoices != 1)} in {name} ({span}); {change}; outstanding {lakh(r.outstanding_paise)}.")  # fmt: skip
+        items = [{"label": "Period", "value": span}, {"label": "Sales (invoiced)", "value": inr(r.total_sales_paise)},
+                 {"label": "Invoices", "value": str(r.invoices)},
+                 {"label": "Average invoice", "value": inr(r.aov_paise) if r.aov_paise else "—"},
+                 {"label": "Previous period", "value": inr(r.previous_sales_paise)},
+                 {"label": "Share of company sales", "value": f"{share}%" if share is not None else "—"},
+                 {"label": "Lifetime sales", "value": inr(r.lifetime_sales_paise)},
+                 {"label": "Outstanding now", "value": inr(r.outstanding_paise)},
+                 {"label": "Last purchase", "value": day(r.last_purchase) if r.last_purchase else "—"}]  # fmt: skip
+        return ToolOut(
+            summary=summary,
+            data={"customer": r.name, "period": span, "period_name": name, "compared_with_period": prev_span,
+                  "where_in_the_erp": where, "sales": inr(r.total_sales_paise),
+                  "sales_short": lakh(r.total_sales_paise), "invoices": r.invoices, "average_invoice": inr(r.aov_paise) if r.aov_paise else None,
+                  "previous_period_sales": inr(r.previous_sales_paise), "change_pct": r.sales_change_pct,
+                  "share_of_company_pct": share, "lifetime_sales": inr(r.lifetime_sales_paise),
+                  "outstanding": inr(r.outstanding_paise), "last_purchase": str(r.last_purchase) if r.last_purchase else None,
+                  "health": r.health_tags, "other_matches": [m.name for m in match[1:4]]},
+            widgets=[{"type": "key_values", "title": f"{r.name} · sales", "items": items}],
+            related=[{"kind": "customer", "label": r.name, "href": f"/orders/customers/{r.id}"}],
+        )  # fmt: skip
+    top = [r for r in rows if r.total_sales_paise > 0][:8]
+    pct_change = round(100 * (total - prev) / prev, 1) if prev else None
+    summary = (f"Sales {lakh(total)} ({inr(total)}) from {invoices} invoices in {name} ({span})"
+               + (f", {pct_change:+g}% vs the period just before ({prev_span})" if pct_change is not None else "")
+               + (f"; biggest customer {top[0].name} ({lakh(top[0].total_sales_paise)})" if top else "") + ".")  # fmt: skip
+    return ToolOut(
+        summary=summary,
+        data={"period": span, "period_name": name, "compared_with_period": prev_span, "where_in_the_erp": where,
+              "total_sales": inr(total), "total_short": lakh(total),
+              "invoices": invoices, "previous_period_sales": inr(prev), "change_pct": pct_change,
+              "top_customers": [{"customer": r.name, "sales": inr(r.total_sales_paise), "invoices": r.invoices,
+                                 "share_pct": round(100 * r.total_sales_paise / total, 1) if total else None} for r in top]},
+        widgets=[{"type": "table", "title": f"Sales by customer · {span}", "columns": [
+            {"key": "customer", "label": "Customer"}, {"key": "sales", "label": "Sales", "align": "right"},
+            {"key": "invoices", "label": "Invoices", "align": "right"}, {"key": "share", "label": "Share", "align": "right"}],
+            "rows": [{"customer": r.name, "sales": inr(r.total_sales_paise), "invoices": str(r.invoices),
+                      "share": f"{round(100 * r.total_sales_paise / total, 1)}%" if total else "—"} for r in top],
+            "empty": "No invoices in this period."}],
+        related=[{"kind": "screen", "label": "Customers", "href": "/orders/customers"}],
+    )  # fmt: skip
+
+
 # ---- billing / money --------------------------------------------------------------------------------------------
 
 
@@ -1126,6 +1209,13 @@ TOOLS: list[Tool] = [
          {"material": {"type": "string", "description": "material name or code, e.g. steel wire rod"}}, [],
          P.PURCHASING_READ, lambda a: f"Comparing suppliers{' for ' + a['material'] if a.get('material') else ''}",
          supplier_comparison),
+    Tool("sales", "Invoiced sales (customer invoices in the ERP) for a period: company total, change vs the previous "
+         "period, top customers; or one customer's sales, invoices, average, share, lifetime, outstanding. Default "
+         "period: this financial year to date (April to today).",
+         {"customer": {"type": "string", "description": "customer name, optional"},
+          "period": {"type": "string", "enum": ["this_month", "this_quarter", "fytd", "last_12_months"]},
+          "start": _DATE, "end": _DATE}, [], P.CUSTOMERS_READ,
+         lambda a: f"Checking sales{' for ' + a['customer'] if a.get('customer') else ''}", sales),
     Tool("receivables", "What customers owe: totals, overdue, expected this week, largest balances.",
          {"customer": {"type": "string"}}, [], P.BILLING_READ, lambda a: "Checking receivables", receivables),
     Tool("payables", "What we owe suppliers and what awaits owner approval.", {}, [], P.BILLING_READ,

@@ -389,3 +389,12 @@ Short records of choices and the reason for each. Newest at the bottom.
     assistant uses reasoning "medium", waits up to 15 s for the main model before using the weaker fallback, and a
     rate-limit wait shows as a step ("Waiting N s for the free AI quota"). The free tier is enough for about one or two
     questions a minute; Groq's paid Dev tier removes that limit without code changes.
+62. **Sales questions get the number (owner: "why isn't it providing the exact number")**: there was no sales tool, so the
+    model described an imaginary filter / Σ / admin UI. New `sales` tool: invoiced sales from `customers.list_customers`
+    (the same numbers as the Customers tab) for a period (this month / quarter / financial year to date / last 12
+    months / dates), for one customer (sales, invoices, average, share, change vs the period just before with its dates,
+    lifetime, outstanding) or the company (total, change, top customers); it states the FY label and where the number
+    is shown. Prompt: data questions get the number from a tool, no period given -> FY to date (say so, don't ask), and if
+    no tool can return it say so and name the real screen; the prompt lists the only screens that exist. Guide: "Sales
+    figures" section.
+

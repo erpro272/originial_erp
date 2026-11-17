@@ -170,6 +170,16 @@ High value (in the top X% of period sales), Declining (period sales down more th
 Inactive (no invoice for the inactive-days limit, for a repeat buyer), Dormant (none for the dormant-days limit).
 The most important tag is shown first. Change the limits with "Edit rules" on the Customers tab (owner).
 
+## Sales figures (how much we sold)
+keywords: sales, total sales, revenue, turnover, sold, sales for a customer, sales this year, fiscal year, financial year, fy, monthly sales, customer sales, top customers
+screen: /orders/customers
+Sales = the customer invoices recorded in the ERP (uploaded and saved, or issued from Billing), by invoice date. The
+Customers tab shows each customer's sales, invoices, average invoice, change vs the previous period, lifetime sales and
+outstanding for the reporting period chosen at the top (this month, this quarter, financial year to date, last 12
+months or custom dates; the financial year starts on 1 April). A customer's page shows monthly sales and top products.
+Orders' values are order values (what was ordered), not invoiced sales. The assistant's sales tool returns the same
+numbers.
+
 ## Import customer invoices
 keywords: upload invoice, import invoices, read invoice, ocr, scan invoice, invoice upload, review invoice, ai invoice reading
 needs: invoices.write

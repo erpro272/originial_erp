@@ -111,6 +111,11 @@ def plan_calls(text: str, names: set[str]) -> list[tuple[str, dict[str, Any]]]:
         t,
     ):
         calls.append(("supplier_comparison", {}))
+    if re.search(r"\b(sales|sold|revenue|turnover)\b", t) and "order" not in t:
+        cust = re.search(r"\b(?:for|of|to|from) ([a-z][\w &.]+?)(?: this| last| in| during|\?|$)", t)
+        per = next((p for w, p in (("this month", "this_month"), ("quarter", "this_quarter"), ("12 months", "last_12_months"))
+                    if w in t), "fytd")  # fmt: skip
+        calls.append(("sales", {"period": per} | ({"customer": cust.group(1).strip()} if cust else {})))
     if any(w in t for w in ("receivable", "owe us", "customers owe", "overdue", "collection")):
         calls.append(("receivables", {}))
     if any(w in t for w in ("payable", "we owe", "pay supplier")):
