@@ -61,6 +61,79 @@ export interface paths {
         patch: operations["rename_api_ai_conversations__cid__patch"];
         trace?: never;
     };
+    "/api/ai/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Documents */
+        get: operations["list_documents_api_ai_documents_get"];
+        put?: never;
+        /** Upload */
+        post: operations["upload_api_ai_documents_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/documents/{did}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete */
+        delete: operations["delete_api_ai_documents__did__delete"];
+        options?: never;
+        head?: never;
+        /** Update */
+        patch: operations["update_api_ai_documents__did__patch"];
+        trace?: never;
+    };
+    "/api/ai/documents/{did}/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Link
+         * @description A fresh short-lived link to the original (citations open the cited page with it).
+         */
+        get: operations["link_api_ai_documents__did__link_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/documents/{did}/reindex": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reindex */
+        post: operations["reindex_api_ai_documents__did__reindex_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/ai/status": {
         parameters: {
             query?: never;
@@ -1873,6 +1946,50 @@ export interface components {
             /** State Code */
             state_code?: string | null;
         };
+        /** AiDocumentOut */
+        AiDocumentOut: {
+            /** Can Edit */
+            can_edit: boolean;
+            /** Chunks */
+            chunks: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Embedder */
+            embedder: string | null;
+            /** Error */
+            error: string | null;
+            /** File Name */
+            file_name: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Indexed At */
+            indexed_at: string | null;
+            /** Pages */
+            pages: number;
+            /** Roles */
+            roles: string[];
+            /** Size Bytes */
+            size_bytes: number;
+            /** Status */
+            status: string;
+            /** Title */
+            title: string;
+            /** Url */
+            url: string;
+        };
+        /** AiDocumentPatch */
+        AiDocumentPatch: {
+            /** Roles */
+            roles?: string[] | null;
+            /** Title */
+            title?: string | null;
+        };
         /** Alert */
         Alert: {
             /** At */
@@ -2355,6 +2472,21 @@ export interface components {
             rejected: components["schemas"]["RejectedFile"][];
             /** Uploads */
             uploads: components["schemas"]["UploadOut"][];
+        };
+        /** Body_upload_api_ai_documents_post */
+        Body_upload_api_ai_documents_post: {
+            /**
+             * File
+             * @description PDF (with text), Word .docx, .txt or .md; up to 20 MB
+             */
+            file: string;
+            /**
+             * Roles
+             * @description roles that may see it in answers; none = everyone
+             */
+            roles?: string[] | null;
+            /** Title */
+            title?: string | null;
         };
         /** Body_upload_api_invoices_uploads_post */
         Body_upload_api_invoices_uploads_post: {
@@ -6408,6 +6540,187 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ConversationOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_documents_api_ai_documents_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiDocumentOut"][];
+                };
+            };
+        };
+    };
+    upload_api_ai_documents_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_api_ai_documents_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiDocumentOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_api_ai_documents__did__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                did: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_api_ai_documents__did__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                did: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiDocumentPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiDocumentOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    link_api_ai_documents__did__link_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                did: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reindex_api_ai_documents__did__reindex_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                did: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiDocumentOut"];
                 };
             };
             /** @description Validation Error */

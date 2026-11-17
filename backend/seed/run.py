@@ -32,6 +32,7 @@ from app.core.security import hash_password
 from seed import planning_demo
 from seed.billing_demo import seed_billing
 from seed.demo_data import seed_demo, seed_second
+from seed.docs_demo import seed_documents
 from seed.purchase_demo import seed_purchases
 
 PASSWORD = os.environ.get("ERP_SEED_PASSWORD", "Demo@12345")
@@ -52,6 +53,11 @@ USERS = [
 DEMO_TABLES = ("products", "materials", "customers", "orders", "invoices")
 
 TABLES_IN_DELETE_ORDER = [
+    "ai_action_proposals",
+    "ai_messages",
+    "ai_conversations",
+    "ai_document_chunks",
+    "ai_documents",
     "stock_movements",
     "po_events",
     "purchase_order_lines",
@@ -131,6 +137,7 @@ async def seed_business(session: AsyncSession, ids: dict[str, uuid.UUID]) -> Non
     await seed_demo(session, ids["demo"], owner)
     await seed_purchases(session, ids["demo"])  # POs at every stage (Raw Material Purchase)
     await seed_billing(session, ids["demo"])  # follow-ups, promises, supplier invoices at every stage
+    await seed_documents(session, ids["demo"], owner)  # SOPs / policies for the AI Assistant
     await seed_second(session, ids["second"])
 
 
@@ -186,6 +193,9 @@ async def seed_missing(session: AsyncSession) -> list[str]:
         if slug not in ids:
             continue
         if await has_business_data(session, ids[slug]):
+            # the demo company gets the sample documents once (never again after they were deleted)
+            if slug == "demo" and await seed_documents(session, ids[slug], owner):
+                print("seed: sample documents added for the AI Assistant (one time)")
             if slug == "demo" and await planning_demo.upgrade_if_old(session, ids[slug]):
                 print("seed: demo company updated to the current planning demo (one time)")
             else:
@@ -195,6 +205,7 @@ async def seed_missing(session: AsyncSession) -> list[str]:
             await seed_demo(session, ids[slug], owner)
             await seed_purchases(session, ids[slug])
             await seed_billing(session, ids[slug])
+            await seed_documents(session, ids[slug], owner)
         else:
             await seed_second(session, ids[slug])
         filled.append(slug)

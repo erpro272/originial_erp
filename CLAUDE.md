@@ -18,7 +18,7 @@ Dashboard tab at the end of the nav, added later). Built **one feature at a time
 ## Stack
 - **Backend** `backend/`: Python 3.12, FastAPI, Pydantic v2, SQLAlchemy 2 (async, asyncpg),
   Alembic, ARQ worker on Redis, boto3 → S3/MinIO, LangGraph + httpx for the AI (`app/ai/`). uv for deps.
-- **DB**: PostgreSQL 16. Money = integer **paise** (`BIGINT`), never float. JSONB for
+- **DB**: PostgreSQL 16 + pgvector (image `pgvector/pgvector:pg16`). Money = integer **paise** (`BIGINT`), never float. JSONB for
   owner-customisable settings.
 - **Frontend** `frontend/`: React 18 + TS (Vite 8), React Router 6, TanStack Query/Table/
   Virtual, Tailwind v4 (tokens in `src/styles.css`), Radix (shadcn-style components in
@@ -124,6 +124,11 @@ isolation). One company per website: no company picker or switcher in the UI.
   timeouts), `tools.py` (read / dry-run tools calling module services; each has a permission; returns summary + data
   + widgets / related / context / actions), `service.py` (conversations private to the user, `chat()` streams typed SSE),
   models `ai_conversations`, `ai_messages`, `ai_action_proposals` (handover C), migration 0013, permission `ai.use`.
+- `ai/rag/` company documents for the assistant: `models.py` (`ai_documents`, `ai_document_chunks` with `vector(384)` +
+  generated tsvector), `ingestion.py` (ARQ job `ingest_document`: extract / chunk / embed), `embeddings.py` (fastembed
+  bge-small, hashing fallback; `EMBEDDINGS_BACKEND=auto|fastembed|hash`, tests use hash), `retrieval.py` (hybrid
+  pgvector + full text + RRF, roles + tenant filtered in SQL), `service.py` / `router.py` (`/ai/documents`). Migration
+  0014. Demo docs: `samples/documents/` (regenerate: `uv run python -m scripts.make_sample_documents`), `seed/docs_demo.py`.
 - Seed: `seed/demo_data.py` (dates relative to today; mirrors the Orders mockup). Planning demo:
   `seed/planning_demo.py` (idempotent upsert; `python -m seed.planning_demo` fixes an old DB in place).
   Bump `engine.ENGINE_VERSION` whenever engine logic changes (saved results then recalculate). Startup
@@ -163,6 +168,8 @@ isolation). One company per website: no company picker or switcher in the UI.
 - AI Assistant `/assistant[?c=<conversation>]` = `modules/assistant/AssistantPage` (full screen, no content column;
   opened by the ✦ button in `TopNav`): `Sidebar` (history), chat (`Widgets.tsx` renders only known widget types),
   `ContextPanel` (ERP context cards, quick actions / prompts). `streamChat()` reads the SSE stream via `apiFetch`.
+  `Documents.tsx`: `DocumentsSheet` (📎 / Documents: upload with roles, status, delete) and `Sources` (citations; open
+  the cited page via a fresh link). A conversation on screen is never replaced by an older saved copy (`shown`).
 - Production route `/production` = `ProductionPage` (Factory Layout). FRONTEND PREVIEW ONLY: all numbers are
   placeholders in `modules/production/demoData.ts` (owner's request; replace with API data when the backend is
   built). `FactoryLayout` places boxes in a 1000 x 420 plan space; hover / focus shows the stage or station card.

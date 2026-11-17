@@ -1,5 +1,6 @@
 """FastAPI application: modular monolith. All routes are under /api."""
 
+import asyncio
 import logging
 import uuid
 from collections.abc import AsyncIterator, Awaitable, Callable
@@ -12,6 +13,8 @@ from fastapi.responses import JSONResponse
 
 from app import models_registry  # noqa: F401  (all tables known to SQLAlchemy)
 from app.ai.assistant.router import router as ai_router
+from app.ai.rag.embeddings import get_embedder
+from app.ai.rag.router import router as docs_router
 from app.billing.router import router as billing_router
 from app.catalog.router import router as catalog_router
 from app.core.config import get_settings
@@ -38,6 +41,11 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         await get_storage().ensure_bucket()
     except Exception:
         log.warning("object storage not reachable at startup; uploads will fail until it is")
+    if (
+        not get_settings().jobs_inline
+    ):  # load / download the embedding model in the background, not on a question
+        warm = asyncio.create_task(asyncio.to_thread(get_embedder))
+        warm.add_done_callback(lambda _: None)
     yield
 
 
@@ -102,6 +110,7 @@ def create_app() -> FastAPI:
         billing_router,
         dashboard_router,
         ai_router,
+        docs_router,
         invoices_router,
         files_router,
     ):

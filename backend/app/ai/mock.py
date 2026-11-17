@@ -104,8 +104,17 @@ def plan_calls(text: str, names: set[str]) -> list[tuple[str, dict[str, Any]]]:
         calls.append(("receivables", {}))
     if any(w in t for w in ("payable", "we owe", "pay supplier")):
         calls.append(("payables", {}))
-    if "cost" in t and "night" not in t:
+    if ("cost" in t and "night" not in t and not re.search(r"\bpolicy\b.*\bcost|costing policy", t)) or (
+        "increase" in t and "cost" in t
+    ):
         calls.append(("cost_trend", {}))
+    if re.search(
+        r"\b(polic(y|ies)|sop|procedure|manual|safety|inspection|iso|din|standard|document|lockout|according to|maintenance|ppe|coolant|scrap|overheads?|how often)\b",
+        t,
+    ):
+        dq = re.split(r"(?:what does|what do|according to)\s+(?:our|the)?\s*", text, flags=re.I)[-1]
+        dq = re.sub(r"\b(say|says|about|tell us)\b|\?", " ", dq, flags=re.I).strip() or text
+        calls.append(("search_documents", {"query": dq[:200]}))
     seen: set[str] = set()
     out = []
     for name, args in calls:

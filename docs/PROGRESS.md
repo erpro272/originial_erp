@@ -138,10 +138,14 @@
   context cards, quick actions and prompts. 16 read / dry-run tools across Planning, Orders, Purchasing and Billing;
   Groq free LLM (mock without a key). Invoice reading moved to Groq's vision model. Tests: 315 pytest, 74 Vitest,
   28 Playwright.
+- AI Assistant, handover B (2026-11-16, awaiting owner review): company documents. 📎 / Documents panel: upload PDF /
+  Word / text, choose who can see each one, status while the worker reads it, open, delete, retry. Answers quote SOPs and
+  policies with document + page ("Sources" under the answer, opens the cited page). Hybrid search: pgvector + full text
+  + RRF, roles and company enforced before anything reaches the model. Local free embeddings (bge-small, hashing
+  fallback). Three demo documents. Tests: 316 pytest, 76 Vitest, 29 Playwright.
 
 ## Next
-- AI Assistant handover B: document upload + hybrid RAG (pgvector + full text, citations). Handover C: approved
-  actions (plan fixes, raise PO, follow-ups) with re-validation and idempotency.
+- AI Assistant handover C: approved actions (plan fixes, raise PO, follow-ups) with re-validation and idempotency.
 - Production backend: real stations from factory setup, live status/output from the plant floor.
 - Billing round 2: document intake + review queue, quotation versions and compare, e-invoice / IRN,
   credit notes and advances screens, GST filing tab, Gmail / WhatsApp / bank feeds.

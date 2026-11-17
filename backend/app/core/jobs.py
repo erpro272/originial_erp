@@ -14,7 +14,10 @@ from app.core.config import get_settings
 _pool: ArqRedis | None = None
 
 # name -> "module:function"
-REGISTRY = {"extract_invoice": "app.invoices.jobs:extract_invoice"}
+REGISTRY = {
+    "extract_invoice": "app.invoices.jobs:extract_invoice",
+    "ingest_document": "app.ai.rag.ingestion:ingest_document",
+}
 
 
 def resolve(name: str) -> Any:

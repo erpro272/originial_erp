@@ -1,0 +1,82 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R 5 0 R] /Count 2 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 1056 >>
+stream
+BT
+/F1 11 Tf
+14 TL
+56 790 Td
+(DEMO DOCUMENT - Costing Policy \(Rev 3, April 2026\)) Tj T*
+() Tj T*
+(1. Purpose) Tj T*
+(This policy sets how manufacturing cost is planned, recorded and reviewed for every) Tj T*
+(customer order \(bolts, nuts, flange bolts and steel assemblies\).) Tj T*
+() Tj T*
+(2. Standard cost of an order) Tj T*
+(Standard cost = material + direct labour + machine hours + overheads + packaging.) Tj T*
+(Overheads are applied at 12% of material, labour and machine cost.) Tj T*
+(Packaging is charged at the rate in the company rules \(per order\).) Tj T*
+(A scrap allowance of 2% of material weight is included in every material estimate.) Tj T*
+() Tj T*
+(3. Night shifts) Tj T*
+(A night shift may be added to a machine only to protect a committed ship date.) Tj T*
+(Night shift labour carries a premium of 25% over the day rate for the crew,) Tj T*
+(plus the machine's night cost per hour. Every night shift added to a plan needs) Tj T*
+(the owner's approval before it is scheduled, and is reviewed in the monthly cost meeting.) Tj T*
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 962 >>
+stream
+BT
+/F1 11 Tf
+14 TL
+56 790 Td
+(DEMO DOCUMENT - Costing Policy \(Rev 3, April 2026\) - page 2) Tj T*
+() Tj T*
+(4. Material price variance) Tj T*
+(Purchase prices are compared with the standard rate of each material every month.) Tj T*
+(A material price variance above 5% for any material \(for example steel wire rod or) Tj T*
+(MS bright bar\) must be explained by Purchasing with supplier quotes, and the standard) Tj T*
+(rate is updated if the change is expected to last more than one quarter.) Tj T*
+(Express freight is allowed only when a shortage would make an order late; its cost is) Tj T*
+(booked to the order that needed it.) Tj T*
+() Tj T*
+(5. Monthly cost review) Tj T*
+(Each month Accounts compares planned and actual cost per order: material, labour,) Tj T*
+(machine hours, scrap and rework. Any order whose margin falls below the company's) Tj T*
+(minimum margin \(18%\) is reviewed with Planning and Sales before similar orders are quoted.) Tj T*
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000001355 00000 n 
+0000001481 00000 n 
+0000002494 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+2564
+%%EOF

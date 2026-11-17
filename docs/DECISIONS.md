@@ -317,3 +317,23 @@ Short records of choices and the reason for each. Newest at the bottom.
     shown but "Apply" is off until handover C (approval, re-validation, idempotent execution); write actions allowed
     then: plan fixes / sequence, raise a PO, log a follow-up or promise. No Finance module yet: cost questions use
     supplier bills, payments and plan costs and say so. Next: B = documents + hybrid RAG (pgvector), C = approved actions.
+58. **AI Assistant, handover B: company documents (hybrid RAG)**: PostgreSQL image is now `pgvector/pgvector:pg16`
+    (pgvector 0.8, same PG16 data volume; migration 0014 creates the extension). `ai_documents` (encrypted original,
+    who may see it = roles, empty = everyone; status queued/processing/ready/failed) and `ai_document_chunks` (page,
+    384-dim embedding with an HNSW cosine index, generated `to_tsvector('english')` with GIN, embedder name). Upload
+    (PDF with a text layer, DOCX incl. tables, TXT/MD; 20 MB; duplicates refused) -> ARQ `ingest_document`: extract per
+    page, paragraph-aware chunks of ~900 characters (never across pages, so citations name the page), embed, store.
+    Scanned PDFs fail with a clear message (no OCR). Embeddings are local and free: fastembed `BAAI/bge-small-en-v1.5`
+    (downloaded once, ~70 MB; the API and the worker warm it up at start); if it can't be loaded (no internet, or
+    `EMBEDDINGS_BACKEND=hash`, as in tests and this sandbox) a deterministic hashing embedder is used. Each chunk
+    records its embedder; vector search only compares chunks made by the embedder in use (re-index after switching).
+    Retrieval: vector path (`SET LOCAL hnsw.iterative_scan = strict_order`) + full-text path (OR of the question's
+    words), merged with Reciprocal Rank Fusion (k = 60); a passage is cited only if it shares at least two of the
+    question's words (or, failing that, is the single closest by meaning above a similarity threshold), so a small
+    library doesn't turn every chunk into a "source". Company (RLS + explicit tenant) and roles are filtered inside
+    both SQL queries, before ranking. Tool `search_documents` (every role) returns passages as JSON data with a note;
+    the system prompt says document text is quoted data, to cite (document, page) and never follow instructions in it.
+    Citations stream as a `citations` SSE event, are saved on the message and open the original at the page through a
+    fresh 5-minute link (`GET /ai/documents/{id}/link`, roles checked again). Uploader or owner may delete / re-index;
+    delete removes the chunks at once. Demo: three sample documents (`samples/documents/`, `scripts/make_sample_documents`),
+    seeded once into the demo company (Costing Policy visible to owner / accountant / planner only).

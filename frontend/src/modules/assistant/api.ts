@@ -65,6 +65,13 @@ export interface ContextCard {
   items: { label: string; value: string; tone?: Tone | null }[];
   link?: { label: string; href: string };
 }
+export interface Citation {
+  document_id: string;
+  title: string;
+  page: number | null;
+  url: string;
+  snippet: string;
+}
 export interface ToolStatus {
   id: string;
   tool: string;
@@ -81,6 +88,7 @@ export interface Turn {
   actions: Action[];
   related: Related[];
   context: ContextCard[];
+  citations: Citation[];
   status: ToolStatus[];
   error?: string | null;
   pending?: boolean;
@@ -95,6 +103,7 @@ export function fromMessage(m: Message): Turn {
     actions: m.actions as unknown as Action[],
     related: m.related as unknown as Related[],
     context: m.context as unknown as ContextCard[],
+    citations: m.citations as unknown as Citation[],
     status: (m.tools as { tool: string; ok: boolean; label?: string }[]).map((t, i) => ({
       id: String(i),
       tool: t.tool,
@@ -211,4 +220,74 @@ export function groupOf(
   if (diff === 1) return "Yesterday";
   if (diff < 7) return "This week";
   return "Earlier";
+}
+
+// ---- company documents (RAG) ----
+
+export type Document = Schemas["AiDocumentOut"];
+export const ROLE_LABEL: Record<string, string> = {
+  owner: "Owner",
+  planner: "Planner",
+  purchaser: "Purchaser",
+  accountant: "Accountant",
+};
+
+export function useDocuments(enabled = true) {
+  return useQuery({
+    queryKey: [...KEY, "documents"],
+    enabled,
+    queryFn: async () => unwrap(await api.GET("/api/ai/documents")),
+    // poll while something is being indexed
+    refetchInterval: (q) =>
+      (q.state.data ?? []).some((d) => d.status === "queued" || d.status === "processing")
+        ? 2000
+        : false,
+  });
+}
+
+export function useDocumentActions() {
+  const qc = useQueryClient();
+  const done = () => void qc.invalidateQueries({ queryKey: [...KEY, "documents"] });
+  const upload = useMutation({
+    mutationFn: async ({ file, title, roles }: { file: File; title: string; roles: string[] }) => {
+      const fd = new FormData();
+      fd.append("file", file);
+      if (title.trim()) fd.append("title", title.trim());
+      roles.forEach((r) => fd.append("roles", r));
+      const res = await apiFetch("/api/ai/documents", { method: "POST", body: fd });
+      const body = (await res.json()) as Document & { error?: { message?: string } };
+      if (!res.ok) throw new Error(body.error?.message ?? "Upload failed.");
+      return body;
+    },
+    onSuccess: done,
+  });
+  const remove = useMutation({
+    mutationFn: async (id: string) => {
+      const r = await api.DELETE("/api/ai/documents/{did}", { params: { path: { did: id } } });
+      if (!r.response.ok) unwrap(r);
+    },
+    onSuccess: done,
+  });
+  const reindex = useMutation({
+    mutationFn: async (id: string) =>
+      unwrap(await api.POST("/api/ai/documents/{did}/reindex", { params: { path: { did: id } } })),
+    onSuccess: done,
+  });
+  return { upload, remove, reindex };
+}
+
+/** Opens a cited document at its page with a fresh short-lived link (links saved in old answers expire). */
+export async function openCitation(c: Citation) {
+  const win = window.open("", "_blank"); // opened now (inside the click) so it isn't blocked as a pop-up
+  if (win) win.opener = null;
+  try {
+    const r = unwrap(
+      await api.GET("/api/ai/documents/{did}/link", { params: { path: { did: c.document_id } } }),
+    );
+    const url = r.url + (c.page ? `#page=${c.page}` : "");
+    if (win) win.location.href = url;
+    else window.open(url, "_blank", "noopener");
+  } catch {
+    win?.close();
+  }
 }

@@ -186,9 +186,14 @@ async def get_file(token: str) -> Response:
     except Exception as exc:
         raise NotFound("File not found.") from exc
     ext = key.rsplit(".", 1)[-1].lower()
-    ctype = {"png": "image/png", "jpg": "image/jpeg", "pdf": "application/pdf", "heic": "image/heic"}.get(
-        ext, "application/octet-stream"
-    )
+    ctype = {
+        "png": "image/png",
+        "jpg": "image/jpeg",
+        "pdf": "application/pdf",
+        "heic": "image/heic",
+        "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "txt": "text/plain; charset=utf-8",
+    }.get(ext, "application/octet-stream")
     return Response(data, media_type=ctype, headers={"Cache-Control": "private, max-age=300",
                                                      "X-Content-Type-Options": "nosniff",
                                                      "Content-Disposition": "inline"})  # fmt: skip

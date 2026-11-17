@@ -18,6 +18,7 @@ import {
 import { ContextPanel } from "./ContextPanel";
 import { QUICK_PROMPTS } from "./prompts";
 import { Sidebar, Sparkle } from "./Sidebar";
+import { DocumentsSheet, Sources } from "./Documents";
 import { ActionsCard, RelatedChips, WidgetView } from "./Widgets";
 
 /** Tiny, safe formatter for the model's text: paragraphs, "- " bullets and **bold** (no HTML). */
@@ -111,6 +112,7 @@ function Bubble({ turn }: { turn: Turn }) {
         {turn.widgets.map((w: Widget, i) => (
           <WidgetView key={i} w={w} />
         ))}
+        {turn.citations.length > 0 && <Sources items={turn.citations} />}
         {turn.actions.length > 0 && <ActionsCard actions={turn.actions} />}
         {turn.related.length > 0 && <RelatedChips items={turn.related} />}
         {turn.error && (
@@ -134,6 +136,7 @@ const empty = (id: string, role: Turn["role"], content = ""): Turn => ({
   actions: [],
   related: [],
   context: [],
+  citations: [],
   status: [],
 });
 
@@ -151,15 +154,21 @@ export function AssistantPage() {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [busy, setBusy] = useState(false);
   const [draft, setDraft] = useState("");
+  const [docsOpen, setDocsOpen] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const seq = useRef(0);
-  // load the opened conversation (state adjusted during render, not in an effect); a turn being streamed wins
-  const source = cid ? (conv.data ? `${cid}:${conv.dataUpdatedAt}` : null) : "none";
-  const [loaded, setLoaded] = useState<string | null>(null);
-  if (!busy && source !== null && source !== loaded) {
-    setLoaded(source);
-    setTurns(cid && conv.data ? conv.data.messages.map(fromMessage) : []);
+  // load a conversation when one is opened (state adjusted during render, not in an effect). The conversation on
+  // screen (also one just started by this turn) is never replaced by a saved copy that may be older than the stream.
+  const [shown, setShown] = useState<string | null>(null);
+  if (!busy) {
+    if (!cid && shown !== null) {
+      setShown(null);
+      setTurns([]);
+    } else if (cid && cid !== shown && conv.data?.id === cid) {
+      setShown(cid);
+      setTurns(conv.data.messages.map(fromMessage));
+    }
   }
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "end" }); // newer browsers return a Promise: never return it
@@ -194,9 +203,10 @@ export function AssistantPage() {
     const patch = (fn: (t: Turn) => Turn) =>
       setTurns((all) => all.map((t) => (t.id === aid ? fn(t) : t)));
     const on = ({ event, data }: ChatEvent) => {
-      if (event === "start" && !cid)
+      if (event === "start" && !cid) {
+        setShown(String(data.conversation_id)); // this screen already shows it
         setParams({ c: String(data.conversation_id) }, { replace: true });
-      else if (event === "tool_start")
+      } else if (event === "tool_start")
         patch((t) => ({
           ...t,
           status: [
@@ -222,6 +232,8 @@ export function AssistantPage() {
       else if (event === "token") patch((t) => ({ ...t, content: t.content + String(data.text) }));
       else if (event === "approval_required")
         patch((t) => ({ ...t, actions: data.actions as Turn["actions"] }));
+      else if (event === "citations")
+        patch((t) => ({ ...t, citations: data.citations as Turn["citations"] }));
       else if (event === "related_records")
         patch((t) => ({ ...t, related: data.records as Turn["related"] }));
       else if (event === "context_update")
@@ -234,10 +246,8 @@ export function AssistantPage() {
       patch((t) => ({ ...t, error: "The connection was interrupted. Try again." }));
     } finally {
       patch((t) => ({ ...t, pending: false }));
-      // reload the saved conversation before handing the screen back to it (never a copy older than this turn)
-      await qc.refetchQueries({ queryKey: ["assistant", "conversation"] });
       setBusy(false);
-      void qc.invalidateQueries({ queryKey: ["assistant", "list"] });
+      void qc.invalidateQueries({ queryKey: ["assistant"] }); // history list + saved copies for the next open
       inputRef.current?.focus();
     }
   };
@@ -281,6 +291,13 @@ export function AssistantPage() {
               className="cursor-pointer rounded-full border border-line px-3 py-1.5 text-[13px] text-ink-2 hover:bg-surface lg:hidden"
             >
               + New
+            </button>
+            <button
+              type="button"
+              onClick={() => setDocsOpen(true)}
+              className="flex cursor-pointer items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-[13px] text-ink-2 hover:bg-surface"
+            >
+              <span aria-hidden="true">📄</span> Documents
             </button>
             {cid && (
               <button
@@ -346,10 +363,10 @@ export function AssistantPage() {
           <div className="mx-auto flex max-w-[860px] items-end gap-2 rounded-card border border-line-input bg-white p-2 focus-within:border-primary">
             <button
               type="button"
-              disabled
               aria-label="Attach a document"
-              title="Uploading SOPs and documents comes in the next step"
-              className="grid size-9 shrink-0 cursor-not-allowed place-items-center rounded-full text-ink-3 opacity-50"
+              title="Upload an SOP, policy or manual the assistant can quote"
+              onClick={() => setDocsOpen(true)}
+              className="grid size-9 shrink-0 cursor-pointer place-items-center rounded-full text-ink-3 hover:bg-surface"
             >
               📎
             </button>
@@ -394,6 +411,7 @@ export function AssistantPage() {
           onDraft={(q) => (setDraft(q), inputRef.current?.focus())}
         />
       </div>
+      <DocumentsSheet open={docsOpen} onOpenChange={setDocsOpen} />
     </div>
   );
 }

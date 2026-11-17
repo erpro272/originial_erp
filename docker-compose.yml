@@ -18,7 +18,8 @@ x-backend-env: &backend-env
 
 services:
   postgres:
-    image: postgres:16-alpine@sha256:f377d590e5474681d4d7838635031a2b50647923b7abfa803ce9b5ff35d5c663
+    # PostgreSQL 16 with the pgvector extension (AI Assistant document search)
+    image: pgvector/pgvector:pg16@sha256:484e838076e04939d27d3e176e91c86eea96236126023be8d3059761122e579f
     environment:
       POSTGRES_USER: erp_owner
       POSTGRES_PASSWORD: erp_owner

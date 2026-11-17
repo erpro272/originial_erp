@@ -83,7 +83,7 @@ def _sse(seq: list[int], mid: uuid.UUID | None, kind: str, data: dict[str, Any])
 
 
 def _merge(outs: list[ToolOut]) -> dict[str, list[dict[str, Any]]]:
-    widgets, related, context, actions = [], [], [], []
+    widgets, related, context, actions, citations = [], [], [], [], []
     seen_r: set[str] = set()
     seen_c: set[str] = set()
     seen_a: set[str] = set()
@@ -99,11 +99,13 @@ def _merge(outs: list[ToolOut]) -> dict[str, list[dict[str, Any]]]:
             if k not in seen_c:
                 seen_c.add(k)
                 context.append(cc)
+        citations += [c for c in o.citations if c not in citations]
         for a in o.actions:
             if a["id"] not in seen_a:
                 seen_a.add(a["id"])
                 actions.append(a)
-    return {"widgets": widgets[:12], "related": related[:10], "context": context[:4], "actions": actions[:6]}
+    return {"widgets": widgets[:12], "related": related[:10], "context": context[:4], "actions": actions[:6],
+            "citations": citations[:6]}  # fmt: skip
 
 
 async def chat(p: Principal, role: str, text: str, cid: uuid.UUID | None) -> AsyncIterator[str]:
@@ -178,6 +180,8 @@ async def chat(p: Principal, role: str, text: str, cid: uuid.UUID | None) -> Asy
         if merged["actions"]:
             # proposals are only executed after approval (handover C); for now they're recommendations
             yield _sse(seq, am_id, "approval_required", {"actions": merged["actions"], "enabled": False})
+        if merged["citations"]:
+            yield _sse(seq, am_id, "citations", {"citations": merged["citations"]})
         if merged["related"]:
             yield _sse(seq, am_id, "related_records", {"records": merged["related"]})
         if merged["context"]:
@@ -185,7 +189,7 @@ async def chat(p: Principal, role: str, text: str, cid: uuid.UUID | None) -> Asy
     async with tenant_session(p.tenant_id) as s:
         s.add(AiMessage(id=am_id, conversation_id=conv_id, role="assistant", content=answer, error=error,
                         widgets=merged["widgets"], related=merged["related"], context=merged["context"],
-                        actions=merged["actions"], citations=[], tools=state.get("runs") or [],
+                        actions=merged["actions"], citations=merged["citations"], tools=state.get("runs") or [],
                         model=state.get("model") or llm.mode))  # fmt: skip
         c = await s.get(AiConversation, conv_id)
         if c is not None:

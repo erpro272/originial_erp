@@ -54,6 +54,12 @@ class Settings(BaseSettings):
     llm_vision_model: str = Field(default="meta-llama/llama-4-scout-17b-16e-instruct",
                                   validation_alias="LLM_VISION_MODEL")  # fmt: skip
     llm_timeout_seconds: float = 60.0
+    # Document search (RAG): local embeddings, no paid API. "auto" = fastembed (BAAI/bge-small-en-v1.5, 384 dims,
+    # downloaded once by the worker) and, if it can't be loaded, the built-in hashing embedder.
+    embeddings_backend: str = Field(
+        default="auto", validation_alias="EMBEDDINGS_BACKEND"
+    )  # auto | fastembed | hash
+    embeddings_model: str = Field(default="BAAI/bge-small-en-v1.5", validation_alias="EMBEDDINGS_MODEL")
 
     cors_origins: list[str] = ["http://localhost:5173"]
 

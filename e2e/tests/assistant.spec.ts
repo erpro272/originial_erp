@@ -1,6 +1,12 @@
 import { expect, test } from "@playwright/test";
 import { signIn } from "./helpers";
 
+// answers run real ERP tools: under a full parallel run they can take longer than the default 5 s
+test.use({ actionTimeout: 15_000 });
+const SLOW = { timeout: 15_000 };
+
+test.describe.configure({ timeout: 60_000 });
+
 test("AI Assistant: open full screen from the top bar, ask, see live steps + widgets + context, then clean up", async ({
   page,
 }) => {
@@ -10,10 +16,10 @@ test("AI Assistant: open full screen from the top bar, ask, see live steps + wid
   await expect(page).toHaveURL(/\/assistant$/);
   await expect(
     page.getByRole("heading", { level: 1, name: "AI Assistant" }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("region", { name: "Quick prompts" }),
-  ).toBeVisible();
+  ).toBeVisible(SLOW);
+  await expect(page.getByRole("region", { name: "Quick prompts" })).toBeVisible(
+    SLOW,
+  );
 
   await page
     .getByLabel("Message")
@@ -21,8 +27,8 @@ test("AI Assistant: open full screen from the top bar, ask, see live steps + wid
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/assistant\?c=/);
   const answer = page.getByRole("article", { name: "Assistant answer" }).last();
-  await expect(answer.getByText(/CNC 01 – /).first()).toBeVisible();
-  await expect(answer.getByText("ORD-1041 – Delay analysis")).toBeVisible();
+  await expect(answer.getByText(/CNC 01 – /).first()).toBeVisible(SLOW);
+  await expect(answer.getByText("ORD-1041 – Delay analysis")).toBeVisible(SLOW);
   await expect(answer.getByRole("list", { name: "Steps" })).toContainText(
     "Checking CNC 01 schedule",
   );
@@ -38,7 +44,7 @@ test("AI Assistant: open full screen from the top bar, ask, see live steps + wid
       .getByRole("navigation", { name: "Conversation history" })
       .getByText(title)
       .first(),
-  ).toBeVisible();
+  ).toBeVisible(SLOW);
 
   // a follow-up from the quick prompts, in the same conversation
   await page
@@ -52,8 +58,8 @@ test("AI Assistant: open full screen from the top bar, ask, see live steps + wid
     page
       .getByRole("article", { name: "Assistant answer" })
       .last()
-      .getByText("Orders at risk"),
-  ).toBeVisible();
+      .getByText("Orders at risk", { exact: true }),
+  ).toBeVisible(SLOW);
 
   // related record opens the source; the assistant comes back from history
   const url = page.url();
@@ -66,7 +72,7 @@ test("AI Assistant: open full screen from the top bar, ask, see live steps + wid
   await expect(page).toHaveURL(/\/orders\?q=ORD-1041/);
   await expect(
     page.getByRole("cell", { name: "ORD-1041" }).first(),
-  ).toBeVisible();
+  ).toBeVisible(SLOW);
   await page.goto(url);
   await expect(
     page.getByRole("article", { name: "Assistant answer" }),
@@ -77,7 +83,7 @@ test("AI Assistant: open full screen from the top bar, ask, see live steps + wid
   await expect(page).toHaveURL(/\/assistant$/);
   await expect(
     page.getByRole("heading", { name: "How can I help with your operations?" }),
-  ).toBeVisible();
+  ).toBeVisible(SLOW);
 });
 
 test("AI Assistant answers within the role's access", async ({ page }) => {

@@ -43,6 +43,10 @@ console.groq.com, make an API key (API Keys -> Create API key) and put `LLM_API_
 file next to `docker-compose.yml` (or in `backend/.env` when running `make api` / `make worker`), then restart
 the API and the worker. Without it all AI runs in mock mode (scripted answers / fixtures).
 
+Document search (the assistant quoting your SOPs and policies) uses a free local embedding model
+(`BAAI/bge-small-en-v1.5`, ~70 MB), downloaded once by the worker and the API on first start (needs internet that
+time). Without it a simpler built-in word-matching embedder is used; re-index documents after the model is available.
+
 ## Develop
 
 `make help` lists everything. Typical loop: `make infra`, then `make api`, `make worker`
