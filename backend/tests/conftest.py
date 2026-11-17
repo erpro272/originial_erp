@@ -12,7 +12,9 @@ os.environ.setdefault(
 )
 os.environ.setdefault("ERP_REDIS_URL", "redis://localhost:6379/15")
 os.environ["ERP_JOBS_INLINE"] = "true"
-os.environ.pop("LLM_API_KEY", None)  # tests always run the AI in mock mode
+os.environ["LLM_API_KEY"] = (
+    ""  # tests always run the AI in mock mode (an empty value also beats backend/.env)
+)
 os.environ["EMBEDDINGS_BACKEND"] = "hash"  # deterministic, offline document embeddings
 
 import uuid

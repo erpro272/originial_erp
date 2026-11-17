@@ -15,7 +15,7 @@ from app.core import keys
 from app.core.db import tenant_session
 from app.core.storage import get_decrypted, put_encrypted, tenant_key
 from app.invoices import files, templates
-from app.invoices.fields import SYSTEM_PROMPT, ai_schema, instructions
+from app.invoices.fields import SYSTEM_PROMPT, TEXT_FORMAT, ai_schema, instructions
 from app.invoices.models import ExtractionRun, InvoiceUpload
 from app.invoices.normalize import build_document, overall_confidence
 from app.invoices.service import seal
@@ -66,8 +66,13 @@ async def extract_invoice(_ctx: dict[str, Any], tenant_id: str, upload_id: str) 
                 else [InputFile(files.ai_image(data), "image/jpeg")]
             )
             client = get_ai_client()
-            result = await client.extract_json(task="invoice", system=SYSTEM_PROMPT, instructions=instructions(),
-                                               schema=ai_schema(), files=ai_files, fixture_hint=fixture_hint(name))  # fmt: skip
+            text = None
+            if client.mode == "live" and templates.available():  # OCR text -> text model (see VisionAIClient)
+                text = await asyncio.to_thread(templates.ocr_text, pages)
+            result = await client.extract_json(task="invoice", system=SYSTEM_PROMPT,
+                                               instructions=instructions() + (TEXT_FORMAT if text else ""),
+                                               schema=ai_schema(), files=ai_files, fixture_hint=fixture_hint(name),
+                                               text=text)  # fmt: skip
         if result.data is None:
             raise AIError("The AI declined to read this document.")
         doc = build_document(result.data, qr)

@@ -49,9 +49,9 @@ class Settings(BaseSettings):
     # unset everything runs in mock mode (fixture / scripted responses, used by all tests).
     llm_api_key: SecretStr | None = Field(default=None, validation_alias="LLM_API_KEY")
     llm_base_url: str = Field(default="https://api.groq.com/openai/v1", validation_alias="LLM_BASE_URL")
-    llm_primary_model: str = Field(default="llama-3.3-70b-versatile", validation_alias="LLM_PRIMARY_MODEL")
-    llm_fallback_model: str = Field(default="llama-3.1-8b-instant", validation_alias="LLM_FALLBACK_MODEL")
-    llm_vision_model: str = Field(default="meta-llama/llama-4-scout-17b-16e-instruct",
+    llm_primary_model: str = Field(default="openai/gpt-oss-120b", validation_alias="LLM_PRIMARY_MODEL")
+    llm_fallback_model: str = Field(default="openai/gpt-oss-20b", validation_alias="LLM_FALLBACK_MODEL")
+    llm_vision_model: str = Field(default="qwen/qwen3.8-27b",
                                   validation_alias="LLM_VISION_MODEL")  # fmt: skip
     llm_timeout_seconds: float = 60.0
     # Document search (RAG): local embeddings, no paid API. "auto" = fastembed (BAAI/bge-small-en-v1.5, 384 dims,

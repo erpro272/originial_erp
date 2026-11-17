@@ -149,6 +149,11 @@
   conversation; role limits shown ("Needs Planning edit access"). Tests: 319 pytest, 78 Vitest, 30 Playwright.
 
 ## Next
+- AI Assistant live on Groq (2026-11-17, awaiting owner review): runs on the owner's key (`backend/.env`), real model
+  answers (gpt-oss-120b, fallback gpt-oss-20b), general questions answered, replies in the user's language, follow-ups
+  use context; free-tier rate limits handled (fallback model, short waits); invoice reading works live (OCR + text
+  model, vision fallback). Tested live in the browser: purchasing overview, what to do today, fixing the biggest
+  problem, EOQ, costing-policy citation, Hindi CNC question, receivables.
 - Production backend: real stations from factory setup, live status/output from the plant floor.
 - Billing round 2: document intake + review queue, quotation versions and compare, e-invoice / IRN,
   credit notes and advances screens, GST filing tab, Gmail / WhatsApp / bank feeds.

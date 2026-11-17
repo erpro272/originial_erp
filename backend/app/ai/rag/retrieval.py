@@ -42,7 +42,7 @@ async def search(session: AsyncSession, tenant_id: uuid.UUID, role: str, query: 
     query = query.strip()[:500]
     if not query:
         return []
-    emb = get_embedder()
+    emb = await asyncio.to_thread(get_embedder)  # never block the event loop while the model loads
     qv = (await asyncio.to_thread(emb.embed, [query]))[0]
     cols = (
         AiDocumentChunk.id,

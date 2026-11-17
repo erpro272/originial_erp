@@ -83,8 +83,12 @@ def normalize(ftype: FieldType, raw: str | None) -> Any:
             return re.sub(r"\s+", " ", r)
 
 
-def _cell(spec_type: FieldType, src: dict[str, Any] | None) -> dict[str, Any]:
-    src = src or {}
+def _cell(spec_type: FieldType, src: dict[str, Any] | str | float | None) -> dict[str, Any]:
+    if isinstance(src, str | int | float) and not isinstance(
+        src, bool
+    ):  # compact item cell: just the printed text
+        src = {"raw": str(src)}
+    src = src if isinstance(src, dict) else {}
     raw = src.get("raw")
     raw = None if raw is None or str(raw).strip() == "" else str(raw)
     conf = src.get("confidence")

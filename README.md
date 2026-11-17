@@ -42,6 +42,11 @@ To use the real AI (the AI Assistant and invoice reading), create a free Groq ac
 console.groq.com, make an API key (API Keys -> Create API key) and put `LLM_API_KEY=gsk_...` in a `.env`
 file next to `docker-compose.yml` (or in `backend/.env` when running `make api` / `make worker`), then restart
 the API and the worker. Without it all AI runs in mock mode (scripted answers / fixtures).
+Models (Groq free tier): `openai/gpt-oss-120b` for the assistant and for reading invoices (from the OCR text),
+`openai/gpt-oss-20b` as the fallback when the first is rate-limited, `qwen/qwen3.8-27b` for images when Tesseract
+isn't installed. The free tier allows about 8,000 tokens a minute per model: a busy minute can make an answer wait a
+few seconds, and invoices are read about one a minute. Tests and e2e always use the mocks (run the API for e2e with
+`LLM_API_KEY= make api`).
 
 Document search (the assistant quoting your SOPs and policies) uses a free local embedding model
 (`BAAI/bge-small-en-v1.5`, ~70 MB), downloaded once by the worker and the API on first start (needs internet that

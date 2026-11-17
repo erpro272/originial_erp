@@ -125,6 +125,33 @@ def _ocr(img: Image.Image, psm: int, chars: str | None = None) -> list[Word]:
     return words
 
 
+def ocr_text(pages: list[Image.Image]) -> str:
+    """Every OCR line with its page and box (0..1 of the page), for the text model: `p1 [x0,y0,x1,y1] text`."""
+    out: list[str] = []
+    exe = shutil.which("tesseract") or "tesseract"
+    for n, img in enumerate(pages, start=1):
+        buf = io.BytesIO()
+        img.convert("RGB").save(buf, "PNG")
+        res = subprocess.run(  # noqa: S603 - fixed arguments; the image goes in on stdin
+            [exe, "stdin", "stdout", "--psm", "3", "-l", "eng", "tsv"], input=buf.getvalue(), capture_output=True,
+            check=True, timeout=90,
+        )  # fmt: skip
+        w, h = img.size
+        lines: dict[tuple[str, ...], list[list[str]]] = {}
+        for row in res.stdout.decode("utf-8", "replace").splitlines()[1:]:
+            c = row.split("\t")
+            if len(c) == 12 and c[11].strip() and float(c[10]) >= 0:
+                lines.setdefault(tuple(c[2:5]), []).append(c)
+        for words in lines.values():
+            x0 = min(int(c[6]) for c in words) / w
+            y0 = min(int(c[7]) for c in words) / h
+            x1 = max(int(c[6]) + int(c[8]) for c in words) / w
+            y1 = max(int(c[7]) + int(c[9]) for c in words) / h
+            text = " ".join(c[11].strip() for c in words)
+            out.append(f"p{n} [{x0:.2f},{y0:.2f},{x1:.2f},{y1:.2f}] {text}")
+    return "\n".join(out)
+
+
 @dataclass
 class _Fit:
     """Maps sample coordinates to the scanned page (independent scale + shift per axis)."""

@@ -353,3 +353,21 @@ Short records of choices and the reason for each. Newest at the bottom.
     a conversation is reopened. E2E applies a follow-up only (applying a plan fix would change the shared demo plan);
     plan fixes are covered by pytest. Also fixed: tests pin "today" for the whole session (module fixtures ran before the
     per-test pin and broke once the real date passed their dates).
+60. **Live AI on the owner's Groq key (owner: "get out of demo mode")**: `backend/.env` (gitignored) holds
+    `LLM_API_KEY`; the API and worker run live with it, tests always run on the mocks (`conftest` sets the key to empty,
+    which also beats `.env`). Groq's free catalogue no longer has Llama chat models, so the defaults are now
+    `openai/gpt-oss-120b` (assistant + invoice text), fallback `openai/gpt-oss-20b`, vision `qwen/qwen3.8-27b`
+    (`reasoning_effort=low` for gpt-oss). Free-tier limits shape the design: 8,000 tokens a minute per model (input +
+    `max_tokens` both count) and only 1,000 output tokens a minute on the vision model. So: (a) tool results go to the
+    model compact (summary + at most ~1,800 characters of data, `graph.compact`); (b) on a 429 the client switches to
+    the fallback model at once, and when every model is limited waits what Groq asks (`retry-after` /
+    `x-ratelimit-reset-tokens`): chat once, up to 20 s; invoice jobs up to 3 times, up to 65 s; never when Groq says
+    `x-should-retry: false`; (c) invoices: the worker OCRs the pages with Tesseract (lines with page + box) and the text
+    model returns compact JSON (fields with page/bbox from the OCR lines, item cells as plain text, absent fields left
+    out), `max_tokens` sized to fit the minute's budget; the vision model is the fallback when Tesseract is missing.
+    Prompt rules added after live testing: company facts only from tools, general manufacturing / business questions
+    from general knowledge (said so), vague requests -> overview tools, never invented arguments, no links between
+    facts the tools didn't make, no internal ids, nothing "approved" unless a tool says so, reply in the language of the
+    latest message. Fixed: the document search loaded the embedding model on the event loop (froze the API while the
+    model downloaded); now in a thread. The scripted mock also maps a bare module name ("purchasing", "billing"...)
+    to that area's overview tools.

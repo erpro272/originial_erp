@@ -58,6 +58,7 @@ class AIClient(Protocol):
         schema: dict[str, Any],
         files: list[InputFile],
         fixture_hint: str | None = None,
+        text: str | None = None,
     ) -> AIResult: ...
 
 
@@ -70,13 +71,16 @@ def _image_part(f: InputFile) -> dict[str, Any]:
 
 
 class VisionAIClient:
-    """Reads page images with a vision model and returns JSON (JSON mode + the schema in the prompt)."""
+    """Returns JSON (JSON mode + the schema in the prompt). With OCR `text` (lines with page + box) the text model
+    reads it: Groq's free vision model may only write ~1,000 tokens a minute, too few for an invoice. Without text,
+    the vision model reads the page images."""
 
     mode: Literal["live", "mock", "template"] = "live"
 
-    def __init__(self, llm: OpenAICompatibleLLM, model: str) -> None:
+    def __init__(self, llm: OpenAICompatibleLLM, model: str, text_model: str = "") -> None:
         self._llm = llm
         self.model = model
+        self.text_model = text_model
 
     async def extract_json(
         self,
@@ -87,7 +91,20 @@ class VisionAIClient:
         schema: dict[str, Any],
         files: list[InputFile],
         fixture_hint: str | None = None,
+        text: str | None = None,
     ) -> AIResult:
+        if text and self.text_model:
+            # the instructions describe the output (`text_format`); the long JSON schema would cost ~2k tokens
+            prompt = (f"{instructions}\n\nThe document's text, read by OCR, one line each as `p<page> [x0,y0,x1,y1] text` "
+                      "(box = fractions of the page). OCR may misread characters: fix obvious slips.\n"
+                      f"<ocr>\n{text[:14000]}\n</ocr>\n\nReply with one compact JSON object only (no spaces or newlines).")  # fmt: skip
+            ask: list[dict[str, Any]] = [
+                {"role": "system", "content": system},
+                {"role": "user", "content": prompt},
+            ]
+            # free tier: input + max_tokens must fit the 8k tokens-a-minute budget (~2.7 characters a token here)
+            room = 7700 - int((len(prompt) + len(system)) / 2.7)
+            return await self._ask(ask, self.text_model, max(2000, min(6000, room)))
         images = [f for f in files if f.media_type != "application/pdf"][:MAX_IMAGES]
         if not images:
             raise AIError("Nothing readable to send to the AI (no page images).")
@@ -95,8 +112,11 @@ class VisionAIClient:
                   f"(no prose, no code fences):\n{json.dumps(schema, separators=(',', ':'))}")  # fmt: skip
         messages: list[dict[str, Any]] = [{"role": "system", "content": system},
                     {"role": "user", "content": [*(_image_part(f) for f in images), {"type": "text", "text": prompt}]}]  # fmt: skip
+        return await self._ask(messages, self.model, 6000)
+
+    async def _ask(self, messages: list[dict[str, Any]], model: str, max_tokens: int) -> AIResult:
         try:
-            res = await self._llm.chat(messages, json_mode=True, model=self.model, max_tokens=8000)
+            res = await self._llm.chat(messages, json_mode=True, model=model, max_tokens=max_tokens)
         except LLMError as exc:
             raise AIError(str(exc)) from exc
         try:
@@ -105,7 +125,7 @@ class VisionAIClient:
             raise AIError("AI returned invalid JSON") from exc
         if not isinstance(data, dict):
             raise AIError("AI returned invalid JSON")
-        return AIResult(data, res.content, res.model or self.model, "live", "stop", res.usage)
+        return AIResult(data, res.content, res.model or model, "live", "stop", res.usage)
 
 
 class MockAIClient:
@@ -125,6 +145,7 @@ class MockAIClient:
         schema: dict[str, Any],
         files: list[InputFile],
         fixture_hint: str | None = None,
+        text: str | None = None,
     ) -> AIResult:
         folder = self.fixtures_dir / task
         candidates = [folder / f"{fixture_hint}.json"] if fixture_hint else []
@@ -141,6 +162,6 @@ def get_ai_client() -> AIClient:
     s = get_settings()
     if s.llm_api_key and s.llm_api_key.get_secret_value():
         llm = OpenAICompatibleLLM(s.llm_base_url, s.llm_api_key.get_secret_value(), s.llm_vision_model, "",
-                                  s.llm_timeout_seconds * 2)  # fmt: skip
-        return VisionAIClient(llm, s.llm_vision_model)
+                                  s.llm_timeout_seconds * 2, max_wait=65, max_waits=3)  # background job: wait out the minute  # fmt: skip
+        return VisionAIClient(llm, s.llm_vision_model, s.llm_primary_model)
     return MockAIClient()

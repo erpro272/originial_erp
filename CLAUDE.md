@@ -67,7 +67,12 @@ isolation). One company per website: no company picker or switcher in the UI.
   429 -> fallback model) and `app/ai/service.get_ai_client()` (invoice extraction on the vision model). Settings
   `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_PRIMARY_MODEL`, `LLM_FALLBACK_MODEL`, `LLM_VISION_MODEL`. Without a key: mocks
   (scripted assistant `app/ai/mock.py`, invoice fixtures `app/ai/fixtures/<task>/`); tests always use mocks.
-  AI never does maths; code does. No Anthropic SDK.
+  AI never does maths; code does. No Anthropic SDK. Defaults (Groq retired Llama): `openai/gpt-oss-120b`, fallback
+  `openai/gpt-oss-20b`, vision `qwen/qwen3.8-27b`. Free tier = 8k tokens/min per model (input + max_tokens): keep
+  tool results compact (`graph.compact`), 429 -> fallback model then wait (`llm.wait_seconds`). Invoices live: Tesseract
+  OCR text (`templates.ocr_text`) -> text model with `fields.TEXT_FORMAT`; vision only without Tesseract.
+  `backend/.env` may hold the owner's key: never commit or print it. Tests set `LLM_API_KEY=""`; run e2e against
+  `LLM_API_KEY= make api` (mock).
 - Never log secrets/PII: logging has a redacting filter; don't put bank numbers in messages.
 - Tests: `backend/tests`, real Postgres DB `erp_test` (recreated per run: never run two pytest sessions at once), seed via
   `seed.run.seed()`. "Today" is pinned to `conftest.TODAY` for the whole session. Use helpers in `tests/conftest.py` (`login`, `owner`, `planner`).

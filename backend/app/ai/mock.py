@@ -115,6 +115,18 @@ def plan_calls(text: str, names: set[str]) -> list[tuple[str, dict[str, Any]]]:
         dq = re.split(r"(?:what does|what do|according to)\s+(?:our|the)?\s*", text, flags=re.I)[-1]
         dq = re.sub(r"\b(say|says|about|tell us)\b|\?", " ", dq, flags=re.I).strip() or text
         calls.append(("search_documents", {"query": dq[:200]}))
+    if not calls:  # a module or topic named on its own ("purchasing", "billing", "stock"...): its overview
+        for words, names_ in ((("purchas", "supplier", "po "), ("purchase_orders", "material_coverage")),
+                              (("billing", "payment", "money", "cash", "invoice"), ("receivables", "payables")),
+                              (("inventory", "stock", "material"), ("material_coverage",)),
+                              (("planning", "plan", "schedule"), ("plan_summary",)),
+                              (("production", "machine", "factory", "capacity"), ("machine_load",)),
+                              (("order", "customer", "ship", "deliver"), ("orders_at_risk", "shippable_orders")),
+                              (("business", "today", "overview", "summary", "status", "how are we"),
+                               ("plan_summary", "orders_at_risk", "receivables"))):  # fmt: skip
+            if any(w in t + " " for w in words):
+                calls += [(n, {}) for n in names_]
+                break
     seen: set[str] = set()
     out = []
     for name, args in calls:

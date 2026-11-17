@@ -206,6 +206,13 @@ Rules:
 - If the document is not an invoice, set is_invoice to false and leave fields null."""
 
 
+TEXT_FORMAT = """
+
+Output format: {"is_invoice":true|false,"fields":{"<field key>":{"raw":"text as printed","confidence":0..1,"page":1,
+"bbox":[x0,y0,x1,y1]}},"lines":[{"<item key>":"text as printed"}]}. Leave out fields and item keys that are not on the
+document. page and bbox come from the OCR line the value is on (2 decimals)."""
+
+
 def instructions() -> str:
     hints = [f"- {f.key}: {f.label}" + (f" ({f.hint})" if f.hint else "") for f in FIELDS]
     line_hints = [f"- {f.key}: {f.label}" + (f" ({f.hint})" if f.hint else "") for f in LINE_FIELDS]

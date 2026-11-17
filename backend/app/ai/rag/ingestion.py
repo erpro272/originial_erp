@@ -129,7 +129,7 @@ async def ingest_document(_: dict[str, Any], tenant_id: str, document_id: str) -
             raise IngestError(
                 "No text found. Is it a scanned PDF? Upload a PDF with selectable text, or a Word file."
             )
-        emb = get_embedder()
+        emb = await asyncio.to_thread(get_embedder)
         vecs = await asyncio.to_thread(emb.embed, [c.text for c in chunks])
     except IngestError as exc:
         return await _fail(tid, did, str(exc))
@@ -163,7 +163,7 @@ async def reindex_stale() -> int:
 
     from app.core.db import global_session
 
-    name = get_embedder().name
+    name = (await asyncio.to_thread(get_embedder)).name
     async with global_session() as s:  # tenant ids only (SECURITY DEFINER function for system jobs)
         tenants = list((await s.execute(text("SELECT * FROM erp_active_tenant_ids()"))).scalars())
     n = 0

@@ -14,7 +14,8 @@ from httpx import AsyncClient
 from app.ai import service as ai_service
 from app.ai.assistant import graph as g
 from app.ai.assistant.tools import BY_NAME, ToolOut
-from app.ai.llm import LLMError, OpenAICompatibleLLM
+from app.ai.llm import LLMError, OpenAICompatibleLLM, wait_seconds
+from app.invoices.normalize import build_document
 from tests.conftest import headers_for
 from tests.test_purchasing import _demo_co
 
@@ -184,6 +185,7 @@ async def test_rate_limit_falls_back_to_the_smaller_model(monkeypatch: pytest.Mo
         return httpx.Response(429, json={})
 
     monkeypatch.setattr(llm, "_post", always_429)
+    llm.max_wait = 0  # don't sleep in the test
     with pytest.raises(LLMError, match="quota"):
         await llm.chat([{"role": "user", "content": "x"}])
 
@@ -210,3 +212,38 @@ async def test_invoice_reading_on_the_vision_model(monkeypatch: pytest.MonkeyPat
     assert sent["response_format"] == {"type": "json_object"}
     with pytest.raises(ai_service.AIError):
         await client.extract_json(task="invoice", system="s", instructions="", schema={}, files=[])
+
+    # with OCR text, the text model reads it (Groq's free vision model can't write a whole invoice in a minute)
+    client = ai_service.VisionAIClient(llm, "vision", "text-model")
+    res = await client.extract_json(task="invoice", system="s", instructions="read", schema={"type": "object"},
+                                    files=[], text="p1 [0.05,0.03,0.21,0.05] TAX INVOICE")  # fmt: skip
+    assert sent["model"] == "text-model" and isinstance(sent["messages"][1]["content"], str)
+    assert "TAX INVOICE" in sent["messages"][1]["content"] and sent["max_tokens"] <= 6000
+
+
+def test_rate_limit_wait_comes_from_the_headers() -> None:
+    assert wait_seconds({"retry-after": "7"}) == 7
+    assert wait_seconds({"x-ratelimit-reset-tokens": "1m2.5s"}) == 63.0
+    assert wait_seconds({"x-ratelimit-reset-tokens": "577ms"}) == pytest.approx(1.077)
+    assert wait_seconds({}) == 2.0
+
+
+async def test_a_request_too_large_for_the_plan_is_not_retried(monkeypatch: pytest.MonkeyPatch) -> None:
+    llm = OpenAICompatibleLLM("https://llm.invalid/v1", "k", "big", "", 5, max_wait=60, max_waits=3)
+    calls: list[int] = []
+
+    async def post(payload: dict[str, Any]) -> httpx.Response:
+        calls.append(1)
+        return httpx.Response(429, headers={"x-should-retry": "false", "retry-after": "1"}, json={})
+
+    monkeypatch.setattr(llm, "_post", post)
+    with pytest.raises(LLMError, match="too large"):
+        await llm.chat([{"role": "user", "content": "x"}])
+    assert len(calls) == 1
+
+
+def test_compact_item_cells_are_accepted() -> None:
+    doc = build_document(
+        {"is_invoice": True, "fields": {}, "lines": [{"product_name": "M8 bolt", "quantity": 500}]}, None
+    )
+    assert doc["lines"][0]["product_name"]["raw"] == "M8 bolt" and doc["lines"][0]["quantity"]["raw"] == "500"
