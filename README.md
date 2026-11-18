@@ -66,3 +66,5 @@ e2e/        Playwright end-to-end tests
 infra/      Postgres init (database roles)
 docs/       Progress and decisions
 ```
+
+Handing the project to another AI assistant? Give it `docs/LLM_CONTEXT.md` (full project context).
